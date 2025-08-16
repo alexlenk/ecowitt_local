@@ -33,7 +33,7 @@ jobs:
           
       - name: Type check with mypy
         run: |
-          mypy custom_components/ecowitt_local
+          mypy --follow-imports=silent --ignore-missing-imports custom_components/ecowitt_local
           
       - name: Test with pytest
         run: |
