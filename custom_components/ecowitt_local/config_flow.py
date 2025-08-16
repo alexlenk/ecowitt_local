@@ -84,11 +84,11 @@ async def validate_input(hass: HomeAssistant, data: Dict[str, Any]) -> Dict[str,
         await api.close()
 
 
+@config_entries.HANDLERS.register(DOMAIN)
 class ConfigFlow(config_entries.ConfigFlow):
     """Handle a config flow for Ecowitt Local."""
 
     VERSION = 1
-    DOMAIN = DOMAIN
     
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -99,18 +99,18 @@ class ConfigFlow(config_entries.ConfigFlow):
         self, user_input: Optional[Dict[str, Any]] = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: Dict[str, str] = {}
+        errors: Optional[Dict[str, str]] = None
         
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
-                errors["base"] = ERROR_CANNOT_CONNECT
+                errors = {"base": ERROR_CANNOT_CONNECT}
             except InvalidAuth:
-                errors["base"] = ERROR_INVALID_AUTH
+                errors = {"base": ERROR_INVALID_AUTH}
             except Exception:
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = ERROR_UNKNOWN
+                errors = {"base": ERROR_UNKNOWN}
             else:
                 # Check if already configured
                 await self.async_set_unique_id(f"{info['gateway_id']}_{info['host']}")
