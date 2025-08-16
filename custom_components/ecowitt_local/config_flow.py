@@ -84,7 +84,7 @@ async def validate_input(hass: HomeAssistant, data: Dict[str, Any]) -> Dict[str,
         await api.close()
 
 
-class ConfigFlow(config_entries.ConfigFlow):
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ecowitt Local."""
 
     VERSION = 1
@@ -92,7 +92,6 @@ class ConfigFlow(config_entries.ConfigFlow):
     def __init__(self) -> None:
         """Initialize the config flow."""
         super().__init__()
-        self.domain = DOMAIN
         self._discovered_info: Optional[Dict[str, Any]] = None
 
     async def async_step_user(
@@ -162,7 +161,6 @@ class ConfigFlow(config_entries.ConfigFlow):
         )
 
     @staticmethod
-    @config_entries.HANDLERS.register(DOMAIN)
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> OptionsFlowHandler:

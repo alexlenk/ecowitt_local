@@ -56,7 +56,6 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=scan_interval),
-            always_update=False,
         )
 
     async def _async_update_data(self) -> Dict[str, Any]:

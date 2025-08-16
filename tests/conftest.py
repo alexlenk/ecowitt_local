@@ -10,7 +10,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+pytest_plugins = "pytest_homeassistant_custom_component"
+
 from custom_components.ecowitt_local.const import DOMAIN, CONF_HOST, CONF_PASSWORD
+
+
+@pytest.fixture(autouse=True)
+def auto_enable_custom_integrations(enable_custom_integrations):
+    """Enable custom integrations defined in the test dir."""
+    yield
 
 
 @pytest.fixture
@@ -107,16 +115,16 @@ def mock_units_data() -> Dict[str, Any]:
 
 
 @pytest.fixture
-async def mock_ecowitt_api():
+def mock_ecowitt_api():
     """Mock the EcowittLocalAPI."""
-    with patch("custom_components.ecowitt_local.api.EcowittLocalAPI") as mock_api:
-        # Configure the mock
-        mock_instance = mock_api.return_value
-        mock_instance.authenticate.return_value = True
-        mock_instance.test_connection.return_value = True
-        mock_instance.close.return_value = None
-        
-        yield mock_instance
+    from unittest.mock import AsyncMock, MagicMock
+    
+    mock_instance = AsyncMock()
+    mock_instance.authenticate.return_value = True
+    mock_instance.test_connection.return_value = True
+    mock_instance.close.return_value = None
+    
+    return mock_instance
 
 
 @pytest.fixture
@@ -130,17 +138,21 @@ async def setup_integration(
     mock_units_data,
 ):
     """Set up the integration with mocked data."""
-    # Configure mock API responses
+    # Configure mock API responses  
     mock_ecowitt_api.get_version.return_value = mock_gateway_version
     mock_ecowitt_api.get_live_data.return_value = mock_live_data
     mock_ecowitt_api.get_all_sensor_mappings.return_value = mock_sensor_mapping
     mock_ecowitt_api.get_units.return_value = mock_units_data
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.authenticate.return_value = True
+    mock_ecowitt_api.close.return_value = None
     
-    # Add config entry to hass
-    mock_config_entry.add_to_hass(hass)
-    
-    # Setup the integration
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    
-    return mock_config_entry
+    with patch("custom_components.ecowitt_local.api.EcowittLocalAPI", return_value=mock_ecowitt_api):
+        # Add config entry to hass
+        mock_config_entry.add_to_hass(hass)
+        
+        # Setup the integration
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        
+        return mock_config_entry

@@ -37,7 +37,7 @@ jobs:
           
       - name: Test with pytest
         run: |
-          pytest tests/ --cov=custom_components.ecowitt_local --cov-report=xml --cov-report=term-missing
+          PYTHONPATH="$PWD" pytest tests/ --cov=custom_components.ecowitt_local --cov-report=xml --cov-report=term-missing
           
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3

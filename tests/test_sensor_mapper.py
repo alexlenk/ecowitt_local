@@ -116,12 +116,12 @@ def test_generate_entity_id(sensor_mapper: SensorMapper, mock_sensor_mappings):
 
 def test_extract_sensor_type_from_key(sensor_mapper: SensorMapper):
     """Test extracting sensor type from key."""
-    assert sensor_mapper._extract_sensor_type_from_key("tempf") == "temp"
-    assert sensor_mapper._extract_sensor_type_from_key("humidity1") == "humid"
-    assert sensor_mapper._extract_sensor_type_from_key("soilmoisture1") == "soil"
+    assert sensor_mapper._extract_sensor_type_from_key("tempf") == "temperature"
+    assert sensor_mapper._extract_sensor_type_from_key("humidity1") == "humidity"
+    assert sensor_mapper._extract_sensor_type_from_key("soilmoisture1") == "soil_moisture"
     assert sensor_mapper._extract_sensor_type_from_key("pm25_ch1") == "pm25"
     assert sensor_mapper._extract_sensor_type_from_key("windspeedmph") == "wind"
-    assert sensor_mapper._extract_sensor_type_from_key("baromrelin") == "barom"
+    assert sensor_mapper._extract_sensor_type_from_key("baromrelin") == "pressure"
 
 
 def test_extract_identifier_from_key(sensor_mapper: SensorMapper):

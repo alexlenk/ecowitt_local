@@ -274,8 +274,8 @@ class SensorMapper:
 
     def _extract_identifier_from_key(self, key: str) -> str:
         """Extract identifier from live data key."""
-        # Extract channel number if present
-        channel_match = re.search(r'(\d+)$', key)
+        # Extract channel number if present (at end or before suffix)
+        channel_match = re.search(r'(\d+)(?:[a-z]*)$', key)
         if channel_match:
             return f"ch{channel_match.group(1)}"
         
@@ -284,15 +284,15 @@ class SensorMapper:
         if ch_match:
             return f"ch{ch_match.group(1)}"
             
-        # Special cases
-        if "indoor" in key or "in" in key:
+        # Special cases - order matters, more specific first
+        if "relative" in key or "relin" in key:
+            return "relative"
+        elif "absolute" in key or "absin" in key:
+            return "absolute"
+        elif "indoor" in key or key.endswith("inf"):
             return "indoor"
         elif "outdoor" in key or key in ("tempf", "humidity", "windspeedmph"):
             return "outdoor"
-        elif "relative" in key or "rel" in key:
-            return "relative"
-        elif "absolute" in key or "abs" in key:
-            return "absolute"
         
         return key.lower()
 
