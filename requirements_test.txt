@@ -1,0 +1,22 @@
+# Test requirements for Ecowitt Local integration
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-asyncio>=0.21.0
+pytest-homeassistant-custom-component>=0.13.0
+
+# Code quality
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
+isort>=5.12.0
+
+# Home Assistant testing
+homeassistant>=2024.1.0
+
+# Runtime dependencies (for testing)
+aiohttp>=3.8.0
+voluptuous>=0.13.0
+
+# Additional testing tools
+aioresponses>=0.7.4
+freezegun>=1.2.0

@@ -1,0 +1,68 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Ecowitt Local Setup",
+        "description": "Configure your Ecowitt gateway connection. Enter the IP address of your Ecowitt gateway device.",
+        "data": {
+          "host": "Gateway IP Address",
+          "password": "Gateway Password (optional)"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the Ecowitt gateway (e.g., 192.168.1.100)",
+          "password": "Password for the gateway web interface (leave blank if none)"
+        }
+      },
+      "options": {
+        "title": "Ecowitt Local Options",
+        "description": "Configure polling intervals and sensor options.",
+        "data": {
+          "scan_interval": "Live Data Poll Interval (seconds)",
+          "mapping_interval": "Sensor Mapping Update Interval (seconds)",
+          "include_inactive": "Include Inactive Sensors"
+        },
+        "data_description": {
+          "scan_interval": "How often to poll for live data (30-300 seconds)",
+          "mapping_interval": "How often to refresh sensor mappings (300-3600 seconds)",
+          "include_inactive": "Include sensors that are currently offline or have no data"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the gateway. Please check the IP address and ensure the gateway is accessible.",
+      "invalid_auth": "Invalid password. Please check the gateway password.",
+      "unknown": "Unexpected error occurred. Please try again."
+    },
+    "abort": {
+      "already_configured": "This gateway is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ecowitt Local Options",
+        "description": "Configure polling intervals and sensor options.",
+        "data": {
+          "scan_interval": "Live Data Poll Interval (seconds)",
+          "mapping_interval": "Sensor Mapping Update Interval (seconds)",
+          "include_inactive": "Include Inactive Sensors"
+        },
+        "data_description": {
+          "scan_interval": "How often to poll for live data (30-300 seconds)",
+          "mapping_interval": "How often to refresh sensor mappings (300-3600 seconds)",
+          "include_inactive": "Include sensors that are currently offline or have no data"
+        }
+      }
+    }
+  },
+  "services": {
+    "refresh_mapping": {
+      "name": "Refresh Sensor Mapping",
+      "description": "Force refresh of sensor hardware ID mapping from the gateway"
+    },
+    "update_data": {
+      "name": "Update Live Data",
+      "description": "Force immediate update of live sensor data from the gateway"
+    }
+  }
+}

@@ -1,0 +1,285 @@
+"""Test the Ecowitt Local API client."""
+from __future__ import annotations
+
+import asyncio
+import base64
+from unittest.mock import AsyncMock, Mock, patch
+
+import aiohttp
+import pytest
+from aioresponses import aioresponses
+
+from custom_components.ecowitt_local.api import (
+    EcowittLocalAPI,
+    AuthenticationError,
+    ConnectionError,
+    DataError,
+)
+
+
+@pytest.fixture
+def api_client():
+    """Create an API client for testing."""
+    return EcowittLocalAPI("192.168.1.100", "test_password")
+
+
+@pytest.mark.asyncio
+async def test_init():
+    """Test API client initialization."""
+    api = EcowittLocalAPI("192.168.1.100", "test_password")
+    
+    assert api._host == "192.168.1.100"
+    assert api._password == "test_password"
+    assert api._base_url == "http://192.168.1.100"
+    assert not api._authenticated
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_authenticate_success():
+    """Test successful authentication."""
+    api = EcowittLocalAPI("192.168.1.100", "test_password")
+    
+    with aioresponses() as m:
+        m.post("http://192.168.1.100/set_login_info", status=200)
+        
+        result = await api.authenticate()
+        
+        assert result is True
+        assert api._authenticated is True
+        
+        # Check the request was made with base64 encoded password
+        expected_password = base64.b64encode("test_password".encode()).decode()
+        request = m.requests[("POST", "http://192.168.1.100/set_login_info")][0]
+        assert request.kwargs["data"]["pwd"] == expected_password
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_authenticate_no_password():
+    """Test authentication with no password."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    result = await api.authenticate()
+    
+    assert result is True
+    assert api._authenticated is True
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_authenticate_invalid_credentials():
+    """Test authentication with invalid credentials."""
+    api = EcowittLocalAPI("192.168.1.100", "wrong_password")
+    
+    with aioresponses() as m:
+        m.post("http://192.168.1.100/set_login_info", status=401)
+        
+        with pytest.raises(AuthenticationError):
+            await api.authenticate()
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_authenticate_connection_error():
+    """Test authentication with connection error."""
+    api = EcowittLocalAPI("192.168.1.100", "test_password")
+    
+    with aioresponses() as m:
+        m.post("http://192.168.1.100/set_login_info", exception=aiohttp.ClientError())
+        
+        with pytest.raises(ConnectionError):
+            await api.authenticate()
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_live_data():
+    """Test getting live data."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    mock_data = {
+        "common_list": [
+            {"id": "tempinf", "val": "72.5"},
+            {"id": "humidity", "val": "45"},
+        ]
+    }
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_livedata_info", payload=mock_data)
+        
+        result = await api.get_live_data()
+        
+        assert result == mock_data
+        assert "common_list" in result
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_live_data_invalid_response():
+    """Test getting live data with invalid response."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_livedata_info", payload={"invalid": "data"})
+        
+        with pytest.raises(DataError):
+            await api.get_live_data()
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_sensor_mapping():
+    """Test getting sensor mapping."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    mock_data = {
+        "sensor": [
+            {"id": "D8174", "type": "WH51", "channel": "1"},
+            {"id": "D8648", "type": "WH51", "channel": "2"},
+        ]
+    }
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_sensors_info?page=1", payload=mock_data)
+        
+        result = await api.get_sensor_mapping(1)
+        
+        assert result == mock_data["sensor"]
+        assert len(result) == 2
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_all_sensor_mappings():
+    """Test getting all sensor mappings."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    page1_data = {
+        "sensor": [
+            {"id": "D8174", "type": "WH51", "channel": "1"},
+        ]
+    }
+    page2_data = {
+        "sensor": [
+            {"id": "D8648", "type": "WH51", "channel": "2"},
+        ]
+    }
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_sensors_info?page=1", payload=page1_data)
+        m.get("http://192.168.1.100/get_sensors_info?page=2", payload=page2_data)
+        
+        result = await api.get_all_sensor_mappings()
+        
+        assert len(result) == 2
+        assert result[0]["id"] == "D8174"
+        assert result[1]["id"] == "D8648"
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_version():
+    """Test getting version information."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    mock_data = {
+        "stationtype": "GW1100A",
+        "version": "1.7.3",
+    }
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_version", payload=mock_data)
+        
+        result = await api.get_version()
+        
+        assert result == mock_data
+        assert result["stationtype"] == "GW1100A"
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_test_connection():
+    """Test connection test."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_version", payload={"version": "1.7.3"})
+        
+        result = await api.test_connection()
+        
+        assert result is True
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_test_connection_auth_error():
+    """Test connection test with auth error."""
+    api = EcowittLocalAPI("192.168.1.100", "wrong_password")
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_version", status=401)
+        
+        # Should return True because auth error means we can connect
+        result = await api.test_connection()
+        
+        assert result is True
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_test_connection_failure():
+    """Test connection test failure."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_version", exception=aiohttp.ClientError())
+        
+        result = await api.test_connection()
+        
+        assert result is False
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_context_manager():
+    """Test API client as context manager."""
+    async with EcowittLocalAPI("192.168.1.100", "") as api:
+        assert api._session is not None
+    
+    # Session should be closed after context manager exit
+
+
+@pytest.mark.asyncio
+async def test_reauthentication_on_401():
+    """Test automatic re-authentication on 401 error."""
+    api = EcowittLocalAPI("192.168.1.100", "test_password")
+    
+    with aioresponses() as m:
+        # First request returns 401
+        m.get("http://192.168.1.100/get_livedata_info", status=401)
+        # Re-authentication succeeds
+        m.post("http://192.168.1.100/set_login_info", status=200)
+        # Retry request succeeds
+        m.get("http://192.168.1.100/get_livedata_info", 
+              payload={"common_list": []})
+        
+        result = await api.get_live_data()
+        
+        assert result == {"common_list": []}
+        assert api._authenticated is True
+    
+    await api.close()

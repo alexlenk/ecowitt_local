@@ -1,0 +1,7 @@
+{
+  "name": "Ecowitt Local",
+  "hacs": "1.32.0",
+  "domains": ["sensor", "binary_sensor"],
+  "iot_class": "Local Polling",
+  "homeassistant": "2024.1.0"
+}
