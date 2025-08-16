@@ -84,10 +84,11 @@ async def validate_input(hass: HomeAssistant, data: Dict[str, Any]) -> Dict[str,
         await api.close()
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ConfigFlow(config_entries.ConfigFlow):
     """Handle a config flow for Ecowitt Local."""
 
     VERSION = 1
+    DOMAIN = DOMAIN
     
     def __init__(self) -> None:
         """Initialize the config flow."""

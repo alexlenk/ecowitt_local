@@ -11,7 +11,7 @@ mypy>=1.0.0
 isort>=5.12.0
 
 # Home Assistant testing
-homeassistant>=2024.1.0
+homeassistant>=2023.12.0,<2024.12.0
 
 # Runtime dependencies (for testing)
 aiohttp>=3.8.0
