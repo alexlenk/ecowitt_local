@@ -71,7 +71,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.services.async_remove(DOMAIN, SERVICE_REFRESH_MAPPING)
             hass.services.async_remove(DOMAIN, SERVICE_UPDATE_DATA)
     
-    return unload_ok
+    return bool(unload_ok)
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

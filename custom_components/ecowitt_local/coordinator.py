@@ -119,8 +119,9 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
 
     async def _process_live_data(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         """Process raw live data into structured sensor data."""
-        processed_data = {
-            "sensors": {},
+        sensors_data: Dict[str, Any] = {}
+        processed_data: Dict[str, Any] = {
+            "sensors": sensors_data,
             "gateway_info": {},
             "last_update": datetime.now(),
         }
@@ -129,8 +130,8 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         common_list = raw_data.get("common_list", [])
         
         for item in common_list:
-            sensor_key = item.get("id", "")
-            sensor_value = item.get("val", "")
+            sensor_key = item.get("id") or ""
+            sensor_value = item.get("val") or ""
             
             if not sensor_key:
                 continue
@@ -159,15 +160,15 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 unit = "%"
             elif system_info:
                 category = "system"
-                device_class = system_info.get("device_class")
-                unit = system_info.get("unit")
+                device_class = system_info.get("device_class") or ""
+                unit = system_info.get("unit") or ""
             else:
                 category = "sensor"
-                device_class = sensor_info.get("device_class")
-                unit = sensor_info.get("unit")
+                device_class = sensor_info.get("device_class") or ""
+                unit = sensor_info.get("unit") or ""
             
             # Get additional sensor information
-            sensor_details = {}
+            sensor_details: Dict[str, Any] = {}
             if hardware_id:
                 hardware_info = self.sensor_mapper.get_sensor_info(hardware_id)
                 if hardware_info:
@@ -180,7 +181,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     }
             
             # Store processed sensor data
-            processed_data["sensors"][entity_id] = {
+            sensors_data[entity_id] = {
                 "entity_id": entity_id,
                 "name": friendly_name,
                 "state": self._convert_sensor_value(sensor_value, unit),
@@ -297,10 +298,15 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         """Get sensor data for a specific entity."""
         if not self.data:
             return None
-        return self.data.get("sensors", {}).get(entity_id)
+        sensors_dict = self.data.get("sensors", {})
+        sensor_data = sensors_dict.get(entity_id)
+        if sensor_data is None:
+            return None
+        return dict(sensor_data) if isinstance(sensor_data, dict) else None
 
     def get_all_sensors(self) -> Dict[str, Any]:
         """Get all sensor data."""
         if not self.data:
             return {}
-        return self.data.get("sensors", {})
+        sensors_dict: Dict[str, Any] = self.data.get("sensors", {})
+        return sensors_dict

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -49,7 +49,7 @@ async def async_setup_entry(
     entities = []
     
     # Get all hardware IDs with their associated sensors
-    hardware_sensors = {}
+    hardware_sensors: Dict[str, List[Dict[str, Any]]] = {}
     sensor_data = coordinator.get_all_sensors()
     
     for entity_id, sensor_info in sensor_data.items():
@@ -234,7 +234,7 @@ class EcowittGatewayOnlineBinarySensor(
     def is_on(self) -> bool:
         """Return true if the gateway is online."""
         # Gateway is online if we have successful coordinator updates
-        return self.coordinator.last_update_success
+        return bool(self.coordinator.last_update_success)
 
     @property
     def device_info(self) -> DeviceInfo:

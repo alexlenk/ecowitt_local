@@ -117,7 +117,10 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
         
         # Set unit of measurement
         unit = sensor_info.get("unit_of_measurement")
-        self._attr_native_unit_of_measurement = UNIT_CONVERSIONS.get(unit, unit)
+        if unit:
+            self._attr_native_unit_of_measurement = UNIT_CONVERSIONS.get(unit, unit)
+        else:
+            self._attr_native_unit_of_measurement = None
         
         # Set device class
         device_class_str = sensor_info.get("device_class")
@@ -242,7 +245,7 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
         if self._hardware_id and sensor_info.get("state") is None:
             # Check if we should include inactive sensors
             include_inactive = self.coordinator.config_entry.data.get("include_inactive", False)
-            return include_inactive
+            return bool(include_inactive)
             
         return True
 

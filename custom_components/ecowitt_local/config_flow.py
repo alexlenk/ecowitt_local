@@ -84,13 +84,15 @@ async def validate_input(hass: HomeAssistant, data: Dict[str, Any]) -> Dict[str,
         await api.close()
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ConfigFlow(config_entries.ConfigFlow):
     """Handle a config flow for Ecowitt Local."""
 
     VERSION = 1
-
+    
     def __init__(self) -> None:
         """Initialize the config flow."""
+        super().__init__()
+        self.domain = DOMAIN
         self._discovered_info: Optional[Dict[str, Any]] = None
 
     async def async_step_user(
@@ -115,7 +117,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 
                 # Store the validated info
-                self._discovered_info = {**user_input, **info}
+                if self._discovered_info is None:
+                    self._discovered_info = {}
+                self._discovered_info.update(user_input)
+                self._discovered_info.update(info)
                 
                 # Proceed to options step
                 return await self.async_step_options()
@@ -135,13 +140,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the options step."""
         if user_input is not None:
             # Combine base config with options
-            final_data = {
-                **self._discovered_info,
-                **user_input,
-            }
+            if self._discovered_info is None:
+                self._discovered_info = {}
+            final_data = {}
+            final_data.update(self._discovered_info)
+            final_data.update(user_input)
             
             return self.async_create_entry(
-                title=self._discovered_info["title"],
+                title=self._discovered_info.get("title", "Ecowitt Gateway"),
                 data=final_data,
             )
 

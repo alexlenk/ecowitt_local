@@ -78,7 +78,7 @@ class SensorMapper:
         Returns:
             List of possible live data keys
         """
-        keys = []
+        keys: List[str] = []
         
         if not sensor_type or not channel:
             return keys

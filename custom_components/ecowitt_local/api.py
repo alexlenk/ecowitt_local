@@ -78,7 +78,7 @@ class EcowittLocalAPI:
         """Async context manager entry."""
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Async context manager exit."""
         await self.close()
 
@@ -103,6 +103,9 @@ class EcowittLocalAPI:
             
             data = {"pwd": encoded_password}
             
+            if not self._session:
+                raise ConnectionError("Session not initialized")
+                
             async with self._session.post(
                 urljoin(self._base_url, "/set_login_info"),
                 data=data,
@@ -138,6 +141,9 @@ class EcowittLocalAPI:
         """
         url = urljoin(self._base_url, endpoint)
         
+        if not self._session:
+            raise ConnectionError("Session not initialized")
+        
         try:
             async with self._session.get(url, params=params) as response:
                 if response.status in (401, 403):
@@ -146,6 +152,8 @@ class EcowittLocalAPI:
                         raise AuthenticationError("Re-authentication failed")
                     
                     # Retry the request
+                    if not self._session:
+                        raise ConnectionError("Session not initialized")
                     async with self._session.get(url, params=params) as retry_response:
                         if retry_response.status in (401, 403):
                             raise AuthenticationError("Authentication expired")
@@ -155,7 +163,7 @@ class EcowittLocalAPI:
                     raise ConnectionError(f"HTTP {response.status}: {await response.text()}")
                 
                 try:
-                    data = await response.json()
+                    data: Dict[str, Any] = await response.json()
                     return data
                 except Exception as err:
                     raise DataError(f"Invalid JSON response: {err}") from err
@@ -208,7 +216,8 @@ class EcowittLocalAPI:
         if "sensor" not in data:
             raise DataError("Invalid sensor mapping response: missing sensor data")
             
-        return data["sensor"]
+        sensor_list: List[Dict[str, Any]] = data["sensor"]
+        return sensor_list
 
     async def get_all_sensor_mappings(self) -> List[Dict[str, Any]]:
         """Get all sensor mappings from both pages.
