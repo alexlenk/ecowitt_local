@@ -35,7 +35,9 @@ async def test_setup_entry_connection_error(
     
     mock_config_entry.add_to_hass(hass)
     
-    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch("custom_components.ecowitt_local.coordinator.EcowittLocalAPI", return_value=mock_ecowitt_api), \
+         patch("custom_components.ecowitt_local.api.EcowittLocalAPI", return_value=mock_ecowitt_api):
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
     
     assert result is False
     assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
@@ -68,6 +70,7 @@ async def test_reload_entry(hass: HomeAssistant, setup_integration, mock_ecowitt
     
     # Mock platform unloading and API for reload
     with patch("homeassistant.config_entries.ConfigEntries.async_unload_platforms", return_value=True), \
+         patch("custom_components.ecowitt_local.coordinator.EcowittLocalAPI", return_value=mock_ecowitt_api), \
          patch("custom_components.ecowitt_local.api.EcowittLocalAPI", return_value=mock_ecowitt_api):
         # Reload
         result = await hass.config_entries.async_reload(config_entry.entry_id)
@@ -168,19 +171,23 @@ async def test_multiple_entries(hass: HomeAssistant, mock_ecowitt_api):
         unique_id="gw2_192.168.1.101",
     )
     
-    entry1.add_to_hass(hass)
-    entry2.add_to_hass(hass)
-    
-    with patch(
-        "custom_components.ecowitt_local.api.EcowittLocalAPI",
-        return_value=mock_ecowitt_api,
-    ):
-        # Setup both entries
+    with patch("custom_components.ecowitt_local.coordinator.EcowittLocalAPI", return_value=mock_ecowitt_api), \
+         patch("custom_components.ecowitt_local.api.EcowittLocalAPI", return_value=mock_ecowitt_api):
+        # Add entries to hass and setup
+        entry1.add_to_hass(hass)
+        entry2.add_to_hass(hass)
+        
         result1 = await hass.config_entries.async_setup(entry1.entry_id)
-        result2 = await hass.config_entries.async_setup(entry2.entry_id)
+        
+        # Check if entry2 is already loaded (HA auto-loads entries for same domain)
+        if entry2.state == ConfigEntryState.NOT_LOADED:
+            result2 = await hass.config_entries.async_setup(entry2.entry_id)
+            assert result2 is True
+        else:
+            # Entry2 was auto-loaded when entry1 was setup
+            assert entry2.state == ConfigEntryState.LOADED
     
     assert result1 is True
-    assert result2 is True
     assert len(hass.data[DOMAIN]) == 2
     assert entry1.entry_id in hass.data[DOMAIN]
     assert entry2.entry_id in hass.data[DOMAIN]

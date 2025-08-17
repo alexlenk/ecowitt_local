@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 pytest_plugins = "pytest_homeassistant_custom_component"
@@ -147,25 +147,19 @@ async def setup_integration(
     mock_ecowitt_api.authenticate.return_value = True
     mock_ecowitt_api.close.return_value = None
     
-    # Mock the coordinator and create a minimal working one for the test
-    from custom_components.ecowitt_local.coordinator import EcowittLocalDataUpdateCoordinator
-    from unittest.mock import AsyncMock, MagicMock
+    # Add config entry to hass
+    mock_config_entry.add_to_hass(hass)
     
-    mock_coordinator = MagicMock()
-    mock_coordinator.async_setup = AsyncMock(return_value=None)
-    mock_coordinator.async_shutdown = AsyncMock(return_value=None)
-    mock_coordinator.gateway_info = mock_gateway_version
-    mock_coordinator.data = {"test": "data"}
-    
-    # Patch multiple components to ensure integration loads successfully
-    with patch("custom_components.ecowitt_local.api.EcowittLocalAPI", return_value=mock_ecowitt_api), \
-         patch("custom_components.ecowitt_local.coordinator.EcowittLocalDataUpdateCoordinator", return_value=mock_coordinator):
-        
-        # Add config entry to hass
-        mock_config_entry.add_to_hass(hass)
+    # Patch the API class in both locations where it's imported
+    with patch("custom_components.ecowitt_local.coordinator.EcowittLocalAPI", return_value=mock_ecowitt_api), \
+         patch("custom_components.ecowitt_local.api.EcowittLocalAPI", return_value=mock_ecowitt_api):
         
         # Setup the integration
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         
-        return mock_config_entry
+        # Verify the entry was loaded
+        assert result is True
+        assert mock_config_entry.state == ConfigEntryState.LOADED
+        
+        yield mock_config_entry
