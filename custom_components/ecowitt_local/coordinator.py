@@ -310,7 +310,8 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         # Track which hardware IDs we've already added diagnostics for
         added_hardware_ids = set()
         
-        for sensor_info in sensors_data.values():
+        # Create a copy of the values to avoid "dictionary changed size during iteration" error
+        for sensor_info in list(sensors_data.values()):
             hardware_id = sensor_info.get("hardware_id")
             if not hardware_id or hardware_id in added_hardware_ids:
                 continue
