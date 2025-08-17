@@ -248,7 +248,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             
             # Determine sensor category
             if battery_info:
-                category = "battery"
+                category = "diagnostic"  # Move battery to diagnostic
                 device_class = "battery"
                 unit = "%"
             elif system_info:
@@ -335,7 +335,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     "state": signal,
                     "unit_of_measurement": None,
                     "device_class": "signal_strength",
-                    "category": "sensor",
+                    "category": "diagnostic",  # Move signal strength to diagnostic
                     "sensor_key": f"signal_{hardware_id}",
                     "hardware_id": hardware_id,
                     "raw_value": signal,

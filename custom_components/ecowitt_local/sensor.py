@@ -110,7 +110,7 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
         else:
             self._attr_unique_id = f"{DOMAIN}_{self.coordinator.config_entry.entry_id}_{self._sensor_key}"
         
-        # Set entity category for diagnostic sensors
+        # Set entity category for diagnostic sensors (including battery and signal)
         if self._category == "diagnostic":
             self._attr_entity_category = "diagnostic"
         
@@ -157,8 +157,8 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
             elif "total" in self._sensor_key or "yearly" in self._sensor_key:
                 self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         
-        # Set battery sensor specific attributes
-        if self._category == "battery":
+        # Set battery sensor specific attributes (now diagnostic category)
+        if device_class_str == "battery":
             self._attr_device_class = SensorDeviceClass.BATTERY
             self._attr_native_unit_of_measurement = PERCENTAGE
             self._attr_state_class = SensorStateClass.MEASUREMENT
