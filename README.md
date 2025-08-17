@@ -2,7 +2,7 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
 [![GitHub Release](https://img.shields.io/github/release/alexlenk/ecowitt_local.svg)](https://github.com/alexlenk/ecowitt_local/releases)
-[![License](https://img.shields.io/github/license/alexlenk/ecowitt_local.svg)](LICENSE)
+[![License](https://img.shields.io/github/license/alexlenk/ecowitt_local.svg)](https://github.com/alexlenk/ecowitt_local/blob/main/LICENSE)
 
 A Home Assistant custom integration that replaces the webhook-based Ecowitt integration with local web interface polling to solve sensor ID stability issues.
 

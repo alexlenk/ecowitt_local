@@ -74,8 +74,11 @@ async def async_setup_entry(
     entities = []
     
     sensor_data = coordinator.get_all_sensors()
+    _LOGGER.debug("Found %d total sensors in coordinator data", len(sensor_data))
     for entity_id, sensor_info in sensor_data.items():
-        if sensor_info.get("category") in ("sensor", "battery", "system"):
+        category = sensor_info.get("category")
+        _LOGGER.debug("Sensor %s: category=%s, sensor_key=%s", entity_id, category, sensor_info.get("sensor_key"))
+        if category in ("sensor", "battery", "system"):
             entities.append(
                 EcowittLocalSensor(coordinator, entity_id, sensor_info)
             )

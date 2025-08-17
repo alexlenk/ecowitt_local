@@ -66,6 +66,11 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             
             # Get live data
             live_data = await self.api.get_live_data()
+            _LOGGER.debug("Raw live data keys: %s", list(live_data.keys()) if live_data else "None")
+            if live_data.get("common_list"):
+                _LOGGER.debug("Found %d items in common_list", len(live_data["common_list"]))
+                for item in live_data["common_list"]:
+                    _LOGGER.debug("Sensor item: id=%s, val=%s", item.get("id"), item.get("val"))
             
             # Process the data
             processed_data = await self._process_live_data(live_data)
@@ -101,6 +106,9 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             
             # Get sensor mappings from both pages
             sensor_mappings = await self.api.get_all_sensor_mappings()
+            _LOGGER.debug("Retrieved %d sensor mappings from API", len(sensor_mappings))
+            for mapping in sensor_mappings:
+                _LOGGER.debug("Sensor mapping: %s", mapping)
             
             # Update the mapper
             self.sensor_mapper.update_mapping(sensor_mappings)
@@ -137,6 +145,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 
             # Skip empty values unless we include inactive sensors
             if not sensor_value and not self._include_inactive:
+                _LOGGER.debug("Skipping sensor %s with empty value (include_inactive=%s)", sensor_key, self._include_inactive)
                 continue
                 
             # Get hardware ID for this sensor
@@ -146,6 +155,8 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             entity_id, friendly_name = self.sensor_mapper.generate_entity_id(
                 sensor_key, hardware_id
             )
+            _LOGGER.debug("Processing sensor: key=%s, value=%s, hardware_id=%s, entity_id=%s", 
+                         sensor_key, sensor_value, hardware_id, entity_id)
             
             # Get sensor type information
             sensor_info = SENSOR_TYPES.get(sensor_key, {})
@@ -199,6 +210,12 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         
         # Process gateway information
         processed_data["gateway_info"] = await self._process_gateway_info()
+        
+        _LOGGER.debug("Processed data summary: %d sensors total", len(sensors_data))
+        for entity_id, sensor_info in sensors_data.items():
+            _LOGGER.debug("Final sensor: %s -> category=%s, key=%s, value=%s", 
+                         entity_id, sensor_info.get("category"), 
+                         sensor_info.get("sensor_key"), sensor_info.get("state"))
         
         return processed_data
 

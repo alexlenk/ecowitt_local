@@ -51,13 +51,18 @@ async def async_setup_entry(
     # Get all hardware IDs with their associated sensors
     hardware_sensors: Dict[str, List[Dict[str, Any]]] = {}
     sensor_data = coordinator.get_all_sensors()
+    _LOGGER.debug("Binary sensor setup: Found %d total sensors", len(sensor_data))
     
     for entity_id, sensor_info in sensor_data.items():
         hardware_id = sensor_info.get("hardware_id")
-        if hardware_id and sensor_info.get("category") == "sensor":
+        category = sensor_info.get("category")
+        _LOGGER.debug("Binary sensor check: %s -> hardware_id=%s, category=%s", entity_id, hardware_id, category)
+        if hardware_id and category == "sensor":
             if hardware_id not in hardware_sensors:
                 hardware_sensors[hardware_id] = []
             hardware_sensors[hardware_id].append(sensor_info)
+    
+    _LOGGER.debug("Hardware sensors found: %s", list(hardware_sensors.keys()))
     
     # Create online/offline binary sensors for each hardware sensor
     for hardware_id, sensors in hardware_sensors.items():
