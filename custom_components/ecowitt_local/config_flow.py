@@ -89,7 +89,7 @@ class ConfigFlow(config_entries.ConfigFlow):
     """Handle a config flow for Ecowitt Local."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
     
     def __init__(self) -> None:
         """Initialize the config flow."""

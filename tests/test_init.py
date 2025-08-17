@@ -249,8 +249,8 @@ async def test_migration_function_exists(hass: HomeAssistant):
         unique_id="test_unique",
     )
     
-    # Set minor_version to 1 (current version)
-    entry.minor_version = 1
+    # Set minor_version to 2 (current version)
+    entry.minor_version = 2
     
     # Test migration function - should return True for current version
     result = await async_migrate_entry(hass, entry)

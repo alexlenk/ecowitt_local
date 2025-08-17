@@ -37,14 +37,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
     
-    # Setup platforms
+    # Setup device registry entries FIRST so devices exist when entities are created
+    await _async_setup_device_registry(hass, entry, coordinator)
+    
+    # Setup platforms (entities will now find their proper devices)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     
     # Register services
     await _async_register_services(hass)
-    
-    # Setup device registry entry
-    await _async_setup_device_registry(hass, entry, coordinator)
     
     _LOGGER.info("Ecowitt Local integration setup complete")
     
@@ -226,8 +226,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     )
     
     # Migration from version 1.0 to 1.1: Individual sensor devices
-    if config_entry.version == 1 and config_entry.minor_version < 1:
-        _LOGGER.info("Migrating to individual sensor devices (v1.1)")
+    # Migration from version 1.1 to 1.2: Fix entity device assignment
+    if config_entry.version == 1 and config_entry.minor_version < 2:
+        _LOGGER.info("Migrating to individual sensor devices (v1.2)")
         
         # Get device registry to handle device migration
         device_registry = dr.async_get(hass)
@@ -246,40 +247,69 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             await _async_setup_device_registry(hass, config_entry, coordinator)
             
             # Update entities to point to new devices
+            # This migration moves ALL entities with valid hardware IDs to their individual devices
+            reassigned_count = 0
             for entity in entities:
                 if entity.unique_id and "_" in entity.unique_id:
                     # Extract hardware_id from unique_id pattern: ecowitt_local_{hardware_id}_{sensor_key}
-                    unique_id_parts = entity.unique_id.split("_", 2)
+                    unique_id_parts = entity.unique_id.split("_")
+                    
+                    # Try different patterns to extract hardware_id
+                    hardware_id = None
                     if len(unique_id_parts) >= 3:
-                        hardware_id = unique_id_parts[2].split("_")[0]
+                        # Pattern: ecowitt_local_{hardware_id}_{sensor_key}
+                        potential_hardware_id = unique_id_parts[2]
+                        if coordinator.sensor_mapper.get_sensor_info(potential_hardware_id):
+                            hardware_id = potential_hardware_id
+                    
+                    if not hardware_id and len(unique_id_parts) >= 4:
+                        # Pattern: ecowitt_local_{entry_id}_{hardware_id}_{sensor_key}  
+                        potential_hardware_id = unique_id_parts[3]
+                        if coordinator.sensor_mapper.get_sensor_info(potential_hardware_id):
+                            hardware_id = potential_hardware_id
+                    
+                    # Also check if the entity has hardware_id in coordinator data
+                    if not hardware_id:
+                        sensor_data = coordinator.get_all_sensors()
+                        for entity_id, sensor_info in sensor_data.items():
+                            if entity_id == entity.entity_id:
+                                potential_hardware_id = sensor_info.get("hardware_id")
+                                if (potential_hardware_id and 
+                                    coordinator.sensor_mapper.get_sensor_info(potential_hardware_id)):
+                                    hardware_id = potential_hardware_id
+                                break
                         
-                        # Check if this hardware_id exists in sensor mapping and is valid
-                        if (hardware_id and 
-                            hardware_id.upper() not in ("FFFFFFFE", "FFFFFFFF", "00000000") and
-                            coordinator.sensor_mapper.get_sensor_info(hardware_id)):
-                            # Find the new device for this hardware_id
-                            new_device = device_registry.async_get_device(
-                                identifiers={(DOMAIN, hardware_id)}
+                    # Check if this hardware_id exists in sensor mapping and is valid
+                    if (hardware_id and 
+                        hardware_id.upper() not in ("FFFFFFFE", "FFFFFFFF", "00000000") and
+                        coordinator.sensor_mapper.get_sensor_info(hardware_id)):
+                        # Find the new device for this hardware_id
+                        new_device = device_registry.async_get_device(
+                            identifiers={(DOMAIN, hardware_id)}
+                        )
+                        if new_device:
+                            # Update entity to point to new device
+                            entity_registry.async_update_entity(
+                                entity.entity_id,
+                                device_id=new_device.id
                             )
-                            if new_device:
-                                # Update entity to point to new device
-                                entity_registry.async_update_entity(
-                                    entity.entity_id,
-                                    device_id=new_device.id
-                                )
-                                _LOGGER.debug(
-                                    "Migrated entity %s to device %s", 
-                                    entity.entity_id, 
-                                    new_device.name
-                                )
+                            reassigned_count += 1
+                            _LOGGER.info(
+                                "Migrated entity %s to device %s (%s)", 
+                                entity.entity_id, 
+                                new_device.name,
+                                hardware_id
+                            )
+            
+            _LOGGER.info("Migration completed: reassigned %d entities to individual devices", reassigned_count)
         
         # Update config entry version using proper API
         hass.config_entries.async_update_entry(
             config_entry,
-            minor_version=1
+            minor_version=2
         )
         
-        _LOGGER.info("Migration to v1.1 completed successfully")
+        _LOGGER.info("Migration to v1.2 completed successfully")
     
     return True
 
