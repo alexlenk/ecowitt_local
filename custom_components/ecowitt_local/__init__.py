@@ -91,14 +91,18 @@ async def _async_setup_device_registry(
     device_registry = dr.async_get(hass)
     gateway_info = coordinator.gateway_info
     
+    # Create configuration URL only if host is available
+    host = gateway_info.get('host', '')
+    config_url = f"http://{host}" if host else None
+    
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, gateway_info.get("gateway_id", "unknown"))},
-        name=f"Ecowitt Gateway {gateway_info.get('host', '')}",
+        name=f"Ecowitt Gateway {host}",
         manufacturer="Ecowitt",
         model=gateway_info.get("model", "Unknown"),
         sw_version=gateway_info.get("firmware_version", "Unknown"),
-        configuration_url=f"http://{gateway_info.get('host', '')}",
+        configuration_url=config_url,
     )
 
 
