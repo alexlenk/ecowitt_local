@@ -175,8 +175,8 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         # Create battery sensor if battery data exists
                         if battery:
                             battery_key = f"soilbatt{channel}"
-                            # Convert battery level (1=low, 9=high) to percentage
-                            battery_pct = str((int(battery) - 1) * 12.5) if battery.isdigit() else battery
+                            # Convert battery level (1=20%, 2=40%, 3=60%, 4=80%, 5=100%)
+                            battery_pct = str(int(battery) * 20) if battery.isdigit() else battery
                             all_sensor_items.append({"id": battery_key, "val": battery_pct})
                             _LOGGER.debug("Added soil battery sensor: %s = %s", battery_key, battery_pct)
         
@@ -289,6 +289,9 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 },
             }
         
+        # Add diagnostic sensors for hardware devices
+        self._add_diagnostic_sensors(sensors_data)
+        
         # Process gateway information
         processed_data["gateway_info"] = await self._process_gateway_info()
         
@@ -299,6 +302,69 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                          sensor_info.get("sensor_key"), sensor_info.get("state"))
         
         return processed_data
+
+    def _add_diagnostic_sensors(self, sensors_data: Dict[str, Any]) -> None:
+        """Add diagnostic sensors for hardware ID and channel information."""
+        # Track which hardware IDs we've already added diagnostics for
+        added_hardware_ids = set()
+        
+        for sensor_info in sensors_data.values():
+            hardware_id = sensor_info.get("hardware_id")
+            if not hardware_id or hardware_id in added_hardware_ids:
+                continue
+                
+            # Get hardware info from sensor mapper
+            hardware_info = self.sensor_mapper.get_sensor_info(hardware_id)
+            if not hardware_info:
+                continue
+                
+            channel = hardware_info.get("channel")
+            if not channel:
+                continue
+                
+            # Add Hardware ID diagnostic sensor
+            hardware_id_entity_id = f"sensor.ecowitt_hardware_id_{hardware_id.lower()}"
+            sensors_data[hardware_id_entity_id] = {
+                "entity_id": hardware_id_entity_id,
+                "name": "Hardware ID",
+                "state": hardware_id,
+                "unit_of_measurement": None,
+                "device_class": None,
+                "category": "diagnostic",
+                "sensor_key": f"hardware_id_{hardware_id}",
+                "hardware_id": hardware_id,
+                "raw_value": hardware_id,
+                "attributes": {
+                    "sensor_key": f"hardware_id_{hardware_id}",
+                    "last_update": datetime.now().isoformat(),
+                    "hardware_id": hardware_id,
+                    "entity_category": "diagnostic",
+                },
+            }
+            
+            # Add Channel diagnostic sensor
+            channel_entity_id = f"sensor.ecowitt_channel_{hardware_id.lower()}"
+            sensors_data[channel_entity_id] = {
+                "entity_id": channel_entity_id,
+                "name": "Channel",
+                "state": channel,
+                "unit_of_measurement": None,
+                "device_class": None,
+                "category": "diagnostic",
+                "sensor_key": f"channel_{hardware_id}",
+                "hardware_id": hardware_id,
+                "raw_value": channel,
+                "attributes": {
+                    "sensor_key": f"channel_{hardware_id}",
+                    "last_update": datetime.now().isoformat(),
+                    "hardware_id": hardware_id,
+                    "channel": channel,
+                    "entity_category": "diagnostic",
+                },
+            }
+            
+            added_hardware_ids.add(hardware_id)
+            _LOGGER.debug("Added diagnostic sensors for hardware_id: %s (channel: %s)", hardware_id, channel)
 
     def _convert_sensor_value(self, value: Any, unit: Optional[str]) -> Any:
         """Convert sensor value to appropriate type."""

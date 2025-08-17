@@ -78,7 +78,7 @@ async def async_setup_entry(
     for entity_id, sensor_info in sensor_data.items():
         category = sensor_info.get("category")
         _LOGGER.debug("Sensor %s: category=%s, sensor_key=%s", entity_id, category, sensor_info.get("sensor_key"))
-        if category in ("sensor", "battery", "system"):
+        if category in ("sensor", "battery", "system", "diagnostic"):
             entities.append(
                 EcowittLocalSensor(coordinator, entity_id, sensor_info)
             )
@@ -109,6 +109,10 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
             self._attr_unique_id = f"{DOMAIN}_{self._hardware_id}_{self._sensor_key}"
         else:
             self._attr_unique_id = f"{DOMAIN}_{self.coordinator.config_entry.entry_id}_{self._sensor_key}"
+        
+        # Set entity category for diagnostic sensors
+        if self._category == "diagnostic":
+            self._attr_entity_category = "diagnostic"
         
         # Set initial attributes
         self._update_attributes(sensor_info)
