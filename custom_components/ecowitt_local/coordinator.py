@@ -23,6 +23,7 @@ from .const import (
     SENSOR_TYPES,
     BATTERY_SENSORS,
     SYSTEM_SENSORS,
+    GATEWAY_SENSORS,
 )
 from .sensor_mapper import SensorMapper
 
@@ -220,8 +221,11 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 _LOGGER.debug("Skipping sensor %s with empty value (include_inactive=%s)", sensor_key, self._include_inactive)
                 continue
                 
-            # Get hardware ID for this sensor
-            hardware_id = self.sensor_mapper.get_hardware_id(sensor_key)
+            # Get hardware ID for this sensor (only for non-gateway sensors)
+            hardware_id = None
+            if sensor_key not in GATEWAY_SENSORS:
+                hardware_id = self.sensor_mapper.get_hardware_id(sensor_key)
+                _LOGGER.debug("Hardware ID lookup for %s: %s", sensor_key, hardware_id)
             
             # Generate entity information
             entity_id, friendly_name = self.sensor_mapper.generate_entity_id(

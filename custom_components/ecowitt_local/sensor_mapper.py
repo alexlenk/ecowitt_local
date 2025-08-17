@@ -59,6 +59,7 @@ class SensorMapper:
                 
                 # Map live data keys to hardware IDs
                 live_keys = self._generate_live_data_keys(sensor_type, channel)
+                _LOGGER.debug("Mapping for hardware_id %s (type=%s, channel=%s): keys=%s", hardware_id, sensor_type, channel, live_keys)
                 for key in live_keys:
                     self._hardware_mapping[key] = hardware_id
                     

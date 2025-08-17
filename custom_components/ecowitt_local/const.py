@@ -33,6 +33,14 @@ DEFAULT_NAME: Final = "Ecowitt Gateway"
 ENTITY_ID_FORMAT: Final = "{domain}.ecowitt_{sensor_type}_{identifier}"
 DEVICE_ID_FORMAT: Final = "ecowitt_{gateway_id}"
 
+# Gateway built-in sensors (should not have individual hardware IDs)
+GATEWAY_SENSORS: Final = {
+    "tempinf",      # Indoor temperature
+    "humidityin",   # Indoor humidity  
+    "baromabsin",   # Absolute pressure
+    "baromrelin",   # Relative pressure
+}
+
 # Sensor types and their properties
 SENSOR_TYPES: Final = {
     # Temperature sensors

@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .api import EcowittLocalAPI
-from .const import DOMAIN, SERVICE_REFRESH_MAPPING, SERVICE_UPDATE_DATA
+from .const import DOMAIN, SERVICE_REFRESH_MAPPING, SERVICE_UPDATE_DATA, GATEWAY_SENSORS
 from .coordinator import EcowittLocalDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -227,8 +227,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     
     # Migration from version 1.0 to 1.1: Individual sensor devices
     # Migration from version 1.1 to 1.2: Fix entity device assignment
-    if config_entry.version == 1 and config_entry.minor_version < 2:
-        _LOGGER.info("Migrating to individual sensor devices (v1.2)")
+    # Migration from version 1.2 to 1.3: Fix gateway sensor device assignment
+    if config_entry.version == 1 and config_entry.minor_version < 3:
+        if config_entry.minor_version < 2:
+            _LOGGER.info("Migrating to individual sensor devices (v1.2)")
+        if config_entry.minor_version < 3:
+            _LOGGER.info("Migrating gateway sensor device assignment (v1.3)")
         
         # Get device registry to handle device migration
         device_registry = dr.async_get(hass)
@@ -301,15 +305,44 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                                 hardware_id
                             )
             
-            _LOGGER.info("Migration completed: reassigned %d entities to individual devices", reassigned_count)
+            if config_entry.minor_version < 2:
+                _LOGGER.info("Migration completed: reassigned %d entities to individual devices", reassigned_count)
+            
+            # v1.3 Migration: Move gateway sensors back to gateway device
+            if config_entry.minor_version < 3:
+                gateway_id = coordinator.gateway_info.get("gateway_id", "unknown")
+                gateway_device = device_registry.async_get_device(
+                    identifiers={(DOMAIN, gateway_id)}
+                )
+                
+                if gateway_device:
+                    gateway_reassigned_count = 0
+                    for entity in entities:
+                        if entity.unique_id:
+                            # Check if this is a gateway sensor entity
+                            for gateway_sensor in GATEWAY_SENSORS:
+                                if gateway_sensor in entity.unique_id:
+                                    # Move entity to gateway device
+                                    entity_registry.async_update_entity(
+                                        entity.entity_id,
+                                        device_id=gateway_device.id
+                                    )
+                                    gateway_reassigned_count += 1
+                                    _LOGGER.info(
+                                        "Moved gateway sensor %s back to gateway device", 
+                                        entity.entity_id
+                                    )
+                                    break
+                    
+                    _LOGGER.info("Migration v1.3 completed: moved %d gateway sensors back to gateway device", gateway_reassigned_count)
         
         # Update config entry version using proper API
         hass.config_entries.async_update_entry(
             config_entry,
-            minor_version=2
+            minor_version=3
         )
         
-        _LOGGER.info("Migration to v1.2 completed successfully")
+        _LOGGER.info("Migration to v1.3 completed successfully")
     
     return True
 

@@ -176,6 +176,7 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
         # If this sensor has a hardware ID, create individual device
         if self._hardware_id and self._hardware_id.upper() not in ("FFFFFFFE", "FFFFFFFF", "00000000"):
             sensor_info = self.coordinator.sensor_mapper.get_sensor_info(self._hardware_id)
+            _LOGGER.debug("Sensor %s: hardware_id=%s, sensor_info=%s", self._sensor_key, self._hardware_id, bool(sensor_info))
             if sensor_info:
                 device_model = sensor_info.get("device_model") or sensor_info.get("sensor_type", "Unknown")
                 sensor_type_name = self._get_sensor_type_display_name(sensor_info)
