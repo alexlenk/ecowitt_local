@@ -265,8 +265,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                                     new_device.name
                                 )
         
-        # Update config entry version  
-        config_entry.minor_version = 1
+        # Update config entry version using proper API
+        hass.config_entries.async_update_entry(
+            config_entry,
+            minor_version=1
+        )
         
         _LOGGER.info("Migration to v1.1 completed successfully")
     
