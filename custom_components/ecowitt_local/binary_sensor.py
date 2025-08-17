@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -105,8 +105,9 @@ class EcowittSensorOnlineBinarySensor(
         self.entity_id = f"binary_sensor.ecowitt_{sensor_type}_{hardware_id.lower()}_online"
         self._attr_name = f"Ecowitt {sensor_type.replace('_', ' ').title()} {hardware_id} Online"
         
-        # Set device class
+        # Set device class and entity category
         self._attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def _extract_sensor_type(self, sensor_info: Dict[str, Any]) -> str:
         """Extract sensor type from sensor info."""
@@ -283,8 +284,9 @@ class EcowittGatewayOnlineBinarySensor(
         self.entity_id = f"binary_sensor.ecowitt_gateway_{gateway_id.lower()}_online"
         self._attr_name = f"Ecowitt Gateway {host} Online"
         
-        # Set device class
+        # Set device class and entity category
         self._attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def is_on(self) -> bool:

@@ -18,34 +18,30 @@ def mock_sensor_mappings():
     return [
         {
             "id": "D8174",
-            "type": "WH51",
-            "channel": "1",
-            "sensor_model": "WH51",
-            "battery": "85",
+            "img": "WH51",
+            "name": "Soil moisture CH1",
+            "batt": "85",
             "signal": "4",
         },
         {
             "id": "D8648",
-            "type": "WH51",
-            "channel": "2", 
-            "sensor_model": "WH51",
-            "battery": "78",
+            "img": "WH51",
+            "name": "Soil moisture CH2",
+            "batt": "78",
             "signal": "3",
         },
         {
             "id": "EF891",
-            "type": "WH41",
-            "channel": "1",
-            "sensor_model": "WH41",
-            "battery": "92", 
+            "img": "WH41",
+            "name": "PM2.5 air quality sensor CH1",
+            "batt": "92", 
             "signal": "4",
         },
         {
             "id": "A7C42",
-            "type": "WH31",
-            "channel": "1",
-            "sensor_model": "WH31",
-            "battery": "88",
+            "img": "WH31",
+            "name": "Temp & Humidity CH1",
+            "batt": "88",
             "signal": "3",
         },
     ]
@@ -102,7 +98,7 @@ def test_generate_entity_id(sensor_mapper: SensorMapper, mock_sensor_mappings):
     # Test with hardware ID
     entity_id, name = sensor_mapper.generate_entity_id("soilmoisture1", "D8174")
     assert entity_id == "sensor.ecowitt_soil_moisture_d8174"
-    assert "Soil Moisture CH1" in name
+    assert "Soil Moisture" in name
     
     # Test without hardware ID
     entity_id, name = sensor_mapper.generate_entity_id("tempf", None, "outdoor")

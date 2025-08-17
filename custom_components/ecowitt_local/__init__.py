@@ -336,11 +336,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     
                     _LOGGER.info("Migration v1.3 completed: moved %d gateway sensors back to gateway device", gateway_reassigned_count)
         
-        # Update config entry version using proper API
-        hass.config_entries.async_update_entry(
-            config_entry,
-            minor_version=3
-        )
+        # Update config entry version
+        config_entry.minor_version = 3
         
         _LOGGER.info("Migration to v1.3 completed successfully")
     
