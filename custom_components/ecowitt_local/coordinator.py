@@ -291,9 +291,11 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             self._debounced_refresh.async_cancel()
         
         # Cancel the refresh interval timer
-        if hasattr(self, '_unsub_refresh') and self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
+        if hasattr(self, '_unsub_refresh') and getattr(self, '_unsub_refresh', None):
+            unsub_refresh = getattr(self, '_unsub_refresh')
+            if unsub_refresh:
+                unsub_refresh()
+            setattr(self, '_unsub_refresh', None)
         
         # Close the API connection
         await self.api.close()
