@@ -128,20 +128,34 @@ async def test_update_data_service(hass: HomeAssistant, setup_integration):
 
 
 async def test_device_registry_entry(hass: HomeAssistant, setup_integration):
-    """Test device registry entry creation."""
+    """Test device registry entry creation for gateway and sensors."""
     from homeassistant.helpers import device_registry as dr
     
     device_registry = dr.async_get(hass)
     coordinator = hass.data[DOMAIN][setup_integration.entry_id]
     gateway_info = coordinator.gateway_info
     
-    device = device_registry.async_get_device(
+    # Test gateway device
+    gateway_device = device_registry.async_get_device(
         identifiers={(DOMAIN, gateway_info.get("gateway_id", "unknown"))}
     )
     
-    assert device is not None
-    assert device.manufacturer == "Ecowitt"
-    assert device.name == f"Ecowitt Gateway {gateway_info.get('host', '')}"
+    assert gateway_device is not None
+    assert gateway_device.manufacturer == "Ecowitt"
+    assert gateway_device.name == f"Ecowitt Gateway {gateway_info.get('host', '')}"
+    
+    # Test individual sensor devices
+    hardware_ids = coordinator.sensor_mapper.get_all_hardware_ids()
+    
+    for hardware_id in hardware_ids:
+        sensor_device = device_registry.async_get_device(
+            identifiers={(DOMAIN, hardware_id)}
+        )
+        
+        assert sensor_device is not None
+        assert sensor_device.manufacturer == "Ecowitt"
+        assert hardware_id in sensor_device.name
+        assert sensor_device.via_device_id == gateway_device.id
 
 
 async def test_multiple_entries(hass: HomeAssistant, mock_ecowitt_api):
@@ -191,3 +205,73 @@ async def test_multiple_entries(hass: HomeAssistant, mock_ecowitt_api):
     assert len(hass.data[DOMAIN]) == 2
     assert entry1.entry_id in hass.data[DOMAIN]
     assert entry2.entry_id in hass.data[DOMAIN]
+
+
+async def test_sensor_device_assignment(hass: HomeAssistant, setup_integration):
+    """Test that sensors are assigned to correct devices."""
+    from homeassistant.helpers import device_registry as dr, entity_registry as er
+    
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    coordinator = hass.data[DOMAIN][setup_integration.entry_id]
+    
+    # Get all entities for this config entry
+    entities = er.async_entries_for_config_entry(entity_registry, setup_integration.entry_id)
+    
+    # Check that sensors with hardware IDs are assigned to individual devices
+    for entity in entities:
+        if entity.unique_id and "_" in entity.unique_id:
+            # Extract hardware_id from unique_id pattern
+            unique_id_parts = entity.unique_id.split("_")
+            if len(unique_id_parts) >= 3:
+                # Check if this looks like a hardware ID (from mock data: D8174, D8648, EF891)
+                potential_hardware_id = unique_id_parts[1]
+                
+                if coordinator.sensor_mapper.get_sensor_info(potential_hardware_id):
+                    # This entity should be assigned to the individual sensor device
+                    device = device_registry.async_get(entity.device_id)
+                    assert device is not None
+                    assert (DOMAIN, potential_hardware_id) in device.identifiers
+                    assert "Sensor" in device.name or "Station" in device.name
+
+
+async def test_migration_from_v1_0(hass: HomeAssistant, mock_ecowitt_api, mock_config_entry):
+    """Test migration from v1.0 to v1.1 (individual sensor devices)."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+    from custom_components.ecowitt_local import async_migrate_entry
+    
+    # Create a v1.0 config entry (minor_version = 0)
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        version=1,
+        entry_id="migration_test",
+        unique_id="migration_test_unique",
+    )
+    # Manually set minor_version since MockConfigEntry doesn't accept it in __init__
+    old_entry.minor_version = 0
+    
+    old_entry.add_to_hass(hass)
+    
+    # Configure mock API for migration test
+    mock_ecowitt_api.get_version.return_value = {"stationtype": "GW1100A", "version": "1.7.3"}
+    mock_ecowitt_api.get_live_data.return_value = {"common_list": []}
+    mock_ecowitt_api.get_all_sensor_mappings.return_value = []
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.authenticate.return_value = True
+    
+    # Set up integration first
+    with patch("custom_components.ecowitt_local.coordinator.EcowittLocalAPI", return_value=mock_ecowitt_api), \
+         patch("custom_components.ecowitt_local.api.EcowittLocalAPI", return_value=mock_ecowitt_api):
+        await hass.config_entries.async_setup(old_entry.entry_id)
+    
+    # Verify initial state
+    assert old_entry.version == 1
+    assert old_entry.minor_version == 0
+    
+    # Perform migration
+    result = await async_migrate_entry(hass, old_entry)
+    
+    # Verify migration succeeded
+    assert result is True
+    assert old_entry.minor_version == 1

@@ -173,6 +173,23 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
         gateway_info = self.coordinator.gateway_info
         gateway_id = gateway_info.get("gateway_id", "unknown")
         
+        # If this sensor has a hardware ID, create individual device
+        if self._hardware_id:
+            sensor_info = self.coordinator.sensor_mapper.get_sensor_info(self._hardware_id)
+            if sensor_info:
+                device_model = sensor_info.get("device_model") or sensor_info.get("sensor_type", "Unknown")
+                sensor_type_name = self._get_sensor_type_display_name(sensor_info)
+                
+                return DeviceInfo(
+                    identifiers={(DOMAIN, self._hardware_id)},
+                    name=f"Ecowitt {sensor_type_name} {self._hardware_id}",
+                    manufacturer=MANUFACTURER,
+                    model=device_model,
+                    via_device=(DOMAIN, gateway_id),
+                    suggested_area="Outdoor" if self._is_outdoor_sensor(sensor_info) else None,
+                )
+        
+        # Fall back to gateway device for built-in sensors
         return DeviceInfo(
             identifiers={(DOMAIN, gateway_id)},
             name=f"Ecowitt Gateway {gateway_info.get('host', '')}",
@@ -297,3 +314,37 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
                 return icon
                 
         return None
+
+    def _get_sensor_type_display_name(self, sensor_info: Dict[str, Any]) -> str:
+        """Get display name for sensor type."""
+        sensor_type = sensor_info.get("sensor_type", "").lower()
+        
+        type_names = {
+            "wh51": "Soil Moisture Sensor",
+            "wh31": "Temperature/Humidity Sensor", 
+            "wh41": "PM2.5 Air Quality Sensor",
+            "wh55": "Leak Sensor",
+            "wh57": "Lightning Sensor",
+            "wh40": "Rain Sensor",
+            "wh68": "Weather Station",
+            "soil": "Soil Moisture Sensor",
+            "temp_hum": "Temperature/Humidity Sensor",
+            "pm25": "PM2.5 Air Quality Sensor",
+            "leak": "Leak Sensor",
+            "lightning": "Lightning Sensor",
+            "rain": "Rain Sensor",
+            "weather_station": "Weather Station",
+        }
+        
+        return type_names.get(sensor_type, "Sensor")
+    
+    def _is_outdoor_sensor(self, sensor_info: Dict[str, Any]) -> bool:
+        """Check if sensor is typically outdoor."""
+        sensor_type = sensor_info.get("sensor_type", "").lower()
+        
+        outdoor_types = {
+            "wh51", "wh41", "wh55", "wh57", "wh40", "wh68",
+            "soil", "pm25", "leak", "lightning", "rain", "weather_station"
+        }
+        
+        return sensor_type in outdoor_types
