@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -112,7 +113,7 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
         
         # Set entity category for diagnostic sensors (including battery and signal)
         if self._category == "diagnostic":
-            self._attr_entity_category = "diagnostic"
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
         
         # Set initial attributes
         self._update_attributes(sensor_info)

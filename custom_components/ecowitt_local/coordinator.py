@@ -251,6 +251,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 category = "diagnostic"  # Move battery to diagnostic
                 device_class = "battery"
                 unit = "%"
+                _LOGGER.debug("Battery sensor %s assigned to diagnostic category", sensor_key)
             elif system_info:
                 category = "system"
                 device_class = system_info.get("device_class") or ""
@@ -390,7 +391,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             }
             
             added_hardware_ids.add(hardware_id)
-            _LOGGER.debug("Added diagnostic sensors for hardware_id: %s (channel: %s)", hardware_id, channel)
+            _LOGGER.debug("Added diagnostic sensors for hardware_id: %s (channel: %s, signal: %s)", hardware_id, channel, signal)
 
     def _convert_sensor_value(self, value: Any, unit: Optional[str]) -> Any:
         """Convert sensor value to appropriate type."""
