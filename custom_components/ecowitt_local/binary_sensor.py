@@ -263,8 +263,10 @@ class EcowittGatewayOnlineBinarySensor(
             "firmware_version": gateway_info.get("firmware_version"),
         }
         
-        if self.coordinator.last_update_success_time:
+        if hasattr(self.coordinator, 'last_update_success_time') and self.coordinator.last_update_success_time:
             attributes["last_successful_update"] = self.coordinator.last_update_success_time.isoformat()
+        elif self.coordinator.last_update_success:
+            attributes["last_successful_update"] = self.coordinator.last_update_success.isoformat()
         
         return attributes
 
