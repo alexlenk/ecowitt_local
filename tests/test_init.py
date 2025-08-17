@@ -49,23 +49,28 @@ async def test_unload_entry(hass: HomeAssistant, setup_integration):
     assert config_entry.state == ConfigEntryState.LOADED
     assert config_entry.entry_id in hass.data[DOMAIN]
     
-    # Unload
-    result = await hass.config_entries.async_unload(config_entry.entry_id)
+    # Mock platform unloading since we don't have real platforms in tests
+    with patch("homeassistant.config_entries.ConfigEntries.async_unload_platforms", return_value=True):
+        # Unload
+        result = await hass.config_entries.async_unload(config_entry.entry_id)
     
     assert result is True
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert config_entry.entry_id not in hass.data[DOMAIN]
 
 
-async def test_reload_entry(hass: HomeAssistant, setup_integration):
+async def test_reload_entry(hass: HomeAssistant, setup_integration, mock_ecowitt_api):
     """Test reloading config entry."""
     config_entry = setup_integration
     
     # Verify initial setup
     assert config_entry.state == ConfigEntryState.LOADED
     
-    # Reload
-    result = await hass.config_entries.async_reload(config_entry.entry_id)
+    # Mock platform unloading and API for reload
+    with patch("homeassistant.config_entries.ConfigEntries.async_unload_platforms", return_value=True), \
+         patch("custom_components.ecowitt_local.api.EcowittLocalAPI", return_value=mock_ecowitt_api):
+        # Reload
+        result = await hass.config_entries.async_reload(config_entry.entry_id)
     
     assert result is True
     assert config_entry.state == ConfigEntryState.LOADED
