@@ -37,11 +37,15 @@ class SensorMapper:
         for sensor in sensor_mappings:
             try:
                 hardware_id = sensor.get("id", "").strip()
-                sensor_type = sensor.get("type", "").strip()
-                channel = sensor.get("channel", "")
-                device_model = sensor.get("sensor_model", "")
-                battery = sensor.get("battery", "")
+                img = sensor.get("img", "").strip()
+                name = sensor.get("name", "")
+                device_model = img
+                battery = sensor.get("batt", "")
                 signal = sensor.get("signal", "")
+                
+                # Extract channel from name (e.g., "Soil moisture CH2" → "2")
+                channel = self._extract_channel_from_name(name)
+                sensor_type = img.upper()
                 
                 if not hardware_id:
                     continue
@@ -68,6 +72,19 @@ class SensorMapper:
                 continue
         
         _LOGGER.debug("Updated hardware mapping with %d sensors", len(self._sensor_info))
+
+    def _extract_channel_from_name(self, name: str) -> str:
+        """Extract channel number from sensor name.
+        
+        Args:
+            name: Sensor name like "Soil moisture CH2" or "Temp & Humidity CH3"
+            
+        Returns:
+            Channel number as string (e.g., "2", "3") or empty string if not found
+        """
+        import re
+        match = re.search(r'CH(\d+)', name)
+        return match.group(1) if match else ""
 
     def _generate_live_data_keys(self, sensor_type: str, channel: str) -> List[str]:
         """Generate possible live data keys for a sensor type and channel.

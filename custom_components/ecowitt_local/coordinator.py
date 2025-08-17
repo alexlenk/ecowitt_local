@@ -104,8 +104,11 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             self._last_mapping_update is None
             or (now - self._last_mapping_update).total_seconds() >= mapping_interval
         ):
+            _LOGGER.debug("Triggering sensor mapping update (last_update=%s, interval=%s)", self._last_mapping_update, mapping_interval)
             await self._update_sensor_mapping()
             self._last_mapping_update = now
+        else:
+            _LOGGER.debug("Skipping sensor mapping update (last_update=%s, interval=%s)", self._last_mapping_update, mapping_interval)
 
     async def _update_sensor_mapping(self) -> None:
         """Update sensor hardware ID mapping."""
@@ -115,6 +118,8 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             # Get sensor mappings from both pages
             sensor_mappings = await self.api.get_all_sensor_mappings()
             _LOGGER.debug("Retrieved %d sensor mappings from API", len(sensor_mappings))
+            if not sensor_mappings:
+                _LOGGER.warning("No sensor mappings returned from API - this will cause all sensors to appear on gateway device")
             for mapping in sensor_mappings:
                 _LOGGER.debug("Sensor mapping: %s", mapping)
             
