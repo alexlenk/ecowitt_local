@@ -195,12 +195,14 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 # Absolute pressure
                 if "abs" in wh25_item:
                     abs_val = wh25_item["abs"].replace(" hPa", "")
+                    _LOGGER.debug("Raw absolute pressure from gateway: '%s', cleaned: '%s'", wh25_item["abs"], abs_val)
                     all_sensor_items.append({"id": "baromabsin", "val": abs_val})
                     _LOGGER.debug("Added absolute pressure: baromabsin = %s", abs_val)
                 
                 # Relative pressure
                 if "rel" in wh25_item:
                     rel_val = wh25_item["rel"].replace(" hPa", "")
+                    _LOGGER.debug("Raw relative pressure from gateway: '%s', cleaned: '%s'", wh25_item["rel"], rel_val)
                     all_sensor_items.append({"id": "baromrelin", "val": rel_val})
                     _LOGGER.debug("Added relative pressure: baromrelin = %s", rel_val)
         

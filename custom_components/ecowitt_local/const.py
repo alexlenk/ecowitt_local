@@ -36,7 +36,7 @@ DEVICE_ID_FORMAT: Final = "ecowitt_{gateway_id}"
 # Sensor types and their properties
 SENSOR_TYPES: Final = {
     # Temperature sensors
-    "tempinf": {"name": "Indoor Temperature", "unit": "°F", "device_class": "temperature"},
+    "tempinf": {"name": "Indoor Temperature", "unit": "°C", "device_class": "temperature"},
     "tempf": {"name": "Outdoor Temperature", "unit": "°F", "device_class": "temperature"},
     "temp1f": {"name": "Temperature CH1", "unit": "°F", "device_class": "temperature"},
     "temp2f": {"name": "Temperature CH2", "unit": "°F", "device_class": "temperature"},
@@ -60,8 +60,8 @@ SENSOR_TYPES: Final = {
     "humidity8": {"name": "Humidity CH8", "unit": "%", "device_class": "humidity"},
     
     # Pressure sensors
-    "baromrelin": {"name": "Relative Pressure", "unit": "inHg", "device_class": "atmospheric_pressure"},
-    "baromabsin": {"name": "Absolute Pressure", "unit": "inHg", "device_class": "atmospheric_pressure"},
+    "baromrelin": {"name": "Relative Pressure", "unit": "hPa", "device_class": "atmospheric_pressure"},
+    "baromabsin": {"name": "Absolute Pressure", "unit": "hPa", "device_class": "atmospheric_pressure"},
     
     # Wind sensors
     "windspeedmph": {"name": "Wind Speed", "unit": "mph", "device_class": "wind_speed"},
