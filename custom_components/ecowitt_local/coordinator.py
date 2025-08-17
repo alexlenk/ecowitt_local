@@ -179,6 +179,8 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                             battery_pct = str(int(battery) * 20) if battery.isdigit() else battery
                             all_sensor_items.append({"id": battery_key, "val": battery_pct})
                             _LOGGER.debug("Added soil battery sensor: %s = %s", battery_key, battery_pct)
+                        
+                        # Get signal strength from sensor mapping (we'll add this in processing)
         
         # Extract wh25 data (indoor temp/humidity/pressure)
         wh25_data = raw_data.get("wh25", [])
@@ -289,8 +291,8 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 },
             }
         
-        # Add diagnostic sensors for hardware devices
-        self._add_diagnostic_sensors(sensors_data)
+        # Add diagnostic and signal strength sensors for hardware devices
+        self._add_diagnostic_and_signal_sensors(sensors_data)
         
         # Process gateway information
         processed_data["gateway_info"] = await self._process_gateway_info()
@@ -303,8 +305,8 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         
         return processed_data
 
-    def _add_diagnostic_sensors(self, sensors_data: Dict[str, Any]) -> None:
-        """Add diagnostic sensors for hardware ID and channel information."""
+    def _add_diagnostic_and_signal_sensors(self, sensors_data: Dict[str, Any]) -> None:
+        """Add signal strength and diagnostic sensors for hardware devices."""
         # Track which hardware IDs we've already added diagnostics for
         added_hardware_ids = set()
         
@@ -319,8 +321,31 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 continue
                 
             channel = hardware_info.get("channel")
+            signal = hardware_info.get("signal")
             if not channel:
                 continue
+                
+            # Add Signal Strength sensor (regular sensor, same level as battery)
+            if signal and signal not in ("--", ""):
+                signal_entity_id = f"sensor.ecowitt_signal_strength_{hardware_id.lower()}"
+                sensors_data[signal_entity_id] = {
+                    "entity_id": signal_entity_id,
+                    "name": "Signal Strength",
+                    "state": signal,
+                    "unit_of_measurement": None,
+                    "device_class": "signal_strength",
+                    "category": "sensor",
+                    "sensor_key": f"signal_{hardware_id}",
+                    "hardware_id": hardware_id,
+                    "raw_value": signal,
+                    "attributes": {
+                        "sensor_key": f"signal_{hardware_id}",
+                        "last_update": datetime.now().isoformat(),
+                        "hardware_id": hardware_id,
+                        "signal": signal,
+                    },
+                }
+                _LOGGER.debug("Added signal strength sensor for hardware_id: %s (signal: %s)", hardware_id, signal)
                 
             # Add Hardware ID diagnostic sensor
             hardware_id_entity_id = f"sensor.ecowitt_hardware_id_{hardware_id.lower()}"
