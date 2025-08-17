@@ -71,6 +71,13 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 _LOGGER.debug("Found %d items in common_list", len(live_data["common_list"]))
                 for item in live_data["common_list"]:
                     _LOGGER.debug("Sensor item: id=%s, val=%s", item.get("id"), item.get("val"))
+            else:
+                _LOGGER.debug("No common_list found in live data")
+            
+            # Also check other data structures
+            for key in live_data.keys():
+                if key != "common_list":
+                    _LOGGER.debug("Additional data key '%s': %s", key, live_data[key])
             
             # Process the data
             processed_data = await self._process_live_data(live_data)
@@ -133,10 +140,73 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             "last_update": datetime.now(),
         }
         
+        # Process all sensor data sources
+        all_sensor_items = []
+        
         # Extract common_list data (main sensor readings)
         common_list = raw_data.get("common_list", [])
+        all_sensor_items.extend(common_list)
         
-        for item in common_list:
+        # Extract ch_soil data (soil sensor readings)
+        ch_soil = raw_data.get("ch_soil", [])
+        if ch_soil:
+            _LOGGER.debug("Found ch_soil data with %d items", len(ch_soil))
+            # Process soil sensor data structure
+            for item in ch_soil:
+                _LOGGER.debug("ch_soil item: %s", item)
+                # Convert ch_soil format to standard format
+                if isinstance(item, dict):
+                    channel = item.get("channel")
+                    humidity = item.get("humidity", "").replace("%", "")
+                    battery = item.get("battery")
+                    
+                    if channel and humidity:
+                        # Create soil moisture sensor
+                        soil_key = f"soilmoisture{channel}"
+                        all_sensor_items.append({"id": soil_key, "val": humidity})
+                        _LOGGER.debug("Added soil sensor: %s = %s%%", soil_key, humidity)
+                        
+                        # Create battery sensor if battery data exists
+                        if battery:
+                            battery_key = f"soilbatt{channel}"
+                            # Convert battery level (1=low, 9=high) to percentage
+                            battery_pct = str((int(battery) - 1) * 12.5) if battery.isdigit() else battery
+                            all_sensor_items.append({"id": battery_key, "val": battery_pct})
+                            _LOGGER.debug("Added soil battery sensor: %s = %s", battery_key, battery_pct)
+        
+        # Extract wh25 data (indoor temp/humidity/pressure)
+        wh25_data = raw_data.get("wh25", [])
+        if wh25_data and len(wh25_data) > 0:
+            _LOGGER.debug("Found wh25 data: %s", wh25_data[0])
+            wh25_item = wh25_data[0]
+            if isinstance(wh25_item, dict):
+                # Indoor temperature
+                if "intemp" in wh25_item:
+                    temp_val = wh25_item["intemp"]
+                    all_sensor_items.append({"id": "tempinf", "val": temp_val})
+                    _LOGGER.debug("Added indoor temp: tempinf = %s", temp_val)
+                
+                # Indoor humidity  
+                if "inhumi" in wh25_item:
+                    humi_val = wh25_item["inhumi"].replace("%", "")
+                    all_sensor_items.append({"id": "humidityin", "val": humi_val})
+                    _LOGGER.debug("Added indoor humidity: humidityin = %s", humi_val)
+                
+                # Absolute pressure
+                if "abs" in wh25_item:
+                    abs_val = wh25_item["abs"].replace(" hPa", "")
+                    all_sensor_items.append({"id": "baromabsin", "val": abs_val})
+                    _LOGGER.debug("Added absolute pressure: baromabsin = %s", abs_val)
+                
+                # Relative pressure
+                if "rel" in wh25_item:
+                    rel_val = wh25_item["rel"].replace(" hPa", "")
+                    all_sensor_items.append({"id": "baromrelin", "val": rel_val})
+                    _LOGGER.debug("Added relative pressure: baromrelin = %s", rel_val)
+        
+        _LOGGER.debug("Total sensor items to process: %d", len(all_sensor_items))
+        
+        for item in all_sensor_items:
             sensor_key = item.get("id") or ""
             sensor_value = item.get("val") or ""
             

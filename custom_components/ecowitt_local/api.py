@@ -213,11 +213,23 @@ class EcowittLocalAPI:
             
         data = await self._make_request("/get_sensors_info", {"page": page})
         
-        if "sensor" not in data:
-            raise DataError("Invalid sensor mapping response: missing sensor data")
+        # Handle different response formats
+        if isinstance(data, list):
+            # Direct array response
+            sensor_list = data
+        elif isinstance(data, dict) and "sensor" in data:
+            # Wrapped in sensor object
+            sensor_list = data["sensor"]
+        else:
+            raise DataError("Invalid sensor mapping response: expected array or sensor object")
             
-        sensor_list: List[Dict[str, Any]] = data["sensor"]
-        return sensor_list
+        # Filter out sensors with FFFFFFFF IDs (not connected)
+        active_sensors = [
+            sensor for sensor in sensor_list 
+            if sensor.get("id") != "FFFFFFFF"
+        ]
+        
+        return active_sensors
 
     async def get_all_sensor_mappings(self) -> List[Dict[str, Any]]:
         """Get all sensor mappings from both pages.
