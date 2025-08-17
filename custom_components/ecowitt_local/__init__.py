@@ -110,6 +110,11 @@ async def _async_setup_device_registry(
     # Create individual sensor devices
     hardware_ids = coordinator.sensor_mapper.get_all_hardware_ids()
     for hardware_id in hardware_ids:
+        # Skip invalid hardware IDs
+        if not hardware_id or hardware_id.upper() in ("FFFFFFFE", "FFFFFFFF", "00000000"):
+            _LOGGER.debug("Skipping invalid hardware_id: %s", hardware_id)
+            continue
+            
         sensor_info = coordinator.sensor_mapper.get_sensor_info(hardware_id)
         if sensor_info:
             sensor_type = sensor_info.get("sensor_type", "Unknown")
@@ -130,6 +135,7 @@ async def _async_setup_device_registry(
                 via_device=(DOMAIN, gateway_id),
                 suggested_area="Outdoor" if is_outdoor else None,
             )
+            _LOGGER.debug("Created device for hardware_id: %s", hardware_id)
 
 
 async def _async_register_services(hass: HomeAssistant) -> None:
@@ -247,8 +253,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     if len(unique_id_parts) >= 3:
                         hardware_id = unique_id_parts[2].split("_")[0]
                         
-                        # Check if this hardware_id exists in sensor mapping
-                        if coordinator.sensor_mapper.get_sensor_info(hardware_id):
+                        # Check if this hardware_id exists in sensor mapping and is valid
+                        if (hardware_id and 
+                            hardware_id.upper() not in ("FFFFFFFE", "FFFFFFFF", "00000000") and
+                            coordinator.sensor_mapper.get_sensor_info(hardware_id)):
                             # Find the new device for this hardware_id
                             new_device = device_registry.async_get_device(
                                 identifiers={(DOMAIN, hardware_id)}

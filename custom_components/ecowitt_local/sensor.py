@@ -174,12 +174,13 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
         gateway_id = gateway_info.get("gateway_id", "unknown")
         
         # If this sensor has a hardware ID, create individual device
-        if self._hardware_id:
+        if self._hardware_id and self._hardware_id.upper() not in ("FFFFFFFE", "FFFFFFFF", "00000000"):
             sensor_info = self.coordinator.sensor_mapper.get_sensor_info(self._hardware_id)
             if sensor_info:
                 device_model = sensor_info.get("device_model") or sensor_info.get("sensor_type", "Unknown")
                 sensor_type_name = self._get_sensor_type_display_name(sensor_info)
                 
+                _LOGGER.debug("Sensor %s using individual device: %s", self._sensor_key, self._hardware_id)
                 return DeviceInfo(
                     identifiers={(DOMAIN, self._hardware_id)},
                     name=f"Ecowitt {sensor_type_name} {self._hardware_id}",
@@ -188,8 +189,11 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
                     via_device=(DOMAIN, gateway_id),
                     suggested_area="Outdoor" if self._is_outdoor_sensor(sensor_info) else None,
                 )
+            else:
+                _LOGGER.debug("Sensor %s has hardware_id %s but no sensor info found", self._sensor_key, self._hardware_id)
         
         # Fall back to gateway device for built-in sensors
+        _LOGGER.debug("Sensor %s using gateway device (hardware_id: %s)", self._sensor_key, self._hardware_id)
         return DeviceInfo(
             identifiers={(DOMAIN, gateway_id)},
             name=f"Ecowitt Gateway {gateway_info.get('host', '')}",

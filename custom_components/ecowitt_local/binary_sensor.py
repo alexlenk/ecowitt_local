@@ -161,19 +161,20 @@ class EcowittSensorOnlineBinarySensor(
         gateway_id = gateway_info.get("gateway_id", "unknown")
         
         # Create individual device for sensor hardware
-        sensor_info = self.coordinator.sensor_mapper.get_sensor_info(self._hardware_id)
-        if sensor_info:
-            device_model = sensor_info.get("device_model") or sensor_info.get("sensor_type", "Unknown")
-            sensor_type_name = self._get_sensor_type_display_name(sensor_info)
-            
-            return DeviceInfo(
-                identifiers={(DOMAIN, self._hardware_id)},
-                name=f"Ecowitt {sensor_type_name} {self._hardware_id}",
-                manufacturer=MANUFACTURER,
-                model=device_model,
-                via_device=(DOMAIN, gateway_id),
-                suggested_area="Outdoor" if self._is_outdoor_sensor(sensor_info) else None,
-            )
+        if self._hardware_id and self._hardware_id.upper() not in ("FFFFFFFE", "FFFFFFFF", "00000000"):
+            sensor_info = self.coordinator.sensor_mapper.get_sensor_info(self._hardware_id)
+            if sensor_info:
+                device_model = sensor_info.get("device_model") or sensor_info.get("sensor_type", "Unknown")
+                sensor_type_name = self._get_sensor_type_display_name(sensor_info)
+                
+                return DeviceInfo(
+                    identifiers={(DOMAIN, self._hardware_id)},
+                    name=f"Ecowitt {sensor_type_name} {self._hardware_id}",
+                    manufacturer=MANUFACTURER,
+                    model=device_model,
+                    via_device=(DOMAIN, gateway_id),
+                    suggested_area="Outdoor" if self._is_outdoor_sensor(sensor_info) else None,
+                )
         
         # Fall back to gateway device
         return DeviceInfo(
