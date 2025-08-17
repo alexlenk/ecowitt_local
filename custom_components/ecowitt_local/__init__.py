@@ -74,10 +74,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return bool(unload_ok)
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Reload config entry."""
-    await async_unload_entry(hass, entry)
-    await async_setup_entry(hass, entry)
+    unload_ok = await async_unload_entry(hass, entry)
+    if unload_ok:
+        return await async_setup_entry(hass, entry)
+    return False
 
 
 async def _async_setup_device_registry(

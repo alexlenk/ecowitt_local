@@ -286,6 +286,11 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
 
     async def async_shutdown(self) -> None:
         """Shutdown the coordinator."""
+        # Cancel any pending refresh tasks
+        if hasattr(self, '_debounced_refresh'):
+            self._debounced_refresh.async_cancel()
+        
+        # Close the API connection
         await self.api.close()
 
     @property
