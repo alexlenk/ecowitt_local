@@ -29,10 +29,31 @@ async def coordinator(hass, mock_config_entry, mock_ecowitt_api):
         mock_ecowitt_api.get_all_sensor_mappings.return_value = []
         mock_ecowitt_api.close = AsyncMock(return_value=None)
         
-        # Mock the sensor mapping update method to avoid config_entry issues
+        # Mock methods that could cause issues with config_entry or timers
         coordinator._update_sensor_mapping_if_needed = AsyncMock()
+        coordinator._process_gateway_info = AsyncMock(return_value={
+            "model": "GW1100A",
+            "firmware_version": "1.7.3", 
+            "host": "192.168.1.100",
+            "gateway_id": "GW1100A"
+        })
+        coordinator.async_request_refresh = AsyncMock()
+        
+        # Cancel any scheduled refresh to avoid lingering timers
+        if hasattr(coordinator, '_debounced_refresh'):
+            coordinator._debounced_refresh.async_cancel()
         
         yield coordinator
+        
+        # Cleanup any timers and tasks
+        try:
+            if hasattr(coordinator, '_debounced_refresh'):
+                coordinator._debounced_refresh.async_cancel()
+            # Cancel any update interval 
+            if hasattr(coordinator, '_unsub_refresh') and coordinator._unsub_refresh:
+                coordinator._unsub_refresh()
+        except Exception:
+            pass
 
 
 @pytest.mark.asyncio
@@ -94,6 +115,9 @@ async def test_coordinator_sensor_mapping_refresh(coordinator):
     coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=mock_mappings)
     coordinator.api.get_live_data = AsyncMock(return_value={"common_list": []})
     
+    # Mock the async_request_refresh to avoid debouncer issues
+    coordinator.async_request_refresh = AsyncMock()
+    
     # Test successful refresh using the correct method name
     await coordinator.async_refresh_mapping()
     
@@ -106,6 +130,9 @@ async def test_coordinator_sensor_mapping_refresh_error(coordinator):
     """Test sensor mapping refresh error handling."""
     coordinator.api.get_all_sensor_mappings = AsyncMock(side_effect=APIConnectionError("Connection failed"))
     coordinator.api.get_live_data = AsyncMock(return_value={"common_list": []})
+    
+    # Mock the async_request_refresh to avoid debouncer issues
+    coordinator.async_request_refresh = AsyncMock()
     
     # Should not raise exception, but log error
     await coordinator.async_refresh_mapping()
@@ -172,16 +199,7 @@ async def test_coordinator_data_processing_with_additional_keys(coordinator):
     coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
     coordinator.api.get_version = AsyncMock(return_value={"stationtype": "GW1100A", "version": "1.7.3"})
     
-    # Mock the gateway info to avoid config_entry issues
-    mock_gateway_info = {
-        "model": "GW1100A",
-        "firmware_version": "1.7.3",
-        "host": "192.168.1.100",
-        "gateway_id": "GW1100A"
-    }
-    coordinator._process_gateway_info = AsyncMock(return_value=mock_gateway_info)
-    
-    # Should process successfully and log additional keys
+    # Should process successfully and log additional keys (gateway info already mocked in fixture)
     result = await coordinator._async_update_data()
     
     assert result is not None
@@ -209,16 +227,7 @@ async def test_coordinator_empty_common_list_handling(coordinator):
     coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
     coordinator.api.get_version = AsyncMock(return_value={"stationtype": "GW1100A", "version": "1.7.3"})
     
-    # Mock the gateway info to avoid config_entry issues
-    mock_gateway_info = {
-        "model": "GW1100A",
-        "firmware_version": "1.7.3",
-        "host": "192.168.1.100",
-        "gateway_id": "GW1100A"
-    }
-    coordinator._process_gateway_info = AsyncMock(return_value=mock_gateway_info)
-    
-    # Should handle gracefully
+    # Should handle gracefully (gateway info already mocked in fixture)
     result = await coordinator._async_update_data()
     
     assert result is not None
