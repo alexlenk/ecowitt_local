@@ -1,7 +1,7 @@
 """Constants for the Ecowitt Local integration."""
 from __future__ import annotations
 
-from typing import Final
+from typing import Any, Dict, Final
 
 # Integration domain
 DOMAIN: Final = "ecowitt_local"
@@ -45,9 +45,9 @@ GATEWAY_SENSORS: Final = {
 def _generate_channel_sensors(
     base_key: str,
     name_template: str,
-    sensor_def: dict,
+    sensor_def: Dict[str, Any],
     max_channels: int
-) -> dict:
+) -> Dict[str, Dict[str, Any]]:
     """Generate numbered channel sensors dynamically.
 
     Args:
@@ -257,7 +257,7 @@ def _generate_battery_sensors(
     name_template: str,
     sensor_key_template: str,
     max_channels: int
-) -> dict:
+) -> Dict[str, Dict[str, str]]:
     """Generate numbered battery sensors dynamically.
 
     Args:
