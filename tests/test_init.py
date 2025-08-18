@@ -92,10 +92,14 @@ async def test_services_registration(hass: HomeAssistant, setup_integration):
 
 
 async def test_refresh_mapping_service(hass: HomeAssistant, setup_integration):
-    """Test refresh mapping service."""
+    """Test refresh mapping service with proper mocking."""
     from custom_components.ecowitt_local.const import SERVICE_REFRESH_MAPPING
+    from unittest.mock import AsyncMock
     
     coordinator = hass.data[DOMAIN][setup_integration.entry_id]
+    
+    # Mock the coordinator's refresh method
+    coordinator.async_refresh_sensor_mapping = AsyncMock()
     
     # Call service
     await hass.services.async_call(
@@ -105,15 +109,19 @@ async def test_refresh_mapping_service(hass: HomeAssistant, setup_integration):
         blocking=True,
     )
     
-    # Verify service was called (would need mock verification in real test)
-    assert True  # Placeholder assertion
+    # Verify service was called
+    coordinator.async_refresh_sensor_mapping.assert_called_once()
 
 
 async def test_update_data_service(hass: HomeAssistant, setup_integration):
-    """Test update data service."""
+    """Test update data service with proper mocking."""
     from custom_components.ecowitt_local.const import SERVICE_UPDATE_DATA
+    from unittest.mock import AsyncMock
     
     coordinator = hass.data[DOMAIN][setup_integration.entry_id]
+    
+    # Mock the coordinator's refresh method
+    coordinator.async_request_refresh = AsyncMock()
     
     # Call service
     await hass.services.async_call(
@@ -123,8 +131,30 @@ async def test_update_data_service(hass: HomeAssistant, setup_integration):
         blocking=True,
     )
     
-    # Verify service was called (would need mock verification in real test)
-    assert True  # Placeholder assertion
+    # Verify service was called
+    coordinator.async_request_refresh.assert_called_once()
+
+
+async def test_service_error_handling(hass: HomeAssistant, setup_integration):
+    """Test service error handling."""
+    from custom_components.ecowitt_local.const import SERVICE_REFRESH_MAPPING
+    from unittest.mock import AsyncMock
+    
+    coordinator = hass.data[DOMAIN][setup_integration.entry_id]
+    
+    # Mock the coordinator's refresh method to raise an exception
+    coordinator.async_refresh_sensor_mapping = AsyncMock(side_effect=Exception("Test error"))
+    
+    # Call service - should not raise exception, but handle gracefully
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_MAPPING,
+        {},
+        blocking=True,
+    )
+    
+    # Verify service was attempted
+    coordinator.async_refresh_sensor_mapping.assert_called_once()
 
 
 async def test_device_registry_entry(hass: HomeAssistant, setup_integration):
@@ -255,3 +285,87 @@ async def test_migration_function_exists(hass: HomeAssistant):
     # Test migration function - should return True for current version
     result = await async_migrate_entry(hass, entry)
     assert result is True
+
+
+async def test_migration_from_v1_0(hass: HomeAssistant, mock_ecowitt_api):
+    """Test migration from version 1.0 to 1.2."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+    from custom_components.ecowitt_local import async_migrate_entry
+    from custom_components.ecowitt_local.const import CONF_HOST, CONF_PASSWORD
+    from homeassistant.helpers import entity_registry as er, device_registry as dr
+    
+    # Configure mock API
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.get_version.return_value = {"stationtype": "GW1100A", "version": "1.7.3"}
+    mock_ecowitt_api.get_live_data.return_value = {
+        "common_list": [{"id": "tempf", "val": "72.5"}],
+        "ch_soil": [{"channel": "1", "humidity": "50%", "battery": "2"}]
+    }
+    mock_ecowitt_api.get_all_sensor_mappings.return_value = [
+        {
+            "id": "D8174",
+            "img": "wh51", 
+            "type": "15",
+            "name": "Soil moisture CH2",
+            "batt": "1",
+            "signal": "4"
+        }
+    ]
+    
+    # Create entry with version 1.0 (needs migration)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100", CONF_PASSWORD: ""},
+        version=1,
+        entry_id="test_entry",
+        unique_id="test_unique",
+    )
+    entry.minor_version = 0  # Version 1.0
+    entry.add_to_hass(hass)
+    
+    # Setup the integration first to have data for migration
+    with patch("custom_components.ecowitt_local.coordinator.EcowittLocalAPI", return_value=mock_ecowitt_api):
+        result = await hass.config_entries.async_setup(entry.entry_id)
+        assert result is True
+    
+    # Create some mock entities in entity registry that need migration
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    
+    # Create a gateway device
+    gateway_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "test_gateway")},
+        name="Test Gateway",
+        manufacturer="Ecowitt"
+    )
+    
+    # Create an entity that should be migrated to individual device
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id="ecowitt_local_D8174_soilmoisture2",
+        config_entry=entry,
+        device_id=gateway_device.id,
+        original_name="Soil Moisture 2"
+    )
+    
+    # Test migration function
+    result = await async_migrate_entry(hass, entry)
+    assert result is True
+    assert entry.version == 1
+    assert entry.minor_version >= 2  # Should be at least version 1.2
+    
+    # Verify entity was moved to individual device
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    migrated_entity = next(
+        (e for e in entities if "D8174" in e.unique_id),
+        None
+    )
+    
+    if migrated_entity:
+        # Should now be on individual device, not gateway device
+        assert migrated_entity.device_id != gateway_device.id
+        individual_device = device_registry.async_get(migrated_entity.device_id)
+        assert individual_device is not None
+        assert (DOMAIN, "D8174") in individual_device.identifiers
