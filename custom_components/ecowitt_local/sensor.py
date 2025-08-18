@@ -282,8 +282,8 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
     @property
     def icon(self) -> Optional[str]:
         """Return the icon for the sensor."""
-        # Custom icons based on sensor type
-        if self._category == "battery":
+        # Custom icons based on device class (battery sensors are in diagnostic category)
+        if self.device_class == SensorDeviceClass.BATTERY:
             # Use battery icon based on level
             battery_level = self.extra_state_attributes.get(ATTR_BATTERY_LEVEL)
             if battery_level is not None:

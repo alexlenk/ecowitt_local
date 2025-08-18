@@ -734,7 +734,8 @@ async def test_icon_battery_levels(mock_coordinator):
         sensor_info = {
             "sensor_key": "soilbatt1",
             "hardware_id": "D8174",
-            "category": "battery",
+            "category": "diagnostic",
+            "device_class": "battery",
             "name": "Soil Battery",
             "state": battery_level,
             "attributes": {"battery": str(battery_level)}
@@ -756,7 +757,8 @@ async def test_icon_battery_no_level(mock_coordinator):
     """Test icon for battery sensor without level."""
     sensor_info = {
         "sensor_key": "soilbatt1",
-        "category": "battery",
+        "category": "diagnostic",
+        "device_class": "battery",
         "name": "Soil Battery",
         "state": 85,
         "attributes": {}
