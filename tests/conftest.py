@@ -50,6 +50,97 @@ def mock_gateway_version() -> Dict[str, Any]:
 
 
 @pytest.fixture
+def mock_wh68_sensor_mapping() -> Dict[str, Any]:
+    """Mock WH68 weather station sensor mapping."""
+    return {
+        "id": "A1B2C3",
+        "img": "wh68",
+        "type": "1", 
+        "name": "Solar & Wind",
+        "batt": "2.8",
+        "rssi": "-72",
+        "signal": "4",
+        "idst": "1"
+    }
+
+
+@pytest.fixture
+def mock_wh68_live_data() -> Dict[str, Any]:
+    """Mock WH68 weather station live data."""
+    return {
+        "tempf": "75.2",
+        "humidity": "45",
+        "windspeedmph": "5.2", 
+        "windspdmph_avg10m": "4.8",
+        "windgustmph": "8.1",
+        "maxdailygust": "15.3",
+        "winddir": "180",
+        "winddir_avg10m": "185",
+        "baromrelin": "29.85",
+        "baromabsin": "29.85", 
+        "solarradiation": "850.5",
+        "uv": "6",
+        "wh68batt": "2.8"
+    }
+
+
+@pytest.fixture
+def mock_wh31_sensor_mapping() -> Dict[str, Any]:
+    """Mock WH31 temp/humidity sensor mapping."""
+    return {
+        "id": "D1E2F3",
+        "img": "wh31",
+        "type": "6",
+        "name": "Temp & Humidity CH1", 
+        "batt": "85",
+        "rssi": "-68",
+        "signal": "4",
+        "idst": "1"
+    }
+
+
+@pytest.fixture 
+def mock_wh31_live_data() -> Dict[str, Any]:
+    """Mock WH31 temp/humidity live data."""
+    return {
+        "temp1f": "72.5",
+        "humidity1": "50",
+        "dewpoint1f": "52.1",
+        "batt1": "85"
+    }
+
+
+@pytest.fixture
+def mock_complete_sensor_mappings(mock_wh68_sensor_mapping, mock_wh31_sensor_mapping) -> list[Dict[str, Any]]:
+    """Mock complete sensor mappings including existing soil sensors and new weather sensors."""
+    return [
+        {
+            "id": "D8174", 
+            "img": "wh51",
+            "type": "15",
+            "name": "Soil moisture CH2",
+            "batt": "1",
+            "rssi": "-83", 
+            "signal": "4",
+            "idst": "1"
+        },
+        mock_wh68_sensor_mapping,
+        mock_wh31_sensor_mapping
+    ]
+
+
+@pytest.fixture
+def mock_complete_live_data(mock_wh68_live_data, mock_wh31_live_data) -> Dict[str, Any]:
+    """Mock complete live data including soil and weather sensors."""
+    return {
+        "soilmoisture2": "24",
+        "soilbatt2": "1.2",
+        **mock_wh68_live_data,
+        **mock_wh31_live_data
+    }
+
+
+@pytest.fixture
 def mock_live_data() -> Dict[str, Any]:
     """Mock live data response."""
     return {

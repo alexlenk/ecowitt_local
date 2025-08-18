@@ -251,6 +251,24 @@ SENSOR_TYPES.update(_generate_channel_sensors(
     {"unit": "%", "device_class": "moisture"}, 8
 ))
 
+# Add temperature-only sensors (WH34)
+SENSOR_TYPES.update(_generate_channel_sensors(
+    "tf_ch", "Soil Temperature CH{ch}",
+    {"unit": "°F", "device_class": "temperature"}, 8
+))
+
+# Add temperature-only sensors Celsius (WH34)  
+SENSOR_TYPES.update(_generate_channel_sensors(
+    "tf_ch", "Soil Temperature CH{ch}",
+    {"unit": "°C", "device_class": "temperature"}, 8
+))
+
+# Add dewpoint sensors (calculated from temp/humidity)
+SENSOR_TYPES.update(_generate_channel_sensors(
+    "dewpoint", "Dewpoint CH{ch}",
+    {"unit": "°F", "device_class": "temperature"}, 8  
+))
+
 
 def _generate_battery_sensors(
     base_key: str,
@@ -293,6 +311,14 @@ BATTERY_SENSORS: Final = {
         "name": "Weather Station Battery",
         "sensor_key": "tempf"
     },
+    "wh25batt": {
+        "name": "Indoor Station Battery",
+        "sensor_key": "tempinf"
+    },
+    "wh26batt": {
+        "name": "Indoor Sensor Battery", 
+        "sensor_key": "tempinf"
+    },
 }
 
 # Add dynamically generated battery sensors
@@ -307,6 +333,12 @@ BATTERY_SENSORS.update(_generate_battery_sensors(
 ))
 BATTERY_SENSORS.update(_generate_battery_sensors(
     "leakbatt", "Leak Sensor CH{ch} Battery", "leak_ch{ch}", 4
+))
+BATTERY_SENSORS.update(_generate_battery_sensors(
+    "tf_batt", "Soil Temperature CH{ch} Battery", "tf_ch{ch}", 8
+))
+BATTERY_SENSORS.update(_generate_battery_sensors(
+    "leaf_batt", "Leaf Wetness CH{ch} Battery", "leafwetness_ch{ch}", 8
 ))
 
 # System sensors

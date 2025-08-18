@@ -98,14 +98,16 @@ class SensorMapper:
         """
         keys: List[str] = []
         
-        if not sensor_type or not channel:
+        if not sensor_type:
             return keys
             
-        # Normalize channel to integer if possible
-        try:
-            ch_num = int(channel)
-        except (ValueError, TypeError):
-            ch_num = None
+        # Normalize channel to integer if possible (some sensors don't have channels)
+        ch_num = None
+        if channel:
+            try:
+                ch_num = int(channel)
+            except (ValueError, TypeError):
+                ch_num = None
             
         # Map sensor types to live data keys
         if sensor_type.lower() in ("wh51", "soil"):
@@ -176,6 +178,37 @@ class SensorMapper:
                 "uv",
                 "wh68batt",
             ])
+        elif sensor_type.lower() in ("wh25", "indoor_station"):
+            # Indoor temperature/humidity/pressure station
+            keys.extend([
+                "tempinf",
+                "humidityin",
+                "baromrelin",
+                "baromabsin",
+                "wh25batt",
+            ])
+        elif sensor_type.lower() in ("wh26", "indoor_temp_hum"):
+            # Indoor temperature/humidity sensor
+            keys.extend([
+                "tempinf",
+                "humidityin", 
+                "wh26batt",
+            ])
+        elif sensor_type.lower() in ("wh34", "temp_only"):
+            # Temperature-only sensors
+            if ch_num:
+                keys.extend([
+                    f"tf_ch{ch_num}",
+                    f"tf_ch{ch_num}c",
+                    f"tf_batt{ch_num}",
+                ])
+        elif sensor_type.lower() in ("wh35", "leaf_wetness"):
+            # Leaf wetness sensors
+            if ch_num:
+                keys.extend([
+                    f"leafwetness_ch{ch_num}",
+                    f"leaf_batt{ch_num}",
+                ])
             
         return keys
 
