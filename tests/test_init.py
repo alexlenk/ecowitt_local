@@ -486,11 +486,21 @@ async def test_service_with_invalid_device_id(hass: HomeAssistant, setup_integra
     from custom_components.ecowitt_local.const import SERVICE_REFRESH_MAPPING, SERVICE_UPDATE_DATA
     from homeassistant.helpers import device_registry as dr
     from unittest.mock import AsyncMock
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
     
     coordinator = hass.data[DOMAIN][setup_integration.entry_id]
     device_registry = dr.async_get(hass)
     
-    # Create a device that's NOT associated with our config entry
+    # Create another config entry for testing
+    other_entry = MockConfigEntry(
+        domain="other_domain",
+        data={"host": "192.168.1.200"},
+        entry_id="other_entry_id",
+        unique_id="other_unique_id",
+    )
+    other_entry.add_to_hass(hass)
+    
+    # Create a device that's associated with the other config entry
     other_device = device_registry.async_get_or_create(
         config_entry_id="other_entry_id",
         identifiers={("other_domain", "other_device")},
