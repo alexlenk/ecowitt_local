@@ -178,6 +178,19 @@ sensor.ecowitt_lightning_e4f5a6_battery     # Battery level [Diagnostic]
 binary_sensor.ecowitt_lightning_e4f5a6_online # Online status [Diagnostic]
 ```
 
+### Rain Gauge
+```
+sensor.ecowitt_rain_f6g7h8                  # Rain rate (Hardware ID F6G7H8)
+sensor.ecowitt_rain_f6g7h8_daily            # Daily rainfall accumulation
+sensor.ecowitt_rain_f6g7h8_hourly           # Hourly rainfall accumulation
+sensor.ecowitt_rain_f6g7h8_weekly           # Weekly rainfall accumulation
+sensor.ecowitt_rain_f6g7h8_monthly          # Monthly rainfall accumulation
+sensor.ecowitt_rain_f6g7h8_yearly           # Yearly rainfall accumulation
+sensor.ecowitt_rain_f6g7h8_total            # Total rainfall since reset
+sensor.ecowitt_rain_f6g7h8_battery          # Battery level [Diagnostic]
+binary_sensor.ecowitt_rain_f6g7h8_online    # Online status [Diagnostic]
+```
+
 ## 🔧 Services
 
 The integration provides services for manual control:
@@ -299,7 +312,7 @@ All other sensor types are tested using detailed mock datasets derived from:
 - **WH68**: Weather station (temp, humidity, wind, solar, UV) ✅ *Implemented*
 - **WH31**: Temperature/humidity sensors (CH1-8) ✅ *Implemented*
 - **WH57**: Lightning detector (strikes, distance, timestamp) ✅ *Implemented*
-- **WH40**: Rain gauge with piezo sensor
+- **WH40**: Rain gauge (rate, accumulations, battery) ✅ *Implemented*
 - **WH41**: PM2.5 air quality sensors (CH1-4)
 - **WH45**: CO2/PM2.5/PM10 combo sensor
 - **WH55**: Leak detection sensors (CH1-4)

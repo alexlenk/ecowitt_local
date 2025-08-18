@@ -111,7 +111,7 @@ def mock_wh31_live_data() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def mock_complete_sensor_mappings(mock_wh68_sensor_mapping, mock_wh31_sensor_mapping, mock_wh57_sensor_mapping) -> list[Dict[str, Any]]:
+def mock_complete_sensor_mappings(mock_wh68_sensor_mapping, mock_wh31_sensor_mapping, mock_wh57_sensor_mapping, mock_wh40_sensor_mapping) -> list[Dict[str, Any]]:
     """Mock complete sensor mappings including existing soil sensors and new weather/environmental sensors."""
     return [
         {
@@ -126,7 +126,8 @@ def mock_complete_sensor_mappings(mock_wh68_sensor_mapping, mock_wh31_sensor_map
         },
         mock_wh68_sensor_mapping,
         mock_wh31_sensor_mapping,
-        mock_wh57_sensor_mapping
+        mock_wh57_sensor_mapping,
+        mock_wh40_sensor_mapping
     ]
 
 
@@ -158,14 +159,46 @@ def mock_wh57_live_data() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def mock_complete_live_data(mock_wh68_live_data, mock_wh31_live_data, mock_wh57_live_data) -> Dict[str, Any]:
-    """Mock complete live data including soil, weather, and lightning sensors."""
+def mock_wh40_sensor_mapping() -> Dict[str, Any]:
+    """Mock WH40 rain gauge sensor mapping."""
+    return {
+        "id": "F6G7H8",
+        "img": "wh40",
+        "type": "3",
+        "name": "Rain",
+        "batt": "78",
+        "rssi": "-70",
+        "signal": "4",
+        "idst": "1"
+    }
+
+
+@pytest.fixture
+def mock_wh40_live_data() -> Dict[str, Any]:
+    """Mock WH40 rain gauge live data."""
+    return {
+        "rainratein": "0.12",
+        "eventrainin": "0.05",
+        "hourlyrainin": "0.15",
+        "dailyrainin": "0.87",
+        "weeklyrainin": "2.34",
+        "monthlyrainin": "5.67",
+        "yearlyrainin": "45.23",
+        "totalrainin": "112.56",
+        "wh40batt": "2.8"
+    }
+
+
+@pytest.fixture
+def mock_complete_live_data(mock_wh68_live_data, mock_wh31_live_data, mock_wh57_live_data, mock_wh40_live_data) -> Dict[str, Any]:
+    """Mock complete live data including soil, weather, lightning, and rain sensors."""
     return {
         "soilmoisture2": "24",
         "soilbatt2": "1.2",
         **mock_wh68_live_data,
         **mock_wh31_live_data,
-        **mock_wh57_live_data
+        **mock_wh57_live_data,
+        **mock_wh40_live_data
     }
 
 

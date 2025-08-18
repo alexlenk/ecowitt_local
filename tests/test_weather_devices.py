@@ -278,6 +278,162 @@ class TestWH57LightningDetector:
         assert mapper.get_hardware_id("wh68batt") == "WEATHER1"
 
 
+class TestWH40RainGauge:
+    """Test WH40 rain gauge support."""
+
+    def test_wh40_sensor_mapping(self, mock_wh40_sensor_mapping):
+        """Test WH40 sensor mapping and key generation."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh40_sensor_mapping])
+        
+        # Verify hardware ID is stored
+        assert "F6G7H8" in mapper.get_all_hardware_ids()
+        
+        # Test sensor info
+        sensor_info = mapper.get_sensor_info("F6G7H8")
+        assert sensor_info is not None
+        assert sensor_info["sensor_type"] == "WH40"
+        assert sensor_info["device_model"] == "wh40"
+        assert sensor_info["battery"] == "78"
+        assert sensor_info["signal"] == "4"
+        assert sensor_info["channel"] == ""  # Rain gauge has no channel
+
+    def test_wh40_live_data_keys(self, mock_wh40_sensor_mapping):
+        """Test WH40 generates correct live data keys."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh40_sensor_mapping])
+        
+        # Test key mappings for rain gauge sensors
+        expected_keys = [
+            "rainratein", "eventrainin", "hourlyrainin", "dailyrainin",
+            "weeklyrainin", "monthlyrainin", "yearlyrainin", "totalrainin",
+            "wh40batt"
+        ]
+        
+        for key in expected_keys:
+            hardware_id = mapper.get_hardware_id(key)
+            assert hardware_id == "F6G7H8", f"Key {key} should map to F6G7H8"
+
+    def test_wh40_entity_id_generation(self, mock_wh40_sensor_mapping):
+        """Test WH40 entity ID generation."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh40_sensor_mapping])
+        
+        # Test rain rate sensor
+        entity_id, name = mapper.generate_entity_id("rainratein", "F6G7H8")
+        assert entity_id == "sensor.ecowitt_rain_f6g7h8"
+        assert "Rain" in name
+        
+        # Test daily rain sensor  
+        entity_id, name = mapper.generate_entity_id("dailyrainin", "F6G7H8")
+        assert entity_id == "sensor.ecowitt_rain_f6g7h8"
+        assert "Rain" in name
+        
+        # Test total rain sensor
+        entity_id, name = mapper.generate_entity_id("totalrainin", "F6G7H8")
+        assert entity_id == "sensor.ecowitt_rain_f6g7h8"
+        assert "Rain" in name
+        
+        # Test battery sensor
+        entity_id, name = mapper.generate_entity_id("wh40batt", "F6G7H8")
+        assert entity_id == "sensor.ecowitt_rain_battery_f6g7h8"
+        assert "Battery" in name
+
+    def test_wh40_multiple_rain_metrics(self, mock_wh40_live_data):
+        """Test handling of multiple rain measurement types."""
+        mapper = SensorMapper()
+        mapping = {
+            "id": "F6G7H8",
+            "img": "wh40",
+            "type": "3",
+            "name": "Rain",
+            "batt": "78",
+            "signal": "4"
+        }
+        mapper.update_mapping([mapping])
+        
+        # Verify all rain sensors map to same hardware ID
+        rain_sensors = [
+            "rainratein", "eventrainin", "hourlyrainin", "dailyrainin",
+            "weeklyrainin", "monthlyrainin", "yearlyrainin", "totalrainin"
+        ]
+        for sensor in rain_sensors:
+            assert mapper.get_hardware_id(sensor) == "F6G7H8"
+
+    def test_wh40_precipitation_units(self, mock_wh40_sensor_mapping):
+        """Test WH40 supports imperial precipitation units."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh40_sensor_mapping])
+        
+        # All precipitation sensors should map to same device
+        assert mapper.get_hardware_id("rainratein") == "F6G7H8"  # Rate in inches/hr
+        assert mapper.get_hardware_id("dailyrainin") == "F6G7H8"  # Daily accumulation in inches
+        assert mapper.get_hardware_id("totalrainin") == "F6G7H8"  # Total accumulation in inches
+
+    def test_wh40_time_based_accumulation(self, mock_wh40_sensor_mapping):
+        """Test WH40 supports different time-based rain accumulations."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh40_sensor_mapping])
+        
+        # Time-based accumulation sensors
+        time_sensors = [
+            "eventrainin",    # Current rain event
+            "hourlyrainin",   # Last hour
+            "dailyrainin",    # Last 24 hours  
+            "weeklyrainin",   # Last 7 days
+            "monthlyrainin",  # Last 30 days
+            "yearlyrainin",   # Last 365 days
+            "totalrainin"     # Since device reset
+        ]
+        
+        for sensor in time_sensors:
+            assert mapper.get_hardware_id(sensor) == "F6G7H8"
+
+    def test_wh40_unique_rain_sensor_type(self):
+        """Test WH40 is distinct from other weather sensors."""
+        mapper = SensorMapper()
+        
+        # Rain gauge should be distinguishable from weather stations
+        rain_mapping = {
+            "id": "RAIN1",
+            "img": "wh40", 
+            "type": "3",
+            "name": "Rain",
+            "batt": "75",
+            "signal": "4"
+        }
+        
+        weather_mapping = {
+            "id": "WEATHER1",
+            "img": "wh68",
+            "type": "1", 
+            "name": "Solar & Wind",
+            "batt": "90",
+            "signal": "4"
+        }
+        
+        mapper.update_mapping([rain_mapping, weather_mapping])
+        
+        # Different sensor types should not conflict
+        assert mapper.get_hardware_id("rainratein") == "RAIN1"
+        assert mapper.get_hardware_id("tempf") == "WEATHER1"
+        assert mapper.get_hardware_id("wh40batt") == "RAIN1"
+        assert mapper.get_hardware_id("wh68batt") == "WEATHER1"
+
+    def test_wh40_battery_monitoring(self, mock_wh40_sensor_mapping):
+        """Test WH40 battery monitoring integration."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh40_sensor_mapping])
+        
+        # Battery sensor should map correctly
+        assert mapper.get_hardware_id("wh40batt") == "F6G7H8"
+        
+        # Entity ID should be properly formed
+        entity_id, name = mapper.generate_entity_id("wh40batt", "F6G7H8")
+        assert "battery" in entity_id.lower()
+        assert "Battery" in name
+
+
 class TestWeatherDeviceIntegration:
     """Test integration of weather devices with existing soil sensors."""
 
@@ -292,11 +448,12 @@ class TestWeatherDeviceIntegration:
         assert "A1B2C3" in hardware_ids  # Weather station
         assert "D1E2F3" in hardware_ids  # Temp/humidity
         assert "E4F5A6" in hardware_ids  # Lightning detector
+        assert "F6G7H8" in hardware_ids  # Rain gauge
         
         # Test mapping stats
         stats = mapper.get_mapping_stats()
-        assert stats["total_sensors"] == 4
-        assert stats["sensor_types"] >= 4  # WH51, WH68, WH31, WH57
+        assert stats["total_sensors"] == 5
+        assert stats["sensor_types"] >= 5  # WH51, WH68, WH31, WH57, WH40
 
     def test_no_mapping_conflicts(self, mock_complete_sensor_mappings):
         """Test no conflicts between device mappings.""" 
@@ -319,6 +476,11 @@ class TestWeatherDeviceIntegration:
         assert mapper.get_hardware_id("lightning_num") == "E4F5A6"
         assert mapper.get_hardware_id("lightning_time") == "E4F5A6"
         assert mapper.get_hardware_id("wh57batt") == "E4F5A6"
+        
+        # Test rain gauge keys work
+        assert mapper.get_hardware_id("rainratein") == "F6G7H8"
+        assert mapper.get_hardware_id("dailyrainin") == "F6G7H8"
+        assert mapper.get_hardware_id("wh40batt") == "F6G7H8"
 
     def test_entity_id_stability(self, mock_complete_sensor_mappings):
         """Test entity IDs remain stable across remapping."""
@@ -332,6 +494,7 @@ class TestWeatherDeviceIntegration:
         weather_entity, _ = mapper.generate_entity_id("tempf", "A1B2C3") 
         temp_entity, _ = mapper.generate_entity_id("temp1f", "D1E2F3")
         lightning_entity, _ = mapper.generate_entity_id("lightning_num", "E4F5A6")
+        rain_entity, _ = mapper.generate_entity_id("rainratein", "F6G7H8")
         
         # Remap (simulating integration reload)
         mapper.update_mapping(mock_complete_sensor_mappings)
@@ -341,11 +504,13 @@ class TestWeatherDeviceIntegration:
         weather_entity2, _ = mapper.generate_entity_id("tempf", "A1B2C3")
         temp_entity2, _ = mapper.generate_entity_id("temp1f", "D1E2F3")
         lightning_entity2, _ = mapper.generate_entity_id("lightning_num", "E4F5A6")
+        rain_entity2, _ = mapper.generate_entity_id("rainratein", "F6G7H8")
         
         assert soil_entity == soil_entity2
         assert weather_entity == weather_entity2 
         assert temp_entity == temp_entity2
         assert lightning_entity == lightning_entity2
+        assert rain_entity == rain_entity2
 
 
 class TestWeatherDeviceEdgeCases:
