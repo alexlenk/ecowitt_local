@@ -434,6 +434,252 @@ class TestWH40RainGauge:
         assert "Battery" in name
 
 
+class TestWH41PM25Sensor:
+    """Test WH41 PM2.5 air quality sensor support."""
+
+    def test_wh41_sensor_mapping(self, mock_wh41_sensor_mapping):
+        """Test WH41 sensor mapping and channel extraction."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh41_sensor_mapping])
+        
+        # Verify hardware ID is stored
+        assert "G8H9I0" in mapper.get_all_hardware_ids()
+        
+        # Test sensor info
+        sensor_info = mapper.get_sensor_info("G8H9I0")
+        assert sensor_info is not None
+        assert sensor_info["sensor_type"] == "WH41"
+        assert sensor_info["device_model"] == "wh41"
+        assert sensor_info["battery"] == "85"
+        assert sensor_info["signal"] == "4"
+        assert sensor_info["channel"] == "1"  # Extracted from "CH1"
+
+    def test_wh41_live_data_keys(self, mock_wh41_sensor_mapping):
+        """Test WH41 generates correct live data keys."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh41_sensor_mapping])
+        
+        # Test key mappings for PM2.5 sensor
+        expected_keys = [
+            "pm25_ch1", "pm25_avg_24h_ch1", "pm25batt1"
+        ]
+        
+        for key in expected_keys:
+            hardware_id = mapper.get_hardware_id(key)
+            assert hardware_id == "G8H9I0", f"Key {key} should map to G8H9I0"
+
+    def test_wh41_entity_id_generation(self, mock_wh41_sensor_mapping):
+        """Test WH41 entity ID generation."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh41_sensor_mapping])
+        
+        # Test PM2.5 sensor
+        entity_id, name = mapper.generate_entity_id("pm25_ch1", "G8H9I0")
+        assert entity_id == "sensor.ecowitt_pm25_g8h9i0"
+        assert "PM2.5" in name
+        
+        # Test PM2.5 24h average sensor
+        entity_id, name = mapper.generate_entity_id("pm25_avg_24h_ch1", "G8H9I0")
+        assert entity_id == "sensor.ecowitt_pm25_g8h9i0"
+        assert "PM2.5" in name
+        
+        # Test battery sensor
+        entity_id, name = mapper.generate_entity_id("pm25batt1", "G8H9I0")
+        assert entity_id == "sensor.ecowitt_pm25_battery_g8h9i0"
+        assert "Battery" in name
+
+    def test_wh41_multiple_channels(self):
+        """Test multiple WH41 sensors with different channels."""
+        mapper = SensorMapper()
+        mappings = [
+            {
+                "id": "PM251",
+                "img": "wh41",
+                "type": "22", 
+                "name": "PM2.5 CH1",
+                "batt": "85",
+                "signal": "4"
+            },
+            {
+                "id": "PM252", 
+                "img": "wh41",
+                "type": "23",
+                "name": "PM2.5 CH2", 
+                "batt": "78",
+                "signal": "3"
+            }
+        ]
+        mapper.update_mapping(mappings)
+        
+        # Test channel separation
+        assert mapper.get_hardware_id("pm25_ch1") == "PM251"
+        assert mapper.get_hardware_id("pm25_ch2") == "PM252"
+        assert mapper.get_hardware_id("pm25batt1") == "PM251"
+        assert mapper.get_hardware_id("pm25batt2") == "PM252"
+
+
+class TestWH55LeakDetection:
+    """Test WH55 leak detection sensor support."""
+
+    def test_wh55_sensor_mapping(self, mock_wh55_sensor_mapping):
+        """Test WH55 sensor mapping and channel extraction."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh55_sensor_mapping])
+        
+        # Verify hardware ID is stored
+        assert "J1K2L3" in mapper.get_all_hardware_ids()
+        
+        # Test sensor info
+        sensor_info = mapper.get_sensor_info("J1K2L3")
+        assert sensor_info is not None
+        assert sensor_info["sensor_type"] == "WH55"
+        assert sensor_info["device_model"] == "wh55"
+        assert sensor_info["battery"] == "92"
+        assert sensor_info["signal"] == "4"
+        assert sensor_info["channel"] == "1"  # Extracted from "CH1"
+
+    def test_wh55_live_data_keys(self, mock_wh55_sensor_mapping):
+        """Test WH55 generates correct live data keys."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh55_sensor_mapping])
+        
+        # Test key mappings for leak detection sensor
+        expected_keys = [
+            "leak_ch1", "leakbatt1"
+        ]
+        
+        for key in expected_keys:
+            hardware_id = mapper.get_hardware_id(key)
+            assert hardware_id == "J1K2L3", f"Key {key} should map to J1K2L3"
+
+    def test_wh55_entity_id_generation(self, mock_wh55_sensor_mapping):
+        """Test WH55 entity ID generation."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh55_sensor_mapping])
+        
+        # Test leak detection sensor
+        entity_id, name = mapper.generate_entity_id("leak_ch1", "J1K2L3")
+        assert entity_id == "sensor.ecowitt_leak_j1k2l3"
+        assert "Leak" in name
+        
+        # Test battery sensor
+        entity_id, name = mapper.generate_entity_id("leakbatt1", "J1K2L3")
+        assert entity_id == "sensor.ecowitt_leak_battery_j1k2l3"
+        assert "Battery" in name
+
+    def test_wh55_binary_sensor_support(self, mock_wh55_live_data):
+        """Test WH55 leak detection binary sensor values."""
+        mapper = SensorMapper()
+        mapping = {
+            "id": "J1K2L3",
+            "img": "wh55",
+            "type": "27",
+            "name": "Leak CH1",
+            "batt": "92",
+            "signal": "4"
+        }
+        mapper.update_mapping([mapping])
+        
+        # Verify leak sensor maps correctly (0 = no leak, 1 = leak)
+        assert mapper.get_hardware_id("leak_ch1") == "J1K2L3"
+
+
+class TestWH45ComboSensor:
+    """Test WH45 CO2/PM2.5/PM10 combo sensor support."""
+
+    def test_wh45_sensor_mapping(self, mock_wh45_sensor_mapping):
+        """Test WH45 sensor mapping for multi-function device."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh45_sensor_mapping])
+        
+        # Verify hardware ID is stored
+        assert "M4N5O6" in mapper.get_all_hardware_ids()
+        
+        # Test sensor info
+        sensor_info = mapper.get_sensor_info("M4N5O6")
+        assert sensor_info is not None
+        assert sensor_info["sensor_type"] == "WH45"
+        assert sensor_info["device_model"] == "wh45"
+        assert sensor_info["battery"] == "88"
+        assert sensor_info["signal"] == "4"
+        assert sensor_info["channel"] == ""  # No channel for combo device
+
+    def test_wh45_live_data_keys(self, mock_wh45_sensor_mapping):
+        """Test WH45 generates correct live data keys for all sensor types."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh45_sensor_mapping])
+        
+        # Test key mappings for combo sensor
+        expected_keys = [
+            "tf_co2", "tf_co2c", "humi_co2",  # Temperature & humidity
+            "pm25_co2", "pm25_24h_co2",        # PM2.5 current & 24h avg
+            "pm10_co2", "pm10_24h_co2",        # PM10 current & 24h avg  
+            "co2", "co2_24h",                  # CO2 current & 24h avg
+            "co2_batt"                         # Battery
+        ]
+        
+        for key in expected_keys:
+            hardware_id = mapper.get_hardware_id(key)
+            assert hardware_id == "M4N5O6", f"Key {key} should map to M4N5O6"
+
+    def test_wh45_entity_id_generation(self, mock_wh45_sensor_mapping):
+        """Test WH45 entity ID generation for different sensor types."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh45_sensor_mapping])
+        
+        # Test CO2 sensor
+        entity_id, name = mapper.generate_entity_id("co2", "M4N5O6")
+        assert entity_id == "sensor.ecowitt_co_m4n5o6"
+        assert "CO2" in name
+        
+        # Test PM2.5 sensor
+        entity_id, name = mapper.generate_entity_id("pm25_co2", "M4N5O6")
+        assert entity_id == "sensor.ecowitt_pm25_m4n5o6"
+        assert "PM2.5" in name
+        
+        # Test temperature sensor
+        entity_id, name = mapper.generate_entity_id("tf_co2", "M4N5O6")
+        assert entity_id == "sensor.ecowitt_tf_co_m4n5o6"
+        assert "Temperature" in name
+        
+        # Test humidity sensor
+        entity_id, name = mapper.generate_entity_id("humi_co2", "M4N5O6")
+        assert entity_id == "sensor.ecowitt_humi_co_m4n5o6"
+        assert "Humidity" in name
+        
+        # Test PM10 sensor
+        entity_id, name = mapper.generate_entity_id("pm10_co2", "M4N5O6")
+        assert entity_id == "sensor.ecowitt_pm10_co_m4n5o6"
+        assert "PM10" in name
+
+    def test_wh45_multi_function_device(self, mock_wh45_live_data):
+        """Test WH45 handles multiple sensor types in single device."""
+        mapper = SensorMapper()
+        mapping = {
+            "id": "M4N5O6",
+            "img": "wh45",
+            "type": "39",
+            "name": "PM25 & PM10 & CO2",
+            "batt": "88",
+            "signal": "4"
+        }
+        mapper.update_mapping([mapping])
+        
+        # Verify all sensor types map to same hardware ID
+        sensor_groups = {
+            "co2": ["co2", "co2_24h"],
+            "pm25": ["pm25_co2", "pm25_24h_co2"],
+            "pm10": ["pm10_co2", "pm10_24h_co2"],
+            "temp": ["tf_co2", "tf_co2c"],
+            "humidity": ["humi_co2"],
+            "battery": ["co2_batt"]
+        }
+        
+        for group, sensors in sensor_groups.items():
+            for sensor in sensors:
+                assert mapper.get_hardware_id(sensor) == "M4N5O6", f"{group} sensor {sensor} should map to M4N5O6"
+
+
 class TestWeatherDeviceIntegration:
     """Test integration of weather devices with existing soil sensors."""
 
@@ -449,11 +695,14 @@ class TestWeatherDeviceIntegration:
         assert "D1E2F3" in hardware_ids  # Temp/humidity
         assert "E4F5A6" in hardware_ids  # Lightning detector
         assert "F6G7H8" in hardware_ids  # Rain gauge
+        assert "G8H9I0" in hardware_ids  # PM2.5 sensor
+        assert "J1K2L3" in hardware_ids  # Leak detection
+        assert "M4N5O6" in hardware_ids  # Combo sensor
         
         # Test mapping stats
         stats = mapper.get_mapping_stats()
-        assert stats["total_sensors"] == 5
-        assert stats["sensor_types"] >= 5  # WH51, WH68, WH31, WH57, WH40
+        assert stats["total_sensors"] == 8
+        assert stats["sensor_types"] >= 8  # WH51, WH68, WH31, WH57, WH40, WH41, WH55, WH45
 
     def test_no_mapping_conflicts(self, mock_complete_sensor_mappings):
         """Test no conflicts between device mappings.""" 
@@ -481,6 +730,19 @@ class TestWeatherDeviceIntegration:
         assert mapper.get_hardware_id("rainratein") == "F6G7H8"
         assert mapper.get_hardware_id("dailyrainin") == "F6G7H8"
         assert mapper.get_hardware_id("wh40batt") == "F6G7H8"
+        
+        # Test PM2.5 sensor keys work
+        assert mapper.get_hardware_id("pm25_ch1") == "G8H9I0"
+        assert mapper.get_hardware_id("pm25batt1") == "G8H9I0"
+        
+        # Test leak detection keys work
+        assert mapper.get_hardware_id("leak_ch1") == "J1K2L3"
+        assert mapper.get_hardware_id("leakbatt1") == "J1K2L3"
+        
+        # Test combo sensor keys work  
+        assert mapper.get_hardware_id("co2") == "M4N5O6"
+        assert mapper.get_hardware_id("pm25_co2") == "M4N5O6"
+        assert mapper.get_hardware_id("co2_batt") == "M4N5O6"
 
     def test_entity_id_stability(self, mock_complete_sensor_mappings):
         """Test entity IDs remain stable across remapping."""
@@ -495,6 +757,9 @@ class TestWeatherDeviceIntegration:
         temp_entity, _ = mapper.generate_entity_id("temp1f", "D1E2F3")
         lightning_entity, _ = mapper.generate_entity_id("lightning_num", "E4F5A6")
         rain_entity, _ = mapper.generate_entity_id("rainratein", "F6G7H8")
+        pm25_entity, _ = mapper.generate_entity_id("pm25_ch1", "G8H9I0")
+        leak_entity, _ = mapper.generate_entity_id("leak_ch1", "J1K2L3")
+        combo_entity, _ = mapper.generate_entity_id("co2", "M4N5O6")
         
         # Remap (simulating integration reload)
         mapper.update_mapping(mock_complete_sensor_mappings)

@@ -111,8 +111,8 @@ def mock_wh31_live_data() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def mock_complete_sensor_mappings(mock_wh68_sensor_mapping, mock_wh31_sensor_mapping, mock_wh57_sensor_mapping, mock_wh40_sensor_mapping) -> list[Dict[str, Any]]:
-    """Mock complete sensor mappings including existing soil sensors and new weather/environmental sensors."""
+def mock_complete_sensor_mappings(mock_wh68_sensor_mapping, mock_wh31_sensor_mapping, mock_wh57_sensor_mapping, mock_wh40_sensor_mapping, mock_wh41_sensor_mapping, mock_wh55_sensor_mapping, mock_wh45_sensor_mapping) -> list[Dict[str, Any]]:
+    """Mock complete sensor mappings including soil sensors and all weather/environmental/air quality sensors."""
     return [
         {
             "id": "D8174", 
@@ -127,7 +127,10 @@ def mock_complete_sensor_mappings(mock_wh68_sensor_mapping, mock_wh31_sensor_map
         mock_wh68_sensor_mapping,
         mock_wh31_sensor_mapping,
         mock_wh57_sensor_mapping,
-        mock_wh40_sensor_mapping
+        mock_wh40_sensor_mapping,
+        mock_wh41_sensor_mapping,
+        mock_wh55_sensor_mapping,
+        mock_wh45_sensor_mapping
     ]
 
 
@@ -190,15 +193,99 @@ def mock_wh40_live_data() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def mock_complete_live_data(mock_wh68_live_data, mock_wh31_live_data, mock_wh57_live_data, mock_wh40_live_data) -> Dict[str, Any]:
-    """Mock complete live data including soil, weather, lightning, and rain sensors."""
+def mock_wh41_sensor_mapping() -> Dict[str, Any]:
+    """Mock WH41 PM2.5 sensor mapping."""
+    return {
+        "id": "G8H9I0",
+        "img": "wh41",
+        "type": "22",
+        "name": "PM2.5 CH1",
+        "batt": "85",
+        "rssi": "-72",
+        "signal": "4",
+        "idst": "1"
+    }
+
+
+@pytest.fixture
+def mock_wh41_live_data() -> Dict[str, Any]:
+    """Mock WH41 PM2.5 live data."""
+    return {
+        "pm25_ch1": "35.2",
+        "pm25_avg_24h_ch1": "28.7",
+        "pm25batt1": "85"
+    }
+
+
+@pytest.fixture
+def mock_wh55_sensor_mapping() -> Dict[str, Any]:
+    """Mock WH55 leak detection sensor mapping."""
+    return {
+        "id": "J1K2L3",
+        "img": "wh55",
+        "type": "27",
+        "name": "Leak CH1",
+        "batt": "92",
+        "rssi": "-68",
+        "signal": "4",
+        "idst": "1"
+    }
+
+
+@pytest.fixture
+def mock_wh55_live_data() -> Dict[str, Any]:
+    """Mock WH55 leak detection live data."""
+    return {
+        "leak_ch1": "0",
+        "leakbatt1": "92"
+    }
+
+
+@pytest.fixture
+def mock_wh45_sensor_mapping() -> Dict[str, Any]:
+    """Mock WH45 CO2/PM2.5/PM10 combo sensor mapping."""
+    return {
+        "id": "M4N5O6",
+        "img": "wh45",
+        "type": "39",
+        "name": "PM25 & PM10 & CO2",
+        "batt": "88",
+        "rssi": "-65",
+        "signal": "4",
+        "idst": "1"
+    }
+
+
+@pytest.fixture
+def mock_wh45_live_data() -> Dict[str, Any]:
+    """Mock WH45 combo sensor live data."""
+    return {
+        "tf_co2": "72.1",
+        "tf_co2c": "22.3",
+        "humi_co2": "45",
+        "pm25_co2": "28.5",
+        "pm25_24h_co2": "31.2",
+        "pm10_co2": "42.8",
+        "pm10_24h_co2": "38.9",
+        "co2": "487",
+        "co2_24h": "512",
+        "co2_batt": "88"
+    }
+
+
+@pytest.fixture
+def mock_complete_live_data(mock_wh68_live_data, mock_wh31_live_data, mock_wh57_live_data, mock_wh40_live_data, mock_wh41_live_data, mock_wh55_live_data, mock_wh45_live_data) -> Dict[str, Any]:
+    """Mock complete live data including soil, weather, lightning, rain, air quality, leak detection, and combo sensors."""
     return {
         "soilmoisture2": "24",
         "soilbatt2": "1.2",
         **mock_wh68_live_data,
         **mock_wh31_live_data,
         **mock_wh57_live_data,
-        **mock_wh40_live_data
+        **mock_wh40_live_data,
+        **mock_wh41_live_data,
+        **mock_wh55_live_data,
+        **mock_wh45_live_data
     }
 
 

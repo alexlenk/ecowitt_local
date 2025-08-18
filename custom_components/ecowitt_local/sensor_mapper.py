@@ -210,6 +210,20 @@ class SensorMapper:
                     f"leafwetness_ch{ch_num}",
                     f"leaf_batt{ch_num}",
                 ])
+        elif sensor_type.lower() in ("wh45", "combo", "co2_pm"):
+            # WH45 combo sensor (CO2 + PM2.5 + PM10 + temp/humidity)
+            keys.extend([
+                "tf_co2",           # Temperature (F)
+                "tf_co2c",          # Temperature (C)
+                "humi_co2",         # Humidity
+                "pm25_co2",         # PM2.5 current
+                "pm25_24h_co2",     # PM2.5 24h average
+                "pm10_co2",         # PM10 current
+                "pm10_24h_co2",     # PM10 24h average
+                "co2",              # CO2 current
+                "co2_24h",          # CO2 24h average
+                "co2_batt",         # Battery
+            ])
             
         return keys
 

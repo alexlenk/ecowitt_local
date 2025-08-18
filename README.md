@@ -191,6 +191,33 @@ sensor.ecowitt_rain_f6g7h8_battery          # Battery level [Diagnostic]
 binary_sensor.ecowitt_rain_f6g7h8_online    # Online status [Diagnostic]
 ```
 
+### Air Quality Sensors
+```
+sensor.ecowitt_pm25_g8h9i0                  # PM2.5 current reading (Hardware ID G8H9I0)
+sensor.ecowitt_pm25_g8h9i0_24h              # PM2.5 24-hour average
+sensor.ecowitt_pm25_g8h9i0_battery          # Battery level [Diagnostic]
+binary_sensor.ecowitt_pm25_g8h9i0_online    # Online status [Diagnostic]
+```
+
+### Leak Detection Sensors
+```
+sensor.ecowitt_leak_j1k2l3                  # Leak status (Hardware ID J1K2L3)
+sensor.ecowitt_leak_j1k2l3_battery          # Battery level [Diagnostic]
+binary_sensor.ecowitt_leak_j1k2l3_online    # Online status [Diagnostic]
+```
+
+### Multi-Sensor Combo Units (WH45)
+```
+sensor.ecowitt_co2_m4n5o6                   # CO2 concentration (Hardware ID M4N5O6)
+sensor.ecowitt_co2_m4n5o6_24h               # CO2 24-hour average
+sensor.ecowitt_pm25_m4n5o6                  # PM2.5 from combo sensor
+sensor.ecowitt_pm10_m4n5o6                  # PM10 from combo sensor
+sensor.ecowitt_temperature_m4n5o6           # Temperature from combo sensor
+sensor.ecowitt_humidity_m4n5o6              # Humidity from combo sensor
+sensor.ecowitt_combo_m4n5o6_battery         # Battery level [Diagnostic]
+binary_sensor.ecowitt_combo_m4n5o6_online   # Online status [Diagnostic]
+```
+
 ## 🔧 Services
 
 The integration provides services for manual control:
@@ -313,9 +340,9 @@ All other sensor types are tested using detailed mock datasets derived from:
 - **WH31**: Temperature/humidity sensors (CH1-8) ✅ *Implemented*
 - **WH57**: Lightning detector (strikes, distance, timestamp) ✅ *Implemented*
 - **WH40**: Rain gauge (rate, accumulations, battery) ✅ *Implemented*
-- **WH41**: PM2.5 air quality sensors (CH1-4)
-- **WH45**: CO2/PM2.5/PM10 combo sensor
-- **WH55**: Leak detection sensors (CH1-4)
+- **WH41**: PM2.5 air quality sensors (CH1-4) ✅ *Implemented*
+- **WH45**: CO2/PM2.5/PM10 combo sensor ✅ *Implemented*
+- **WH55**: Leak detection sensors (CH1-4) ✅ *Implemented*
 - **WH25/WH26**: Indoor sensors ✅ *Implemented*
 - **WH34**: Temperature-only sensors (CH1-8) ✅ *Implemented*
 - **WH35**: Leaf wetness sensors (CH1-8) ✅ *Implemented*

@@ -224,6 +224,53 @@ SENSOR_TYPES: Final = {
         "unit": "mi",
         "device_class": "distance"
     },
+
+    # WH45 combo sensor (CO2 + PM2.5 + PM10 + temp/humidity)
+    "tf_co2": {
+        "name": "CO2 Sensor Temperature",
+        "unit": "°F",
+        "device_class": "temperature"
+    },
+    "tf_co2c": {
+        "name": "CO2 Sensor Temperature",
+        "unit": "°C",
+        "device_class": "temperature"
+    },
+    "humi_co2": {
+        "name": "CO2 Sensor Humidity",
+        "unit": "%",
+        "device_class": "humidity"
+    },
+    "pm25_co2": {
+        "name": "PM2.5",
+        "unit": "µg/m³",
+        "device_class": "pm25"
+    },
+    "pm25_24h_co2": {
+        "name": "PM2.5 24h Avg",
+        "unit": "µg/m³",
+        "device_class": "pm25"
+    },
+    "pm10_co2": {
+        "name": "PM10",
+        "unit": "µg/m³",
+        "device_class": "pm10"
+    },
+    "pm10_24h_co2": {
+        "name": "PM10 24h Avg",
+        "unit": "µg/m³",
+        "device_class": "pm10"
+    },
+    "co2": {
+        "name": "CO2",
+        "unit": "ppm",
+        "device_class": "carbon_dioxide"
+    },
+    "co2_24h": {
+        "name": "CO2 24h Avg",
+        "unit": "ppm",
+        "device_class": "carbon_dioxide"
+    },
 }
 
 # Add dynamically generated channel sensors
@@ -323,6 +370,10 @@ BATTERY_SENSORS: Final = {
     "wh26batt": {
         "name": "Indoor Sensor Battery", 
         "sensor_key": "tempinf"
+    },
+    "co2_batt": {
+        "name": "CO2 Combo Sensor Battery",
+        "sensor_key": "co2"
     },
 }
 
