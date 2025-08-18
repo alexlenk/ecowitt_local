@@ -119,7 +119,10 @@ def mock_ecowitt_api():
     mock_instance = AsyncMock()
     mock_instance.authenticate.return_value = True
     mock_instance.test_connection.return_value = True
-    mock_instance.close.return_value = None
+    mock_instance.close = AsyncMock(return_value=None)
+    mock_instance.get_live_data = AsyncMock(return_value={"common_list": []})
+    mock_instance.get_version = AsyncMock(return_value={"stationtype": "GW1100A", "version": "1.7.3"})
+    mock_instance.get_all_sensor_mappings = AsyncMock(return_value=[])
     
     return mock_instance
 
