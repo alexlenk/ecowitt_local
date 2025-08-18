@@ -8,7 +8,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.1%2B-blue.svg)](https://www.home-assistant.io/)
 
-A Home Assistant custom integration that replaces the webhook-based Ecowitt integration with local web interface polling to solve sensor ID stability issues.
+A Home Assistant custom integration that replaces the webhook-based Ecowitt integration with local web interface polling to solve sensor ID stability issues and provide enhanced device organization.
 
 ## 🎯 Problem Solved
 
@@ -16,24 +16,47 @@ The existing Home Assistant Ecowitt integration relies on webhooks with fundamen
 - **Unstable Entity IDs**: Channel-based naming that changes when batteries die
 - **HTTP-Only**: Security vulnerability requiring non-encrypted endpoints  
 - **Limited Data**: Missing battery levels, signal strength, and hardware IDs
+- **Poor Organization**: All sensors lumped under gateway device
 - **Protocol Constraints**: Cannot be fixed within webhook paradigm
 
 ## ✅ Our Solution
 
-**Hardware-Based Stable Entity IDs**: Use sensor hardware IDs for permanent entity identification
+**🏷️ Hardware-Based Stable Entity IDs**: Use sensor hardware IDs for permanent entity identification
 - `sensor.soil_moisture_1` → `sensor.ecowitt_soil_moisture_d8174`
 - Entity IDs never change when batteries are replaced
 - Perfect historical data continuity
 - Automations that never break
 
+**📱 Individual Sensor Devices**: Each physical sensor gets its own Home Assistant device
+- Soil moisture sensors as dedicated devices with moisture + battery + online status
+- Weather sensors organized by function (temperature/humidity, wind, rain, etc.)
+- Clean device tree matching your physical sensor setup
+
 ## 🚀 Key Features
 
-- **🔒 Enhanced Security**: No HTTP requirement, full HTTPS compatibility
-- **📊 Rich Data**: Battery levels, signal strength, inactive sensors
-- **🔄 Reliable Updates**: Direct polling instead of webhook dependency  
-- **🏷️ Stable IDs**: Hardware-based entity naming that survives battery replacements
-- **📱 HACS Compatible**: Easy installation and updates
-- **🔧 Comprehensive Support**: All Ecowitt sensor types (soil, weather, air quality, etc.)
+### 🔒 Enhanced Security & Reliability
+- **Full HTTPS compatibility** - No HTTP requirement
+- **Direct polling** - More reliable than webhook dependency  
+- **Robust error handling** - Continues working during network hiccups
+
+### 📊 Rich Data & Monitoring
+- **Battery levels** - Monitor all sensor batteries
+- **Signal strength** - Track RF connection quality
+- **Online status** - Know when sensors go offline
+- **Inactive sensors** - Option to include offline devices
+- **Hardware information** - Channel, device model, firmware version
+
+### 🏠 Superior Device Organization  
+- **Individual sensor devices** - Each physical sensor becomes a HA device
+- **Diagnostic categorization** - Monitoring info in diagnostic section
+- **Clean main view** - Focus on sensor data, not system health
+- **Automatic device assignment** - Entities go to correct sensor devices
+
+### 🔧 Developer & Maintainer Friendly
+- **89% test coverage** - Comprehensive automated testing
+- **Type safety** - Full mypy type checking
+- **Code optimization** - Dynamic sensor generation reduces duplication
+- **CI/CD pipeline** - Automated testing and quality checks
 
 ## 📋 Requirements
 
@@ -80,27 +103,70 @@ The existing Home Assistant Ecowitt integration relies on webhooks with fundamen
 
 Check your router's connected devices or use network scanning tools to find your Ecowitt gateway's IP address.
 
+## 📱 Device Organization
+
+### Individual Sensor Devices
+Each physical sensor becomes its own Home Assistant device with relevant entities:
+
+**Soil Moisture Sensor (Hardware ID: D8174)**
+```
+🌱 Ecowitt Soil Moisture D8174                 [Device]
+├── 💧 Soil Moisture (24%)                     [Main View]
+├── 🔋 Battery (85%)                          [Diagnostic]
+├── 📶 Signal Strength (4)                    [Diagnostic] 
+└── 🔧 Online Status                          [Diagnostic]
+```
+
+**Weather Station (Hardware ID: A1B2C)**
+```
+🌤️ Ecowitt Weather Station A1B2C             [Device]
+├── 🌡️ Temperature (72.5°F)                   [Main View]
+├── 💨 Humidity (45%)                         [Main View]
+├── 🌪️ Wind Speed (12 mph)                    [Main View]
+├── 🔋 Battery (90%)                          [Diagnostic]
+├── 📶 Signal Strength (5)                    [Diagnostic]
+└── 🔧 Online Status                          [Diagnostic]
+```
+
+### Clean UI Organization
+
+**Main View** - Focus on sensor data:
+- Temperature, humidity, soil moisture values
+- Wind speed, rainfall amounts
+- Air quality readings
+
+**Diagnostic View** - Health monitoring:
+- Battery levels and alerts
+- Signal strength indicators  
+- Online/offline status
+- Hardware information (channel, model, firmware)
+
 ## 📊 Entity Examples
 
 ### Soil Moisture Sensors
 ```
-sensor.ecowitt_soil_moisture_d8174          # Hardware ID D8174
-sensor.ecowitt_soil_moisture_d8174_battery  # Battery level
-binary_sensor.ecowitt_soil_moisture_d8174_online  # Online status
+sensor.ecowitt_soil_moisture_d8174          # Hardware ID D8174 (24%)
+sensor.ecowitt_soil_moisture_d8174_battery  # Battery level (85%) [Diagnostic]
+binary_sensor.ecowitt_soil_moisture_d8174_online  # Online status [Diagnostic]
+sensor.ecowitt_soil_moisture_d8174_signal   # Signal strength [Diagnostic]
 ```
 
 ### Weather Sensors  
 ```
-sensor.ecowitt_temperature_outdoor
-sensor.ecowitt_humidity_outdoor
-sensor.ecowitt_wind_speed
-sensor.ecowitt_pressure_relative
+sensor.ecowitt_temperature_outdoor           # Outdoor temperature
+sensor.ecowitt_humidity_outdoor              # Outdoor humidity  
+sensor.ecowitt_wind_speed                    # Current wind speed
+sensor.ecowitt_wind_gust                     # Wind gusts
+sensor.ecowitt_pressure_relative             # Barometric pressure
+sensor.ecowitt_pressure_absolute             # Absolute pressure
 ```
 
-### Air Quality
+### Air Quality Sensors
 ```
-sensor.ecowitt_pm25_ch1_ef891               # Hardware ID EF891
-sensor.ecowitt_pm25_ch1_ef891_battery       # Battery level
+sensor.ecowitt_pm25_ch1_ef891               # PM2.5 readings (Hardware ID EF891)
+sensor.ecowitt_pm25_ch1_ef891_battery       # Battery level [Diagnostic]
+sensor.ecowitt_pm25_ch1_ef891_signal        # Signal strength [Diagnostic]
+binary_sensor.ecowitt_pm25_ch1_ef891_online # Online status [Diagnostic]
 ```
 
 ## 🔧 Services
@@ -109,9 +175,13 @@ The integration provides services for manual control:
 
 ### `ecowitt_local.refresh_mapping`
 Force refresh of sensor hardware ID mapping
+- **Use case**: After adding new sensors or changing gateway configuration
+- **Target**: Specific device or all devices
 
 ### `ecowitt_local.update_data`  
 Force immediate update of live sensor data
+- **Use case**: Get fresh readings before automations run
+- **Target**: Specific device or all devices
 
 ## ⚠️ Breaking Changes from Original Integration
 
@@ -125,9 +195,19 @@ This integration uses **hardware-based entity IDs** instead of **channel-based I
 - `sensor.ecowitt_soil_moisture_d8174` ← Never changes
 - `sensor.ecowitt_soil_moisture_d8648` ← Hardware ID based
 
-### Migration Required
+### Migration & Device Organization
 
-You will need to update automations and dashboards to use new entity IDs. The integration provides tools to help with this transition.
+**From webhook integration**: Entities will be recreated with new IDs and organized into individual sensor devices
+
+**From earlier versions**: Automatic migration reassigns entities to proper devices
+
+You will need to update:
+- 🏠 **Automations** - Update entity IDs in triggers and conditions
+- 📊 **Dashboards** - Update cards with new entity IDs  
+- 📜 **Scripts** - Update any hardcoded entity references
+- 🔔 **Notifications** - Update entity IDs in notification templates
+
+The integration provides detailed logging to help identify which entities need updating.
 
 ## 🐛 Troubleshooting
 
@@ -146,29 +226,99 @@ You will need to update automations and dashboards to use new entity IDs. The in
 - Use "Refresh Sensor Mapping" service to update hardware mappings
 - Check if sensors are properly paired with gateway
 - Enable "Include Inactive Sensors" option to see offline devices
+- Check diagnostic logs for sensor discovery issues
+
+### Device Assignment Issues
+- Entities should appear under individual sensor devices after installation
+- For existing installations, restart Home Assistant to trigger migration
+- Check logs for migration messages and any assignment failures
+- Use the refresh mapping service if devices aren't organized correctly
 
 ### Performance Issues
 - Increase polling intervals if gateway becomes unresponsive
 - Default settings work well for most setups
 - Monitor Home Assistant logs for API errors
+- Consider reducing number of inactive sensors if performance is poor
 
 ## 📝 Supported Sensors
 
-- **Environmental**: Temperature, humidity, pressure, wind, rain, solar, UV
-- **Soil Monitoring**: Moisture levels (CH1-16), soil temperature  
-- **Air Quality**: PM2.5, PM10, CO2 (model dependent)
-- **Specialized**: Leak detection, leaf wetness, lightning detection
-- **System**: Battery levels, signal strength, gateway status
+### Environmental Monitoring
+- **Temperature & Humidity**: Indoor/outdoor, multi-channel (CH1-8)
+- **Barometric Pressure**: Absolute and relative readings
+- **Wind**: Speed, direction, gusts, averages
+- **Precipitation**: Rate, hourly, daily, weekly, monthly totals
+- **Solar & UV**: Radiation levels, UV index
+
+### Soil & Plant Monitoring
+- **Soil Moisture**: Multi-channel support (CH1-16)
+- **Soil Temperature**: Per-channel readings
+- **Leaf Wetness**: Plant moisture detection (CH1-8)
+
+### Air Quality Monitoring
+- **PM2.5**: Particulate matter with 24h averages (CH1-4)
+- **PM10**: Where supported by sensor hardware
+- **Air Quality Index**: Calculated values
+
+### Specialized Sensors  
+- **Leak Detection**: Water leak sensors (CH1-4)
+- **Lightning Detection**: Strike count, distance, timing
+- **Multi-sensor Units**: Combined temperature/humidity sensors
+
+### System Monitoring
+- **Battery Levels**: Individual sensor battery status
+- **Signal Strength**: RF connection quality (RSSI)
+- **Online Status**: Per-device connectivity monitoring
+- **Gateway Health**: Uptime, memory usage, firmware info
+
+## 🔄 Version History & Latest Features
+
+### v1.2.11+ - UI & Organization Improvements
+- **Diagnostic categorization** - Battery, signal, online status moved to diagnostic section
+- **Cleaner main view** - Focus on actual sensor readings
+- **Enhanced device organization** - Individual sensor devices with proper entity assignment
+- **Improved migration** - Better handling of existing installations
+
+### v1.2.0+ - Code Optimization & Maintainability  
+- **Dynamic sensor generation** - Reduced code duplication
+- **Enhanced type safety** - Full mypy compliance
+- **Improved test coverage** - 89% coverage with 96 passing tests
+- **Better maintainability** - Easier to add new sensor types
+
+### v1.1.0+ - Core Features
+- **Hardware-based entity IDs** - Stable naming that survives battery changes
+- **Individual sensor devices** - Each sensor gets its own HA device
+- **Rich sensor data** - Battery, signal strength, hardware information
+- **Local polling** - Reliable alternative to webhook-based approach
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please:
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes with appropriate tests
+4. Ensure all tests pass (`pytest tests/`)
+5. Follow code style guidelines (`flake8`, `mypy`)
+6. Submit a pull request
+
+### Development Setup
+```bash
+# Clone repository
+git clone https://github.com/alexlenk/ecowitt_local.git
+cd ecowitt_local
+
+# Install development dependencies  
+pip install -r requirements-dev.txt
+
+# Run tests
+pytest tests/ -v
+
+# Run type checking
+mypy custom_components/ecowitt_local/
+
+# Run linting
+flake8 custom_components/ecowitt_local/
+```
 
 ## 📜 License
 
@@ -176,12 +326,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Home Assistant team for the excellent platform
-- Ecowitt for their weather station hardware
-- Community for feedback and testing
+- Home Assistant team for the excellent platform and integration framework
+- Ecowitt for their reliable weather station hardware and local API
+- Home Assistant community for feedback, testing, and feature requests
+- Contributors who have helped improve the integration
 
 ## 📞 Support
 
-- [GitHub Issues](https://github.com/alexlenk/ecowitt_local/issues) for bug reports
-- [Home Assistant Community](https://community.home-assistant.io/) for questions
+- [GitHub Issues](https://github.com/alexlenk/ecowitt_local/issues) for bug reports and feature requests
+- [GitHub Discussions](https://github.com/alexlenk/ecowitt_local/discussions) for questions and community support
+- [Home Assistant Community](https://community.home-assistant.io/) for general Home Assistant questions
 - [HACS Discord](https://discord.gg/apgchf8) for HACS-related support
+
+---
+
+**⭐ If this integration helps you, please consider starring the repository to support development!**
