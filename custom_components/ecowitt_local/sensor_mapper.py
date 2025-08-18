@@ -146,6 +146,7 @@ class SensorMapper:
                 "lightning_num",
                 "lightning_time",
                 "lightning",
+                "lightning_mi",
                 "wh57batt",
             ])
         elif sensor_type.lower() in ("wh40", "rain"):

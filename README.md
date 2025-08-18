@@ -169,6 +169,15 @@ sensor.ecowitt_pm25_ch1_ef891_signal        # Signal strength [Diagnostic]
 binary_sensor.ecowitt_pm25_ch1_ef891_online # Online status [Diagnostic]
 ```
 
+### Lightning Detection
+```
+sensor.ecowitt_lightning_e4f5a6             # Lightning strikes count (Hardware ID E4F5A6)
+sensor.ecowitt_lightning_e4f5a6_distance    # Lightning distance (km/mi)
+sensor.ecowitt_lightning_e4f5a6_time        # Last lightning timestamp
+sensor.ecowitt_lightning_e4f5a6_battery     # Battery level [Diagnostic]
+binary_sensor.ecowitt_lightning_e4f5a6_online # Online status [Diagnostic]
+```
+
 ## 🔧 Services
 
 The integration provides services for manual control:
@@ -287,16 +296,16 @@ All other sensor types are tested using detailed mock datasets derived from:
 - **Community contributions**: Mock data from users with different device types
 
 **Mock-tested devices include:**
-- **WH68**: Weather station (temp, humidity, wind, solar, UV)
-- **WH31**: Temperature/humidity sensors (CH1-8)
+- **WH68**: Weather station (temp, humidity, wind, solar, UV) ✅ *Implemented*
+- **WH31**: Temperature/humidity sensors (CH1-8) ✅ *Implemented*
+- **WH57**: Lightning detector (strikes, distance, timestamp) ✅ *Implemented*
 - **WH40**: Rain gauge with piezo sensor
-- **WH57**: Lightning detector
 - **WH41**: PM2.5 air quality sensors (CH1-4)
 - **WH45**: CO2/PM2.5/PM10 combo sensor
 - **WH55**: Leak detection sensors (CH1-4)
-- **WH25/WH26**: Indoor sensors
-- **WH34**: Temperature-only sensors (CH1-8)
-- **WH35**: Leaf wetness sensors (CH1-8)
+- **WH25/WH26**: Indoor sensors ✅ *Implemented*
+- **WH34**: Temperature-only sensors (CH1-8) ✅ *Implemented*
+- **WH35**: Leaf wetness sensors (CH1-8) ✅ *Implemented*
 
 ### 🔬 **Testing Methodology**
 

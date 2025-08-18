@@ -111,8 +111,8 @@ def mock_wh31_live_data() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def mock_complete_sensor_mappings(mock_wh68_sensor_mapping, mock_wh31_sensor_mapping) -> list[Dict[str, Any]]:
-    """Mock complete sensor mappings including existing soil sensors and new weather sensors."""
+def mock_complete_sensor_mappings(mock_wh68_sensor_mapping, mock_wh31_sensor_mapping, mock_wh57_sensor_mapping) -> list[Dict[str, Any]]:
+    """Mock complete sensor mappings including existing soil sensors and new weather/environmental sensors."""
     return [
         {
             "id": "D8174", 
@@ -125,18 +125,47 @@ def mock_complete_sensor_mappings(mock_wh68_sensor_mapping, mock_wh31_sensor_map
             "idst": "1"
         },
         mock_wh68_sensor_mapping,
-        mock_wh31_sensor_mapping
+        mock_wh31_sensor_mapping,
+        mock_wh57_sensor_mapping
     ]
 
 
 @pytest.fixture
-def mock_complete_live_data(mock_wh68_live_data, mock_wh31_live_data) -> Dict[str, Any]:
-    """Mock complete live data including soil and weather sensors."""
+def mock_wh57_sensor_mapping() -> Dict[str, Any]:
+    """Mock WH57 lightning detector sensor mapping."""
+    return {
+        "id": "E4F5A6",
+        "img": "wh57",
+        "type": "26",
+        "name": "Lightning",
+        "batt": "90",
+        "rssi": "-65",
+        "signal": "4",
+        "idst": "1"
+    }
+
+
+@pytest.fixture
+def mock_wh57_live_data() -> Dict[str, Any]:
+    """Mock WH57 lightning detector live data."""
+    return {
+        "lightning_num": "12",
+        "lightning_time": "2024-08-18T14:30:15",
+        "lightning": "8.5",
+        "lightning_mi": "5.3",
+        "wh57batt": "90"
+    }
+
+
+@pytest.fixture
+def mock_complete_live_data(mock_wh68_live_data, mock_wh31_live_data, mock_wh57_live_data) -> Dict[str, Any]:
+    """Mock complete live data including soil, weather, and lightning sensors."""
     return {
         "soilmoisture2": "24",
         "soilbatt2": "1.2",
         **mock_wh68_live_data,
-        **mock_wh31_live_data
+        **mock_wh31_live_data,
+        **mock_wh57_live_data
     }
 
 

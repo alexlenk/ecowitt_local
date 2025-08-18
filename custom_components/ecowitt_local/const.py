@@ -219,6 +219,11 @@ SENSOR_TYPES: Final = {
         "unit": "km",
         "device_class": "distance"
     },
+    "lightning_mi": {
+        "name": "Lightning Distance",
+        "unit": "mi",
+        "device_class": "distance"
+    },
 }
 
 # Add dynamically generated channel sensors
