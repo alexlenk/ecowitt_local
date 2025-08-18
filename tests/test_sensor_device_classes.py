@@ -35,7 +35,8 @@ async def test_temperature_sensor_device_class(hass: HomeAssistant, mock_coordin
         "hardware_id": None,
         "category": "sensor",
         "name": "Outdoor Temperature",
-        "device_class": "temperature"
+        "device_class": "temperature",
+        "state": 72.5  # This is where native_value comes from
     }
     
     sensor = EcowittLocalSensor(
@@ -60,7 +61,8 @@ async def test_battery_sensor_device_class(hass: HomeAssistant, mock_coordinator
         "hardware_id": "D8174",
         "category": "battery",
         "name": "Soil Moisture Battery",
-        "device_class": "battery"
+        "device_class": "battery",
+        "state": 85
     }
     
     sensor = EcowittLocalSensor(
@@ -85,7 +87,8 @@ async def test_soil_moisture_sensor_device_class(hass: HomeAssistant, mock_coord
         "hardware_id": "D8174",
         "category": "sensor",
         "name": "Soil Moisture CH1",
-        "device_class": "moisture"
+        "device_class": "moisture",
+        "state": 50
     }
     
     sensor = EcowittLocalSensor(
@@ -110,7 +113,8 @@ async def test_pm25_sensor_device_class(hass: HomeAssistant, mock_coordinator):
         "hardware_id": "EF891",
         "category": "sensor",
         "name": "PM2.5 Air Quality CH1",
-        "device_class": "pm25"
+        "device_class": "pm25",
+        "state": 15.2
     }
     
     sensor = EcowittLocalSensor(
@@ -128,14 +132,13 @@ async def test_pm25_sensor_device_class(hass: HomeAssistant, mock_coordinator):
 @pytest.mark.asyncio
 async def test_unknown_device_class_handling(hass: HomeAssistant, mock_coordinator):
     """Test handling of unknown device class string."""
-    mock_coordinator.data["unknown_sensor"] = 42.0
-    
     sensor_info = {
         "sensor_key": "unknown_sensor",
         "hardware_id": None,
         "category": "sensor",
         "name": "Unknown Sensor",
-        "device_class": "invalid_device_class"
+        "device_class": "invalid_device_class",
+        "state": 42.0
     }
     
     sensor = EcowittLocalSensor(
@@ -153,14 +156,13 @@ async def test_unknown_device_class_handling(hass: HomeAssistant, mock_coordinat
 @pytest.mark.asyncio
 async def test_sensor_with_none_value(hass: HomeAssistant, mock_coordinator):
     """Test sensor handling None value."""
-    mock_coordinator.data["null_sensor"] = None
-    
     sensor_info = {
         "sensor_key": "null_sensor",
         "hardware_id": None,
         "category": "sensor",
         "name": "Null Sensor",
-        "device_class": None
+        "device_class": None,
+        "state": None
     }
     
     sensor = EcowittLocalSensor(
@@ -182,7 +184,8 @@ async def test_sensor_without_device_class(hass: HomeAssistant, mock_coordinator
         "sensor_key": "tempf",
         "hardware_id": None,
         "category": "sensor",
-        "name": "Temperature"
+        "name": "Temperature",
+        "state": 72.5
         # No device_class specified
     }
     

@@ -14,14 +14,7 @@ from custom_components.ecowitt_local.coordinator import EcowittLocalDataUpdateCo
 @pytest.fixture
 def coordinator(hass, mock_config_entry, mock_ecowitt_api):
     """Create a coordinator for testing."""
-    # Ensure mock_config_entry has required data
-    mock_config_entry.data = mock_config_entry.data or {
-        "host": "192.168.1.100",
-        "password": "",
-        "scan_interval": 60,
-        "mapping_interval": 300,
-        "include_inactive": False
-    }
+    # The mock_config_entry fixture already has proper data, so just use it
     coordinator = EcowittLocalDataUpdateCoordinator(hass, mock_config_entry)
     # Replace the API with our mock
     coordinator.api = mock_ecowitt_api

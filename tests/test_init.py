@@ -139,19 +139,21 @@ async def test_service_error_handling(hass: HomeAssistant, setup_integration):
     """Test service error handling."""
     from custom_components.ecowitt_local.const import SERVICE_REFRESH_MAPPING
     from unittest.mock import AsyncMock
+    import pytest
     
     coordinator = hass.data[DOMAIN][setup_integration.entry_id]
     
     # Mock the coordinator's refresh method to raise an exception - use correct method name
     coordinator.async_refresh_mapping = AsyncMock(side_effect=Exception("Test error"))
     
-    # Call service - should not raise exception, but handle gracefully
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_REFRESH_MAPPING,
-        {},
-        blocking=True,
-    )
+    # Call service - should propagate the exception since service doesn't handle errors
+    with pytest.raises(Exception, match="Test error"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REFRESH_MAPPING,
+            {},
+            blocking=True,
+        )
     
     # Verify service was attempted
     coordinator.async_refresh_mapping.assert_called_once()
