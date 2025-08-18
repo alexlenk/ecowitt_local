@@ -25,3 +25,6 @@ env/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Test planning documents (local development only)
+TEST_PLAN.md
