@@ -367,3 +367,264 @@ async def test_migration_from_v1_0(hass: HomeAssistant, mock_ecowitt_api):
     
     # The key test is that migration ran successfully and didn't crash
     assert migrated_entity is not None, "Migration test entity should still exist after migration"
+
+
+async def test_reload_entry_failure(hass: HomeAssistant, setup_integration, mock_ecowitt_api):
+    """Test reload entry failure when unload fails."""
+    config_entry = setup_integration
+    
+    # Verify initial setup
+    assert config_entry.state == ConfigEntryState.LOADED
+    
+    # Mock platform unloading to fail
+    with patch("homeassistant.config_entries.ConfigEntries.async_unload_platforms", return_value=False):
+        # Reload should fail
+        result = await hass.config_entries.async_reload(config_entry.entry_id)
+    
+    assert result is False
+    # Entry should still be loaded since unload failed
+    assert config_entry.state == ConfigEntryState.LOADED
+
+
+async def test_invalid_hardware_id_filtering(hass: HomeAssistant, mock_config_entry, mock_ecowitt_api):
+    """Test filtering of invalid hardware IDs during device setup."""
+    from homeassistant.helpers import device_registry as dr
+    
+    # Configure mock API with invalid hardware IDs
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.get_version.return_value = {"stationtype": "GW1100A", "version": "1.7.3"}
+    mock_ecowitt_api.get_live_data.return_value = {"common_list": []}
+    mock_ecowitt_api.get_all_sensor_mappings.return_value = [
+        # Valid hardware ID
+        {"id": "D8174", "img": "wh51", "type": "15", "name": "Valid Sensor", "batt": "1", "signal": "4"},
+        # Invalid hardware IDs that should be filtered out
+        {"id": "FFFFFFFE", "img": "wh51", "type": "15", "name": "Invalid Sensor 1", "batt": "1", "signal": "4"},
+        {"id": "FFFFFFFF", "img": "wh51", "type": "15", "name": "Invalid Sensor 2", "batt": "1", "signal": "4"},
+        {"id": "00000000", "img": "wh51", "type": "15", "name": "Invalid Sensor 3", "batt": "1", "signal": "4"},
+        {"id": "", "img": "wh51", "type": "15", "name": "Empty Hardware ID", "batt": "1", "signal": "4"},
+    ]
+    
+    mock_config_entry.add_to_hass(hass)
+    
+    with patch("custom_components.ecowitt_local.coordinator.EcowittLocalAPI", return_value=mock_ecowitt_api):
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert result is True
+    
+    # Check device registry - only valid hardware ID should create a device
+    device_registry = dr.async_get(hass)
+    
+    # Valid device should exist
+    valid_device = device_registry.async_get_device(identifiers={(DOMAIN, "D8174")})
+    assert valid_device is not None
+    
+    # Invalid devices should not exist
+    invalid_ids = ["FFFFFFFE", "FFFFFFFF", "00000000", ""]
+    for invalid_id in invalid_ids:
+        if invalid_id:  # Skip empty string check
+            invalid_device = device_registry.async_get_device(identifiers={(DOMAIN, invalid_id)})
+            assert invalid_device is None
+
+
+async def test_service_with_device_id_filtering(hass: HomeAssistant, setup_integration):
+    """Test service calls with device_id filtering."""
+    from custom_components.ecowitt_local.const import SERVICE_REFRESH_MAPPING, SERVICE_UPDATE_DATA
+    from homeassistant.helpers import device_registry as dr
+    from unittest.mock import AsyncMock
+    
+    coordinator = hass.data[DOMAIN][setup_integration.entry_id]
+    device_registry = dr.async_get(hass)
+    
+    # Get the gateway device
+    gateway_info = coordinator.gateway_info
+    gateway_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, gateway_info.get("gateway_id", "unknown"))}
+    )
+    assert gateway_device is not None
+    
+    # Mock coordinator methods
+    coordinator.async_refresh_mapping = AsyncMock()
+    coordinator.async_request_refresh = AsyncMock()
+    
+    # Test refresh mapping service with device_id
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_MAPPING,
+        {"device_id": gateway_device.id},
+        blocking=True,
+    )
+    
+    # Should still be called since device is associated with this entry
+    coordinator.async_refresh_mapping.assert_called_once()
+    coordinator.async_refresh_mapping.reset_mock()
+    
+    # Test update data service with device_id
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_DATA,
+        {"device_id": gateway_device.id},
+        blocking=True,
+    )
+    
+    # Should still be called since device is associated with this entry
+    coordinator.async_request_refresh.assert_called_once()
+    coordinator.async_request_refresh.reset_mock()
+    
+    # Test with non-existent device_id
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_MAPPING,
+        {"device_id": "non_existent_device_id"},
+        blocking=True,
+    )
+    
+    # Should not be called since device doesn't exist
+    coordinator.async_refresh_mapping.assert_not_called()
+
+
+async def test_service_with_invalid_device_id(hass: HomeAssistant, setup_integration):
+    """Test service calls with invalid device_id that exists but is not associated with our entry."""
+    from custom_components.ecowitt_local.const import SERVICE_REFRESH_MAPPING, SERVICE_UPDATE_DATA
+    from homeassistant.helpers import device_registry as dr
+    from unittest.mock import AsyncMock
+    
+    coordinator = hass.data[DOMAIN][setup_integration.entry_id]
+    device_registry = dr.async_get(hass)
+    
+    # Create a device that's NOT associated with our config entry
+    other_device = device_registry.async_get_or_create(
+        config_entry_id="other_entry_id",
+        identifiers={("other_domain", "other_device")},
+        name="Other Device",
+        manufacturer="Other"
+    )
+    
+    # Mock coordinator methods
+    coordinator.async_refresh_mapping = AsyncMock()
+    coordinator.async_request_refresh = AsyncMock()
+    
+    # Test with device_id that exists but is not ours
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_MAPPING,
+        {"device_id": other_device.id},
+        blocking=True,
+    )
+    
+    # Should not be called since device is not associated with our entry
+    coordinator.async_refresh_mapping.assert_not_called()
+    
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_DATA,
+        {"device_id": other_device.id},
+        blocking=True,
+    )
+    
+    # Should not be called since device is not associated with our entry
+    coordinator.async_request_refresh.assert_not_called()
+
+
+async def test_migration_with_missing_coordinator(hass: HomeAssistant):
+    """Test migration when coordinator is not available in hass.data."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+    from custom_components.ecowitt_local import async_migrate_entry
+    from custom_components.ecowitt_local.const import CONF_HOST, CONF_PASSWORD
+    
+    # Create entry with version 1.0 that needs migration
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100", CONF_PASSWORD: ""},
+        version=1,
+        entry_id="test_entry",
+        unique_id="test_unique",
+    )
+    entry.minor_version = 0  # Version 1.0
+    
+    # Don't setup the integration - coordinator won't be in hass.data
+    
+    # Test migration function - should still work even without coordinator
+    result = await async_migrate_entry(hass, entry)
+    assert result is True
+    assert entry.minor_version == 3
+
+
+async def test_migration_gateway_sensor_reassignment(hass: HomeAssistant, mock_ecowitt_api):
+    """Test migration v1.3 that moves gateway sensors back to gateway device."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+    from custom_components.ecowitt_local import async_migrate_entry
+    from custom_components.ecowitt_local.const import CONF_HOST, CONF_PASSWORD, GATEWAY_SENSORS
+    from homeassistant.helpers import entity_registry as er, device_registry as dr
+    
+    # Configure mock API
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.get_version.return_value = {"stationtype": "GW1100A", "version": "1.7.3"}
+    mock_ecowitt_api.get_live_data.return_value = {"common_list": []}
+    mock_ecowitt_api.get_all_sensor_mappings.return_value = []
+    
+    # Create entry with version 1.2 (needs migration to 1.3)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100", CONF_PASSWORD: ""},
+        version=1,
+        entry_id="test_entry",
+        unique_id="test_unique",
+    )
+    entry.minor_version = 2  # Version 1.2, needs migration to 1.3
+    entry.add_to_hass(hass)
+    
+    # Setup the integration first
+    with patch("custom_components.ecowitt_local.coordinator.EcowittLocalAPI", return_value=mock_ecowitt_api):
+        result = await hass.config_entries.async_setup(entry.entry_id)
+        assert result is True
+    
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+    
+    # Create a sensor device
+    sensor_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "sensor_device")},
+        name="Sensor Device",
+        manufacturer="Ecowitt"
+    )
+    
+    # Create a gateway sensor entity that should be moved back to gateway
+    gateway_sensor_key = list(GATEWAY_SENSORS)[0]  # Get first gateway sensor
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=f"ecowitt_local_{gateway_sensor_key}",
+        config_entry=entry,
+        device_id=sensor_device.id,  # Initially assigned to sensor device
+        original_name=f"Gateway {gateway_sensor_key}"
+    )
+    
+    # Test migration function
+    result = await async_migrate_entry(hass, entry)
+    assert result is True
+    assert entry.minor_version == 3
+    
+    # Verify the gateway sensor entity was moved to gateway device
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    gateway_id = coordinator.gateway_info.get("gateway_id", "unknown")
+    gateway_device = device_registry.async_get_device(identifiers={(DOMAIN, gateway_id)})
+    
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    gateway_entity = next(
+        (e for e in entities if gateway_sensor_key in e.unique_id),
+        None
+    )
+    
+    assert gateway_entity is not None
+    assert gateway_entity.device_id == gateway_device.id
+
+
+async def test_async_remove_entry(hass: HomeAssistant, mock_config_entry):
+    """Test async_remove_entry function."""
+    from custom_components.ecowitt_local import async_remove_entry
+    
+    # Test the remove entry function
+    await async_remove_entry(hass, mock_config_entry)
+    
+    # Function should complete without error
+    # Currently it just logs, so we verify it doesn't raise an exception
