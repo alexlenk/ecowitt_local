@@ -14,7 +14,7 @@ A Home Assistant custom integration that replaces the webhook-based Ecowitt inte
 
 The existing Home Assistant Ecowitt integration relies on webhooks with fundamental limitations:
 - **Unstable Entity IDs**: Channel-based naming that changes when batteries die
-- **HTTP-Only**: Security vulnerability requiring non-encrypted endpoints  
+- **HTTP Exposure Required**: Must expose Home Assistant over HTTP for gateway webhook delivery
 - **Limited Data**: Missing battery levels, signal strength, and hardware IDs
 - **Poor Organization**: All sensors lumped under gateway device
 - **Protocol Constraints**: Cannot be fixed within webhook paradigm
@@ -35,7 +35,7 @@ The existing Home Assistant Ecowitt integration relies on webhooks with fundamen
 ## 🚀 Key Features
 
 ### 🔒 Enhanced Security & Reliability
-- **Full HTTPS compatibility** - No HTTP requirement
+- **No HTTP exposure required** - Unlike webhook integration that requires HA accessible over HTTP
 - **Direct polling** - More reliable than webhook dependency  
 - **Robust error handling** - Continues working during network hiccups
 
