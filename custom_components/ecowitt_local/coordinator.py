@@ -277,8 +277,16 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             # Convert battery values from 0-5 scale to 0-100%
             converted_value = sensor_value
             if battery_info and sensor_value and str(sensor_value).isdigit():
-                converted_value = str(int(sensor_value) * 20)
-                _LOGGER.debug("Converted battery value %s to %s%% for sensor %s", sensor_value, converted_value, sensor_key)
+                # Only convert if this is a raw 1-5 scale value
+                int_value = int(sensor_value)
+                if int_value <= 5:
+                    # Raw scale 1-5, convert to percentage
+                    converted_value = str(int_value * 20)
+                    _LOGGER.debug("Converted battery value %s to %s%% for sensor %s", sensor_value, converted_value, sensor_key)
+                else:
+                    # Already a percentage value, keep as is
+                    converted_value = sensor_value
+                    _LOGGER.debug("Battery value %s already in percentage for sensor %s", sensor_value, sensor_key)
             else:
                 converted_value = self._convert_sensor_value(sensor_value, unit)
             
