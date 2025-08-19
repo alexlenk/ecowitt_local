@@ -10,6 +10,9 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from custom_components.ecowitt_local.api import AuthenticationError, ConnectionError as APIConnectionError
 from custom_components.ecowitt_local.coordinator import EcowittLocalDataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryNotReady
+from datetime import datetime, timedelta
+from unittest.mock import Mock
 
 
 @pytest.fixture
@@ -233,3 +236,572 @@ async def test_coordinator_empty_common_list_handling(coordinator):
     assert result is not None
     assert isinstance(result, dict)
     assert "sensors" in result
+
+
+@pytest.mark.asyncio
+async def test_coordinator_setup_success(coordinator):
+    """Test successful coordinator setup."""
+    coordinator.api.test_connection = AsyncMock()
+    coordinator._update_sensor_mapping = AsyncMock()
+    
+    await coordinator.async_setup()
+    
+    coordinator.api.test_connection.assert_called_once()
+    coordinator._update_sensor_mapping.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_coordinator_setup_auth_error(coordinator):
+    """Test coordinator setup with authentication error."""
+    coordinator.api.test_connection = AsyncMock(side_effect=AuthenticationError("Auth failed"))
+    
+    with pytest.raises(ConfigEntryAuthFailed, match="Authentication failed"):
+        await coordinator.async_setup()
+
+
+@pytest.mark.asyncio
+async def test_coordinator_setup_connection_error(coordinator):
+    """Test coordinator setup with connection error."""
+    coordinator.api.test_connection = AsyncMock(side_effect=APIConnectionError("Connection failed"))
+    
+    with pytest.raises(ConfigEntryNotReady, match="Cannot connect to gateway"):
+        await coordinator.async_setup()
+
+
+@pytest.mark.asyncio
+async def test_coordinator_setup_unexpected_error(coordinator):
+    """Test coordinator setup with unexpected error."""
+    coordinator.api.test_connection = AsyncMock(side_effect=ValueError("Unexpected error"))
+    
+    with pytest.raises(ConfigEntryNotReady, match="Setup failed"):
+        await coordinator.async_setup()
+
+
+@pytest.mark.asyncio
+async def test_coordinator_shutdown(coordinator):
+    """Test coordinator shutdown."""
+    coordinator.api.close = AsyncMock()
+    
+    # Mock refresh debouncer and unsub_refresh
+    mock_debouncer = Mock()
+    mock_debouncer.async_cancel = Mock()
+    coordinator._debounced_refresh = mock_debouncer
+    
+    mock_unsub = Mock()
+    coordinator._unsub_refresh = mock_unsub
+    
+    await coordinator.async_shutdown()
+    
+    mock_debouncer.async_cancel.assert_called_once()
+    mock_unsub.assert_called_once()
+    coordinator.api.close.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_coordinator_shutdown_no_refresh_tasks(coordinator):
+    """Test coordinator shutdown without refresh tasks."""
+    coordinator.api.close = AsyncMock()
+    
+    # No debouncer or unsub_refresh set
+    await coordinator.async_shutdown()
+    
+    coordinator.api.close.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_coordinator_convert_sensor_value_numeric(coordinator):
+    """Test sensor value conversion for numeric values."""
+    # Integer
+    assert coordinator._convert_sensor_value(42, None) == 42
+    
+    # Float
+    assert coordinator._convert_sensor_value(42.5, None) == 42.5
+    
+    # String integer
+    assert coordinator._convert_sensor_value("42", None) == 42
+    
+    # String float
+    assert coordinator._convert_sensor_value("42.5", None) == 42.5
+
+
+@pytest.mark.asyncio
+async def test_coordinator_convert_sensor_value_special_cases(coordinator):
+    """Test sensor value conversion for special cases."""
+    # Empty values
+    assert coordinator._convert_sensor_value("", None) is None
+    assert coordinator._convert_sensor_value(None, None) is None
+    
+    # Special string values
+    assert coordinator._convert_sensor_value("--", None) is None
+    assert coordinator._convert_sensor_value("null", None) is None
+    assert coordinator._convert_sensor_value("none", None) is None
+    assert coordinator._convert_sensor_value("n/a", None) is None
+    
+    # Non-numeric string
+    assert coordinator._convert_sensor_value("invalid", None) == "invalid"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_convert_sensor_value_error_handling(coordinator):
+    """Test sensor value conversion error handling."""
+    # Mock object that raises exception during conversion
+    class MockValue:
+        def __str__(self):
+            raise ValueError("Conversion error")
+        def strip(self):
+            raise ValueError("Conversion error")
+    
+    mock_value = MockValue()
+    result = coordinator._convert_sensor_value(mock_value, None)
+    # Should return string representation despite conversion error
+    assert result is not None
+
+
+@pytest.mark.asyncio
+async def test_coordinator_process_gateway_info_success(coordinator):
+    """Test gateway info processing success."""
+    # Remove the mocked method from fixture and test the real one
+    del coordinator._process_gateway_info
+    
+    coordinator.api.get_version = AsyncMock(return_value={
+        "stationtype": "GW1100A",
+        "version": "1.7.3"
+    })
+    
+    # Clear cached gateway info
+    coordinator._gateway_info = {}
+    
+    gateway_info = await coordinator._process_gateway_info()
+    
+    assert gateway_info["model"] == "GW1100A"
+    assert gateway_info["firmware_version"] == "1.7.3"
+    assert gateway_info["host"] == "192.168.1.100"  # From config entry
+    assert gateway_info["gateway_id"] == "GW1100A"
+    
+    # Should cache the result
+    assert coordinator._gateway_info == gateway_info
+
+
+@pytest.mark.asyncio
+async def test_coordinator_process_gateway_info_error(coordinator):
+    """Test gateway info processing with API error."""
+    # Remove the mocked method from fixture and test the real one
+    del coordinator._process_gateway_info
+    
+    coordinator.api.get_version = AsyncMock(side_effect=APIConnectionError("Connection failed"))
+    
+    # Clear cached gateway info
+    coordinator._gateway_info = {}
+    
+    gateway_info = await coordinator._process_gateway_info()
+    
+    assert gateway_info["model"] == "Unknown"
+    assert gateway_info["firmware_version"] == "Unknown"
+    assert gateway_info["host"] == "192.168.1.100"  # From config entry
+    assert gateway_info["gateway_id"] == "unknown"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_process_gateway_info_cached(coordinator):
+    """Test gateway info processing with cached data."""
+    # Remove the mocked method from fixture and test the real one
+    del coordinator._process_gateway_info
+    
+    # Set cached gateway info
+    cached_info = {
+        "model": "Cached Model",
+        "firmware_version": "Cached Version",
+        "host": "192.168.1.100",
+        "gateway_id": "cached"
+    }
+    coordinator._gateway_info = cached_info
+    
+    gateway_info = await coordinator._process_gateway_info()
+    
+    # Should return cached data without calling API
+    assert gateway_info == cached_info
+
+
+@pytest.mark.asyncio
+async def test_coordinator_get_sensor_data_success(coordinator):
+    """Test getting sensor data for specific entity."""
+    mock_sensor_data = {
+        "entity_id": "sensor.test",
+        "name": "Test Sensor",
+        "state": 42.0
+    }
+    
+    coordinator.data = {
+        "sensors": {
+            "sensor.test": mock_sensor_data
+        }
+    }
+    
+    result = coordinator.get_sensor_data("sensor.test")
+    
+    assert result == mock_sensor_data
+    assert result is not mock_sensor_data  # Should be a copy
+
+
+@pytest.mark.asyncio
+async def test_coordinator_get_sensor_data_not_found(coordinator):
+    """Test getting sensor data for non-existent entity."""
+    coordinator.data = {
+        "sensors": {
+            "sensor.other": {"name": "Other Sensor"}
+        }
+    }
+    
+    result = coordinator.get_sensor_data("sensor.nonexistent")
+    
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_coordinator_get_sensor_data_no_data(coordinator):
+    """Test getting sensor data when no data available."""
+    coordinator.data = None
+    
+    result = coordinator.get_sensor_data("sensor.test")
+    
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_coordinator_get_all_sensors(coordinator):
+    """Test getting all sensor data."""
+    mock_sensors = {
+        "sensor.test1": {"name": "Test 1"},
+        "sensor.test2": {"name": "Test 2"}
+    }
+    
+    coordinator.data = {
+        "sensors": mock_sensors
+    }
+    
+    result = coordinator.get_all_sensors()
+    
+    assert result == mock_sensors
+
+
+@pytest.mark.asyncio
+async def test_coordinator_get_all_sensors_no_data(coordinator):
+    """Test getting all sensors when no data available."""
+    coordinator.data = None
+    
+    result = coordinator.get_all_sensors()
+    
+    assert result == {}
+
+
+@pytest.mark.asyncio
+async def test_coordinator_gateway_info_property(coordinator):
+    """Test gateway info property access."""
+    test_info = {"model": "GW1100A", "version": "1.7.3"}
+    coordinator._gateway_info = test_info
+    
+    assert coordinator.gateway_info == test_info
+
+
+@pytest.mark.asyncio
+async def test_coordinator_update_sensor_mapping_if_needed_first_time(coordinator):
+    """Test sensor mapping update on first call."""
+    # Remove the mocked method from fixture and test the real one
+    del coordinator._update_sensor_mapping_if_needed
+    
+    coordinator._update_sensor_mapping = AsyncMock()
+    coordinator._last_mapping_update = None
+    
+    await coordinator._update_sensor_mapping_if_needed()
+    
+    coordinator._update_sensor_mapping.assert_called_once()
+    assert coordinator._last_mapping_update is not None
+
+
+@pytest.mark.asyncio
+async def test_coordinator_update_sensor_mapping_if_needed_recent(coordinator):
+    """Test sensor mapping update when recently updated."""
+    coordinator._update_sensor_mapping = AsyncMock()
+    coordinator._last_mapping_update = datetime.now()
+    
+    await coordinator._update_sensor_mapping_if_needed()
+    
+    # Should not update since it was recent
+    coordinator._update_sensor_mapping.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_coordinator_update_sensor_mapping_if_needed_interval_exceeded(coordinator):
+    """Test sensor mapping update when interval exceeded."""
+    # Remove the mocked method from fixture and test the real one
+    del coordinator._update_sensor_mapping_if_needed
+    
+    coordinator._update_sensor_mapping = AsyncMock()
+    coordinator._last_mapping_update = datetime.now() - timedelta(seconds=3700)  # Over 1 hour
+    
+    await coordinator._update_sensor_mapping_if_needed()
+    
+    coordinator._update_sensor_mapping.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_coordinator_update_sensor_mapping_success(coordinator):
+    """Test successful sensor mapping update."""
+    mock_mappings = [
+        {
+            "id": "D8174",
+            "img": "WH51",
+            "name": "Soil moisture CH1",
+            "batt": "85",
+            "signal": "4"
+        }
+    ]
+    
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=mock_mappings)
+    
+    await coordinator._update_sensor_mapping()
+    
+    # Verify mapping was updated
+    stats = coordinator.sensor_mapper.get_mapping_stats()
+    assert stats["total_sensors"] == 1
+
+
+@pytest.mark.asyncio
+async def test_coordinator_update_sensor_mapping_empty_response(coordinator):
+    """Test sensor mapping update with empty response."""
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    
+    # Should not raise error, just log warning
+    await coordinator._update_sensor_mapping()
+    
+    stats = coordinator.sensor_mapper.get_mapping_stats()
+    assert stats["total_sensors"] == 0
+
+
+@pytest.mark.asyncio
+async def test_coordinator_update_sensor_mapping_error(coordinator):
+    """Test sensor mapping update with error."""
+    coordinator.api.get_all_sensor_mappings = AsyncMock(side_effect=APIConnectionError("Connection failed"))
+    
+    # Should not raise error, just log warning
+    await coordinator._update_sensor_mapping()
+    
+    stats = coordinator.sensor_mapper.get_mapping_stats()
+    assert stats["total_sensors"] == 0
+
+
+@pytest.mark.asyncio
+async def test_coordinator_process_ch_soil_data(coordinator):
+    """Test processing ch_soil data structure."""
+    mock_live_data = {
+        "ch_soil": [
+            {
+                "channel": "1",
+                "humidity": "45%", 
+                "battery": "4"
+            },
+            {
+                "channel": "2",
+                "humidity": "50%",
+                "battery": "3"
+            }
+        ]
+    }
+    
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    
+    result = await coordinator._async_update_data()
+    
+    sensors = result["sensors"]
+    
+    # Check for soil moisture sensors
+    soil1_found = False
+    soil2_found = False
+    battery1_found = False
+    battery2_found = False
+    
+    for entity_id, sensor_data in sensors.items():
+        sensor_key = sensor_data.get("sensor_key")
+        if sensor_key == "soilmoisture1":
+            soil1_found = True
+            assert sensor_data["state"] == 45  # Converted to int
+        elif sensor_key == "soilmoisture2":
+            soil2_found = True
+            assert sensor_data["state"] == 50  # Converted to int
+        elif sensor_key == "soilbatt1":
+            battery1_found = True
+            assert sensor_data["state"] == "80"  # 4 * 20 = 80%
+        elif sensor_key == "soilbatt2":
+            battery2_found = True
+            assert sensor_data["state"] == "60"  # 3 * 20 = 60%
+    
+    assert soil1_found
+    assert soil2_found
+    assert battery1_found
+    assert battery2_found
+
+
+@pytest.mark.asyncio
+async def test_coordinator_process_wh25_data(coordinator):
+    """Test processing wh25 data structure."""
+    mock_live_data = {
+        "wh25": [
+            {
+                "intemp": "22.5",
+                "inhumi": "45%",
+                "abs": "1013.2 hPa",
+                "rel": "1015.8 hPa"
+            }
+        ]
+    }
+    
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    
+    result = await coordinator._async_update_data()
+    
+    sensors = result["sensors"]
+    
+    # Check for indoor sensors
+    temp_found = False
+    humidity_found = False
+    abs_pressure_found = False
+    rel_pressure_found = False
+    
+    for entity_id, sensor_data in sensors.items():
+        sensor_key = sensor_data.get("sensor_key")
+        if sensor_key == "tempinf":
+            temp_found = True
+            assert sensor_data["state"] == 22.5  # Converted to float
+        elif sensor_key == "humidityin":
+            humidity_found = True
+            assert sensor_data["state"] == 45  # % removed, converted to int
+        elif sensor_key == "baromabsin":
+            abs_pressure_found = True
+            assert sensor_data["state"] == 1013.2  # hPa removed, converted to float
+        elif sensor_key == "baromrelin":
+            rel_pressure_found = True
+            assert sensor_data["state"] == 1015.8  # hPa removed, converted to float
+    
+    assert temp_found
+    assert humidity_found
+    assert abs_pressure_found
+    assert rel_pressure_found
+
+
+@pytest.mark.asyncio
+async def test_coordinator_add_diagnostic_sensors(coordinator):
+    """Test adding diagnostic and signal sensors."""
+    # Set up sensor mapping with hardware info
+    mock_mappings = [
+        {
+            "id": "D8174",
+            "img": "WH51",
+            "name": "Soil moisture CH1",
+            "batt": "85",
+            "signal": "4",
+            "channel": "1"
+        }
+    ]
+    
+    coordinator.sensor_mapper.update_mapping(mock_mappings)
+    
+    mock_live_data = {
+        "common_list": [
+            {"id": "soilmoisture1", "val": "45"}
+        ]
+    }
+    
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=mock_mappings)
+    
+    result = await coordinator._async_update_data()
+    
+    sensors = result["sensors"]
+    
+    # Check for diagnostic sensors
+    signal_found = False
+    hardware_id_found = False
+    channel_found = False
+    
+    for entity_id, sensor_data in sensors.items():
+        sensor_key = sensor_data.get("sensor_key")
+        if sensor_key == "signal_D8174":
+            signal_found = True
+            assert sensor_data["state"] == "100"  # 4 * 25 = 100%
+            assert sensor_data["category"] == "diagnostic"
+        elif sensor_key == "hardware_id_D8174":
+            hardware_id_found = True
+            assert sensor_data["state"] == "D8174"
+            assert sensor_data["category"] == "diagnostic"
+        elif sensor_key == "channel_D8174":
+            channel_found = True
+            assert sensor_data["state"] == "1"
+            assert sensor_data["category"] == "diagnostic"
+    
+    assert signal_found
+    assert hardware_id_found
+    assert channel_found
+
+
+@pytest.mark.asyncio
+async def test_coordinator_include_inactive_sensors(coordinator):
+    """Test including inactive sensors when configured."""
+    # Enable include_inactive
+    coordinator._include_inactive = True
+    
+    mock_live_data = {
+        "common_list": [
+            {"id": "tempf", "val": "72.5"},
+            {"id": "humidity", "val": ""}  # Empty value
+        ]
+    }
+    
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    
+    result = await coordinator._async_update_data()
+    
+    sensors = result["sensors"]
+    
+    # Should include both sensors, even the one with empty value
+    found_sensors = []
+    for entity_id, sensor_data in sensors.items():
+        sensor_key = sensor_data.get("sensor_key")
+        if sensor_key in ["tempf", "humidity"]:
+            found_sensors.append(sensor_key)
+    
+    assert "tempf" in found_sensors
+    assert "humidity" in found_sensors
+
+
+@pytest.mark.asyncio
+async def test_coordinator_exclude_inactive_sensors(coordinator):
+    """Test excluding inactive sensors when configured."""
+    # Disable include_inactive (default)
+    coordinator._include_inactive = False
+    
+    mock_live_data = {
+        "common_list": [
+            {"id": "tempf", "val": "72.5"},
+            {"id": "humidity", "val": ""}  # Empty value
+        ]
+    }
+    
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    
+    result = await coordinator._async_update_data()
+    
+    sensors = result["sensors"]
+    
+    # Should only include sensor with value
+    found_sensors = []
+    for entity_id, sensor_data in sensors.items():
+        sensor_key = sensor_data.get("sensor_key")
+        if sensor_key in ["tempf", "humidity"]:
+            found_sensors.append(sensor_key)
+    
+    assert "tempf" in found_sensors
+    assert "humidity" not in found_sensors
