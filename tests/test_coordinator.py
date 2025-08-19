@@ -363,6 +363,12 @@ async def test_coordinator_convert_sensor_value_error_handling(coordinator):
 @pytest.mark.asyncio
 async def test_coordinator_process_gateway_info_success(coordinator):
     """Test gateway info processing success."""
+    # Ensure config_entry is properly set with data
+    if coordinator.config_entry is None:
+        from unittest.mock import Mock
+        coordinator.config_entry = Mock()
+        coordinator.config_entry.data = {"host": "192.168.1.100"}
+    
     # Remove the mocked method from fixture and test the real one
     if hasattr(coordinator, '_process_gateway_info') and callable(getattr(coordinator, '_process_gateway_info')):
         # If it's a mock, replace with real method
@@ -391,6 +397,12 @@ async def test_coordinator_process_gateway_info_success(coordinator):
 @pytest.mark.asyncio
 async def test_coordinator_process_gateway_info_error(coordinator):
     """Test gateway info processing with API error."""
+    # Ensure config_entry is properly set with data
+    if coordinator.config_entry is None:
+        from unittest.mock import Mock
+        coordinator.config_entry = Mock()
+        coordinator.config_entry.data = {"host": "192.168.1.100"}
+    
     # Remove the mocked method from fixture and test the real one
     if hasattr(coordinator, '_process_gateway_info') and callable(getattr(coordinator, '_process_gateway_info')):
         # If it's a mock, replace with real method
@@ -518,6 +530,12 @@ async def test_coordinator_gateway_info_property(coordinator):
 @pytest.mark.asyncio
 async def test_coordinator_update_sensor_mapping_if_needed_first_time(coordinator):
     """Test sensor mapping update on first call."""
+    # Ensure config_entry is properly set with data
+    if coordinator.config_entry is None:
+        from unittest.mock import Mock
+        coordinator.config_entry = Mock()
+        coordinator.config_entry.data = {"mapping_interval": 3600}  # 1 hour
+    
     # Remove the mocked method from fixture and test the real one
     if hasattr(coordinator, '_update_sensor_mapping_if_needed') and callable(getattr(coordinator, '_update_sensor_mapping_if_needed')):
         # If it's a mock, replace with real method
@@ -548,6 +566,12 @@ async def test_coordinator_update_sensor_mapping_if_needed_recent(coordinator):
 @pytest.mark.asyncio
 async def test_coordinator_update_sensor_mapping_if_needed_interval_exceeded(coordinator):
     """Test sensor mapping update when interval exceeded."""
+    # Ensure config_entry is properly set with data
+    if coordinator.config_entry is None:
+        from unittest.mock import Mock
+        coordinator.config_entry = Mock()
+        coordinator.config_entry.data = {"mapping_interval": 3600}  # 1 hour
+    
     # Remove the mocked method from fixture and test the real one
     if hasattr(coordinator, '_update_sensor_mapping_if_needed') and callable(getattr(coordinator, '_update_sensor_mapping_if_needed')):
         # If it's a mock, replace with real method
