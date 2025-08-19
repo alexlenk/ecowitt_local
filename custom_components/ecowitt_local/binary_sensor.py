@@ -138,11 +138,19 @@ class EcowittSensorOnlineBinarySensor(
         
         for entity_id, sensor_info in sensor_data.items():
             if sensor_info.get("hardware_id") == self._hardware_id:
-                # Check if sensor has a value (not None)
-                if sensor_info.get("state") is not None:
-                    return True
+                state = sensor_info.get("state")
+                
+                # Check if sensor has a meaningful value (not None and not invalid values)
+                if state is not None:
+                    # Convert to string and check if it's a valid value
+                    state_str = str(state).lower()
+                    invalid_states = {"unknown", "n/a", "none", "", "null", "unavailable"}
                     
-                # Check timestamp if available
+                    # If state is not in invalid states, sensor is online
+                    if state_str not in invalid_states:
+                        return True
+                    
+                # Check timestamp if available (fallback for sensors without valid state)
                 last_update_str = sensor_info.get("attributes", {}).get("last_update")
                 if last_update_str:
                     try:

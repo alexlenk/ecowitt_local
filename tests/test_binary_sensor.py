@@ -245,6 +245,51 @@ def test_sensor_online_state_invalid_timestamp(mock_coordinator):
     assert entity.is_on is False
 
 
+def test_sensor_online_state_with_unknown_value(mock_coordinator):
+    """Test is_on property when sensor has Unknown value."""
+    entity = EcowittSensorOnlineBinarySensor(mock_coordinator, "D8174", {"sensor_key": "test"})
+    
+    mock_coordinator.get_all_sensors.return_value = {
+        "sensor.test": {
+            "hardware_id": "D8174",
+            "state": "Unknown"  # Invalid state
+        }
+    }
+    
+    assert entity.is_on is False
+
+
+def test_sensor_online_state_with_various_invalid_values(mock_coordinator):
+    """Test is_on property with various invalid state values."""
+    entity = EcowittSensorOnlineBinarySensor(mock_coordinator, "D8174", {"sensor_key": "test"})
+    
+    invalid_values = ["Unknown", "N/A", "None", "", "null", "unavailable", "UNKNOWN", "n/a"]
+    
+    for invalid_value in invalid_values:
+        mock_coordinator.get_all_sensors.return_value = {
+            "sensor.test": {
+                "hardware_id": "D8174",
+                "state": invalid_value
+            }
+        }
+        
+        assert entity.is_on is False, f"Expected sensor to be offline with state '{invalid_value}'"
+
+
+def test_sensor_online_state_with_valid_value(mock_coordinator):
+    """Test is_on property when sensor has a valid numeric value."""
+    entity = EcowittSensorOnlineBinarySensor(mock_coordinator, "D8174", {"sensor_key": "test"})
+    
+    mock_coordinator.get_all_sensors.return_value = {
+        "sensor.test": {
+            "hardware_id": "D8174",
+            "state": 25.6  # Valid numeric value
+        }
+    }
+    
+    assert entity.is_on is True
+
+
 def test_sensor_device_info_with_hardware_id(mock_coordinator):
     """Test device_info property with valid hardware ID."""
     entity = EcowittSensorOnlineBinarySensor(mock_coordinator, "D8174", {"sensor_key": "test"})
