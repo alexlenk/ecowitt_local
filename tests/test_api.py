@@ -279,3 +279,269 @@ async def test_reauthentication_on_401():
         assert result == {"common_list": []}
     
     await api.close()
+
+
+@pytest.mark.asyncio
+async def test_authenticate_session_not_initialized():
+    """Test authentication with session not initialized."""
+    api = EcowittLocalAPI("192.168.1.100", "test_password")
+    
+    # Close session to simulate uninitialized state
+    await api.close()
+    api._session = None
+    
+    with pytest.raises(ConnectionError, match="Session not initialized"):
+        await api.authenticate()
+
+
+@pytest.mark.asyncio
+async def test_authenticate_timeout_error():
+    """Test authentication with timeout error."""
+    api = EcowittLocalAPI("192.168.1.100", "test_password")
+    
+    with aioresponses() as m:
+        m.post("http://192.168.1.100/set_login_info", exception=asyncio.TimeoutError())
+        
+        with pytest.raises(ConnectionError, match="Timeout during authentication"):
+            await api.authenticate()
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_make_request_session_not_initialized():
+    """Test _make_request with session not initialized."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    # Close session to simulate uninitialized state
+    await api.close()
+    api._session = None
+    
+    with pytest.raises(ConnectionError, match="Session not initialized"):
+        await api._make_request("/test")
+
+
+@pytest.mark.asyncio
+async def test_make_request_401_reauth_fails():
+    """Test _make_request with 401 error and re-authentication failure."""
+    api = EcowittLocalAPI("192.168.1.100", "test_password")
+    
+    # Mock authenticate to return False instead of raising exception
+    async def mock_authenticate():
+        return False
+    
+    api.authenticate = mock_authenticate
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/test", status=401)
+        
+        with pytest.raises(AuthenticationError, match="Re-authentication failed"):
+            await api._make_request("/test")
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_make_request_401_reauth_succeeds_then_fails():
+    """Test _make_request with 401, successful reauth, then 401 again."""
+    api = EcowittLocalAPI("192.168.1.100", "test_password")
+    
+    with aioresponses() as m:
+        # Mock successful re-authentication but still get 401 on retry
+        m.post("http://192.168.1.100/set_login_info", status=200)
+        m.get("http://192.168.1.100/test", status=401)
+        m.get("http://192.168.1.100/test", status=401)  # Retry also fails
+        
+        with pytest.raises(AuthenticationError, match="Authentication expired"):
+            await api._make_request("/test")
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_make_request_401_reauth_session_none():
+    """Test _make_request with 401, successful reauth, but session becomes None."""
+    api = EcowittLocalAPI("192.168.1.100", "test_password")
+    
+    # Mock the authenticate method to succeed but clear session
+    async def mock_authenticate():
+        api._session = None
+        return True
+    
+    api.authenticate = mock_authenticate
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/test", status=401)
+        
+        with pytest.raises(ConnectionError, match="Session not initialized"):
+            await api._make_request("/test")
+
+
+@pytest.mark.asyncio
+async def test_make_request_non_200_status():
+    """Test _make_request with non-200 HTTP status."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/test", status=500, body="Server Error")
+        
+        with pytest.raises(ConnectionError, match="HTTP 500"):
+            await api._make_request("/test")
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_make_request_invalid_json():
+    """Test _make_request with invalid JSON response."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/test", status=200, body="invalid json")
+        
+        with pytest.raises(DataError, match="Invalid JSON response"):
+            await api._make_request("/test")
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_make_request_timeout_error():
+    """Test _make_request with timeout error."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/test", exception=asyncio.TimeoutError())
+        
+        with pytest.raises(ConnectionError, match="Request timeout"):
+            await api._make_request("/test")
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_sensor_mapping_with_authentication():
+    """Test get_sensor_mapping that triggers authentication."""
+    api = EcowittLocalAPI("192.168.1.100", "test_password")
+    
+    mock_data = {
+        "sensor": [
+            {"id": "D8174", "type": "WH51", "channel": "1"},
+        ]
+    }
+    
+    with aioresponses() as m:
+        m.post("http://192.168.1.100/set_login_info", status=200)
+        m.get("http://192.168.1.100/get_sensors_info?page=1", payload=mock_data)
+        
+        result = await api.get_sensor_mapping(1)
+        
+        assert result == mock_data["sensor"]
+        assert api._authenticated is True
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_sensor_mapping_array_response():
+    """Test get_sensor_mapping with direct array response."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    mock_data = [
+        {"id": "D8174", "type": "WH51", "channel": "1"},
+        {"id": "D8648", "type": "WH51", "channel": "2"},
+    ]
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_sensors_info?page=1", payload=mock_data)
+        
+        result = await api.get_sensor_mapping(1)
+        
+        assert result == mock_data
+        assert len(result) == 2
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_sensor_mapping_invalid_response():
+    """Test get_sensor_mapping with invalid response format."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_sensors_info?page=1", payload={"invalid": "format"})
+        
+        with pytest.raises(DataError, match="Invalid sensor mapping response"):
+            await api.get_sensor_mapping(1)
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_all_sensor_mappings_with_data_error():
+    """Test get_all_sensor_mappings handling DataError from a page."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    page1_data = {
+        "sensor": [
+            {"id": "D8174", "type": "WH51", "channel": "1"},
+        ]
+    }
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_sensors_info?page=1", payload=page1_data)
+        m.get("http://192.168.1.100/get_sensors_info?page=2", payload={"invalid": "format"})
+        
+        # Should handle DataError on page 2 and continue
+        result = await api.get_all_sensor_mappings()
+        
+        # Should only have page 1 data
+        assert len(result) == 1
+        assert result[0]["id"] == "D8174"
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_units():
+    """Test getting unit settings."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    mock_data = {
+        "temperature": "F",
+        "pressure": "inHg",
+        "wind": "mph",
+        "rain": "in"
+    }
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_units_info", payload=mock_data)
+        
+        result = await api.get_units()
+        
+        assert result == mock_data
+        assert result["temperature"] == "F"
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_units_with_authentication():
+    """Test get_units that triggers authentication."""
+    api = EcowittLocalAPI("192.168.1.100", "test_password")
+    
+    mock_data = {
+        "temperature": "C",
+        "pressure": "hPa"
+    }
+    
+    with aioresponses() as m:
+        m.post("http://192.168.1.100/set_login_info", status=200)
+        m.get("http://192.168.1.100/get_units_info", payload=mock_data)
+        
+        result = await api.get_units()
+        
+        assert result == mock_data
+        assert api._authenticated is True
+    
+    await api.close()
