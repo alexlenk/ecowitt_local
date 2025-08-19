@@ -23,7 +23,7 @@ class TestWH68WeatherStation:
         assert sensor_info is not None
         assert sensor_info["sensor_type"] == "WH68"
         assert sensor_info["device_model"] == "wh68"
-        assert sensor_info["battery"] == "2.8"
+        assert sensor_info["battery"] == "3"
         assert sensor_info["signal"] == "4"
 
     def test_wh68_live_data_keys(self, mock_wh68_sensor_mapping):
@@ -96,7 +96,7 @@ class TestWH31TempHumidity:
         assert sensor_info is not None
         assert sensor_info["sensor_type"] == "WH31"
         assert sensor_info["channel"] == "1"  # Extracted from "CH1"
-        assert sensor_info["battery"] == "85"
+        assert sensor_info["battery"] == "4"
 
     def test_wh31_live_data_keys(self, mock_wh31_sensor_mapping):
         """Test WH31 generates channel-specific keys."""
@@ -174,7 +174,7 @@ class TestWH57LightningDetector:
         assert sensor_info is not None
         assert sensor_info["sensor_type"] == "WH57"
         assert sensor_info["device_model"] == "wh57"
-        assert sensor_info["battery"] == "90"
+        assert sensor_info["battery"] == "4"
         assert sensor_info["signal"] == "4"
         assert sensor_info["channel"] == ""  # Lightning sensor has no channel
 
@@ -294,7 +294,7 @@ class TestWH40RainGauge:
         assert sensor_info is not None
         assert sensor_info["sensor_type"] == "WH40"
         assert sensor_info["device_model"] == "wh40"
-        assert sensor_info["battery"] == "78"
+        assert sensor_info["battery"] == "3"
         assert sensor_info["signal"] == "4"
         assert sensor_info["channel"] == ""  # Rain gauge has no channel
 
@@ -450,7 +450,7 @@ class TestWH41PM25Sensor:
         assert sensor_info is not None
         assert sensor_info["sensor_type"] == "WH41"
         assert sensor_info["device_model"] == "wh41"
-        assert sensor_info["battery"] == "85"
+        assert sensor_info["battery"] == "4"
         assert sensor_info["signal"] == "4"
         assert sensor_info["channel"] == "1"  # Extracted from "CH1"
 
@@ -534,7 +534,7 @@ class TestWH55LeakDetection:
         assert sensor_info is not None
         assert sensor_info["sensor_type"] == "WH55"
         assert sensor_info["device_model"] == "wh55"
-        assert sensor_info["battery"] == "92"
+        assert sensor_info["battery"] == "5"
         assert sensor_info["signal"] == "4"
         assert sensor_info["channel"] == "1"  # Extracted from "CH1"
 
@@ -600,7 +600,7 @@ class TestWH45ComboSensor:
         assert sensor_info is not None
         assert sensor_info["sensor_type"] == "WH45"
         assert sensor_info["device_model"] == "wh45"
-        assert sensor_info["battery"] == "88"
+        assert sensor_info["battery"] == "4"
         assert sensor_info["signal"] == "4"
         assert sensor_info["channel"] == ""  # No channel for combo device
 

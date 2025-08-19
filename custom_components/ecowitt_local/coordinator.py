@@ -274,11 +274,19 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         "signal": hardware_info.get("signal"),
                     }
             
+            # Convert battery values from 0-5 scale to 0-100%
+            converted_value = sensor_value
+            if battery_info and sensor_value and str(sensor_value).isdigit():
+                converted_value = str(int(sensor_value) * 20)
+                _LOGGER.debug("Converted battery value %s to %s%% for sensor %s", sensor_value, converted_value, sensor_key)
+            else:
+                converted_value = self._convert_sensor_value(sensor_value, unit)
+            
             # Store processed sensor data
             sensors_data[entity_id] = {
                 "entity_id": entity_id,
                 "name": friendly_name,
-                "state": self._convert_sensor_value(sensor_value, unit),
+                "state": converted_value,
                 "unit_of_measurement": unit,
                 "device_class": device_class,
                 "category": category,
@@ -330,11 +338,13 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             # Add Signal Strength sensor (regular sensor, same level as battery)
             if signal and signal not in ("--", ""):
                 signal_entity_id = f"sensor.ecowitt_signal_strength_{hardware_id.lower()}"
+                # Convert signal strength (0-4 scale to 0-100%)
+                signal_pct = str(int(signal) * 25) if signal.isdigit() else signal
                 sensors_data[signal_entity_id] = {
                     "entity_id": signal_entity_id,
                     "name": "Signal Strength",
-                    "state": signal,
-                    "unit_of_measurement": None,
+                    "state": signal_pct,
+                    "unit_of_measurement": "%",
                     "device_class": "signal_strength",
                     "category": "diagnostic",  # Move signal strength to diagnostic
                     "sensor_key": f"signal_{hardware_id}",
@@ -345,6 +355,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         "last_update": datetime.now().isoformat(),
                         "hardware_id": hardware_id,
                         "signal": signal,
+                        "signal_percentage": signal_pct,
                     },
                 }
                 _LOGGER.debug("Added signal strength sensor for hardware_id: %s (signal: %s)", hardware_id, signal)

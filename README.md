@@ -353,7 +353,8 @@ All other sensor types are tested using detailed mock datasets derived from:
 - Cross-validated against aioecowitt's proven sensor mappings
 - Based on real API response patterns from EcoWitt gateways
 - Comprehensive test coverage for sensor discovery, entity creation, and hardware ID mapping
-- Simulated battery levels, signal strength, and online/offline states
+- Accurate battery level conversion (0-5 raw scale → 0-100% display)
+- Accurate signal strength conversion (0-4 raw scale → 0-100% display)
 
 **Regression Testing:**
 - All tests must pass before new device types are added

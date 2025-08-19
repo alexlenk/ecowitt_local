@@ -57,7 +57,7 @@ def mock_wh68_sensor_mapping() -> Dict[str, Any]:
         "img": "wh68",
         "type": "1", 
         "name": "Solar & Wind",
-        "batt": "2.8",
+        "batt": "3",
         "rssi": "-72",
         "signal": "4",
         "idst": "1"
@@ -80,7 +80,7 @@ def mock_wh68_live_data() -> Dict[str, Any]:
         "baromabsin": "29.85", 
         "solarradiation": "850.5",
         "uv": "6",
-        "wh68batt": "2.8"
+        "wh68batt": "3"
     }
 
 
@@ -92,7 +92,7 @@ def mock_wh31_sensor_mapping() -> Dict[str, Any]:
         "img": "wh31",
         "type": "6",
         "name": "Temp & Humidity CH1", 
-        "batt": "85",
+        "batt": "4",
         "rssi": "-68",
         "signal": "4",
         "idst": "1"
@@ -106,7 +106,7 @@ def mock_wh31_live_data() -> Dict[str, Any]:
         "temp1f": "72.5",
         "humidity1": "50",
         "dewpoint1f": "52.1",
-        "batt1": "85"
+        "batt1": "4"
     }
 
 
@@ -142,7 +142,7 @@ def mock_wh57_sensor_mapping() -> Dict[str, Any]:
         "img": "wh57",
         "type": "26",
         "name": "Lightning",
-        "batt": "90",
+        "batt": "4",
         "rssi": "-65",
         "signal": "4",
         "idst": "1"
@@ -157,7 +157,7 @@ def mock_wh57_live_data() -> Dict[str, Any]:
         "lightning_time": "2024-08-18T14:30:15",
         "lightning": "8.5",
         "lightning_mi": "5.3",
-        "wh57batt": "90"
+        "wh57batt": "4"
     }
 
 
@@ -169,7 +169,7 @@ def mock_wh40_sensor_mapping() -> Dict[str, Any]:
         "img": "wh40",
         "type": "3",
         "name": "Rain",
-        "batt": "78",
+        "batt": "3",
         "rssi": "-70",
         "signal": "4",
         "idst": "1"
@@ -188,7 +188,7 @@ def mock_wh40_live_data() -> Dict[str, Any]:
         "monthlyrainin": "5.67",
         "yearlyrainin": "45.23",
         "totalrainin": "112.56",
-        "wh40batt": "2.8"
+        "wh40batt": "3"
     }
 
 
@@ -200,7 +200,7 @@ def mock_wh41_sensor_mapping() -> Dict[str, Any]:
         "img": "wh41",
         "type": "22",
         "name": "PM2.5 CH1",
-        "batt": "85",
+        "batt": "4",
         "rssi": "-72",
         "signal": "4",
         "idst": "1"
@@ -213,7 +213,7 @@ def mock_wh41_live_data() -> Dict[str, Any]:
     return {
         "pm25_ch1": "35.2",
         "pm25_avg_24h_ch1": "28.7",
-        "pm25batt1": "85"
+        "pm25batt1": "4"
     }
 
 
@@ -225,7 +225,7 @@ def mock_wh55_sensor_mapping() -> Dict[str, Any]:
         "img": "wh55",
         "type": "27",
         "name": "Leak CH1",
-        "batt": "92",
+        "batt": "5",
         "rssi": "-68",
         "signal": "4",
         "idst": "1"
@@ -237,7 +237,7 @@ def mock_wh55_live_data() -> Dict[str, Any]:
     """Mock WH55 leak detection live data."""
     return {
         "leak_ch1": "0",
-        "leakbatt1": "92"
+        "leakbatt1": "5"
     }
 
 
@@ -249,7 +249,7 @@ def mock_wh45_sensor_mapping() -> Dict[str, Any]:
         "img": "wh45",
         "type": "39",
         "name": "PM25 & PM10 & CO2",
-        "batt": "88",
+        "batt": "4",
         "rssi": "-65",
         "signal": "4",
         "idst": "1"
@@ -269,7 +269,7 @@ def mock_wh45_live_data() -> Dict[str, Any]:
         "pm10_24h_co2": "38.9",
         "co2": "487",
         "co2_24h": "512",
-        "co2_batt": "88"
+        "co2_batt": "4"
     }
 
 
@@ -303,10 +303,10 @@ def mock_live_data() -> Dict[str, Any]:
             {"id": "baromrelin", "val": "30.12"},
             {"id": "soilmoisture1", "val": "35"},
             {"id": "soilmoisture2", "val": "42"},
-            {"id": "soilbatt1", "val": "85"},
-            {"id": "soilbatt2", "val": "78"},
+            {"id": "soilbatt1", "val": "4"},
+            {"id": "soilbatt2", "val": "4"},
             {"id": "pm25_ch1", "val": "12"},
-            {"id": "pm25batt1", "val": "92"},
+            {"id": "pm25batt1", "val": "4"},
         ]
     }
 
@@ -319,21 +319,21 @@ def mock_sensor_mapping() -> list[Dict[str, Any]]:
             "id": "D8174",
             "img": "WH51",
             "name": "Soil moisture CH1",
-            "batt": "85",
+            "batt": "4",
             "signal": "4",
         },
         {
             "id": "D8648",
             "img": "WH51", 
             "name": "Soil moisture CH2",
-            "batt": "78",
+            "batt": "4",
             "signal": "3",
         },
         {
             "id": "EF891",
             "img": "WH41",
             "name": "PM2.5 air quality sensor CH1",
-            "batt": "92",
+            "batt": "5",
             "signal": "4",
         },
     ]
