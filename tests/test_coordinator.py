@@ -870,3 +870,94 @@ async def test_coordinator_exclude_inactive_sensors(coordinator):
     
     assert "tempf" in found_sensors
     assert "humidity" not in found_sensors
+
+
+async def test_coordinator_extract_model_from_firmware(hass, mock_config_entry, mock_ecowitt_api):
+    """Test extracting gateway model from firmware version string."""
+    with patch("custom_components.ecowitt_local.coordinator.EcowittLocalAPI", return_value=mock_ecowitt_api):
+        coordinator = EcowittLocalDataUpdateCoordinator(hass, mock_config_entry)
+        
+        # Test various firmware version patterns
+        test_cases = [
+            ("GW1100A_V2.4.3", "GW1100A"),  # Standard pattern like user's device
+            ("GW2000_V1.2.1", "GW2000"),    # Another common model
+            ("GW1000_V3.1.0", "GW1000"),    # Older model
+            ("GWxxxx_V1.0.0", "GWxxxx"),    # Generic pattern
+            ("Unknown", "Unknown"),          # Unknown firmware
+            ("", "Unknown"),                # Empty string
+            (None, "Unknown"),              # None value
+            ("1.2.3", "Unknown"),           # No GW prefix
+            ("GW1100A", "GW1100A"),         # Just model name, no version
+            ("V2.4.3_GW1100A", "Unknown"),  # Reversed pattern (shouldn't match)
+        ]
+        
+        for firmware_version, expected_model in test_cases:
+            result = coordinator._extract_model_from_firmware(firmware_version)
+            assert result == expected_model, f"For firmware '{firmware_version}', expected '{expected_model}' but got '{result}'"
+
+
+async def test_coordinator_gateway_info_with_firmware_model_extraction(coordinator):
+    """Test gateway info processing with firmware model extraction."""
+    from unittest.mock import AsyncMock
+    
+    # Ensure config_entry is properly set with data
+    if coordinator.config_entry is None:
+        from unittest.mock import Mock
+        coordinator.config_entry = Mock()
+        coordinator.config_entry.data = {"host": "192.168.1.100"}
+    
+    # Remove the mocked method from fixture and test the real one
+    if hasattr(coordinator, '_process_gateway_info') and callable(getattr(coordinator, '_process_gateway_info')):
+        # If it's a mock, replace with real method
+        from custom_components.ecowitt_local.coordinator import EcowittLocalDataUpdateCoordinator
+        coordinator._process_gateway_info = EcowittLocalDataUpdateCoordinator._process_gateway_info.__get__(coordinator)
+    
+    # Mock API response with firmware containing model
+    coordinator.api.get_version = AsyncMock(return_value={
+        "stationtype": "Unknown",  # This would normally be "Unknown"
+        "version": "GW1100A_V2.4.3"  # But firmware contains the actual model
+    })
+    
+    # Clear any cached gateway info to force processing
+    coordinator._gateway_info = {}
+    
+    # Process gateway info
+    gateway_info = await coordinator._process_gateway_info()
+    
+    # Model should be extracted from firmware version, not stationtype
+    assert gateway_info["model"] == "GW1100A"
+    assert gateway_info["firmware_version"] == "GW1100A_V2.4.3"
+    assert gateway_info["host"] == "192.168.1.100"
+        
+        
+async def test_coordinator_gateway_info_fallback_to_stationtype(coordinator):
+    """Test gateway info falls back to stationtype when firmware extraction fails."""
+    from unittest.mock import AsyncMock
+    
+    # Ensure config_entry is properly set with data
+    if coordinator.config_entry is None:
+        from unittest.mock import Mock
+        coordinator.config_entry = Mock()
+        coordinator.config_entry.data = {"host": "192.168.1.100"}
+    
+    # Remove the mocked method from fixture and test the real one
+    if hasattr(coordinator, '_process_gateway_info') and callable(getattr(coordinator, '_process_gateway_info')):
+        # If it's a mock, replace with real method
+        from custom_components.ecowitt_local.coordinator import EcowittLocalDataUpdateCoordinator
+        coordinator._process_gateway_info = EcowittLocalDataUpdateCoordinator._process_gateway_info.__get__(coordinator)
+    
+    # Mock API response where firmware doesn't contain extractable model
+    coordinator.api.get_version = AsyncMock(return_value={
+        "stationtype": "GW1100A",  # Valid stationtype
+        "version": "V2.4.3"  # Firmware without GW prefix
+    })
+    
+    # Clear any cached gateway info to force processing
+    coordinator._gateway_info = {}
+    
+    # Process gateway info
+    gateway_info = await coordinator._process_gateway_info()
+    
+    # Should fall back to stationtype since firmware extraction failed
+    assert gateway_info["model"] == "GW1100A"
+    assert gateway_info["firmware_version"] == "V2.4.3"

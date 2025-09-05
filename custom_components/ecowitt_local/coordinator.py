@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
@@ -453,9 +454,17 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         if not self._gateway_info:
             try:
                 version_info = await self.api.get_version()
+                firmware_version = version_info.get("version", "Unknown")
+                
+                # Extract model from firmware version (e.g., "GW1100A_V2.4.3" -> "GW1100A")
+                model = self._extract_model_from_firmware(firmware_version)
+                if not model or model == "Unknown":
+                    # Fallback to stationtype if model extraction fails
+                    model = version_info.get("stationtype", "Unknown")
+                
                 self._gateway_info = {
-                    "model": version_info.get("stationtype", "Unknown"),
-                    "firmware_version": version_info.get("version", "Unknown"),
+                    "model": model,
+                    "firmware_version": firmware_version,
                     "host": self.config_entry.data[CONF_HOST],
                     "gateway_id": version_info.get("stationtype", "unknown"),
                 }
@@ -469,6 +478,40 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 }
         
         return self._gateway_info
+
+    def _extract_model_from_firmware(self, firmware_version: str) -> str:
+        """Extract gateway model from firmware version string.
+        
+        Args:
+            firmware_version: Firmware version string (e.g., "GW1100A_V2.4.3")
+            
+        Returns:
+            Gateway model (e.g., "GW1100A") or "Unknown" if extraction fails
+        """
+        if not firmware_version or firmware_version == "Unknown":
+            return "Unknown"
+        
+        try:
+            # Look for pattern like "GW1100A_V2.4.3" where model is before the first underscore
+            if "_" in firmware_version:
+                model = firmware_version.split("_")[0].strip()
+                if model and model.upper().startswith("GW"):
+                    return model
+            
+            # If no underscore, check if the entire string looks like a model
+            if firmware_version.upper().startswith("GW") and not "." in firmware_version:
+                return firmware_version.strip()
+                
+            # Look for other common patterns (model could be at the start)
+            # Pattern to match gateway models like GW1100A, GW2000, etc.
+            match = re.match(r'^(GW\w+)', firmware_version)
+            if match:
+                return match.group(1)
+                
+        except Exception as err:
+            _LOGGER.debug("Error extracting model from firmware version '%s': %s", firmware_version, err)
+        
+        return "Unknown"
 
     async def async_refresh_mapping(self) -> None:
         """Force refresh of sensor mapping."""
