@@ -545,3 +545,85 @@ async def test_get_units_with_authentication():
         assert api._authenticated is True
     
     await api.close()
+
+
+@pytest.mark.asyncio
+async def test_make_request_html_content_type_with_valid_json():
+    """Test _make_request with HTML content-type but valid JSON content (GW3000 issue)."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    # Mock response with text/html content type but valid JSON body
+    json_content = '{"stationtype": "GW3000", "version": "1.1.0"}'
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_version", 
+              status=200,
+              body=json_content,
+              headers={'content-type': 'text/html; charset=utf-8'})
+        
+        result = await api._make_request("/get_version")
+        
+        assert result == {"stationtype": "GW3000", "version": "1.1.0"}
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_make_request_html_content_type_with_malformed_json():
+    """Test _make_request with HTML content-type and malformed JSON."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    # Mock response with text/html content type and malformed JSON
+    malformed_json = '{"stationtype": "GW3000", "version": malformed}'
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_version",
+              status=200, 
+              body=malformed_json,
+              headers={'content-type': 'text/html'})
+        
+        with pytest.raises(DataError, match="Gateway returned malformed JSON"):
+            await api._make_request("/get_version")
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_make_request_html_content_type_with_html_content():
+    """Test _make_request with HTML content-type and actual HTML content."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    # Mock response with text/html content type and actual HTML
+    html_content = '<html><body>Error page</body></html>'
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_version",
+              status=200,
+              body=html_content, 
+              headers={'content-type': 'text/html'})
+        
+        with pytest.raises(DataError, match="Gateway returned non-JSON content"):
+            await api._make_request("/get_version")
+    
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_make_request_text_plain_content_type_with_json():
+    """Test _make_request with text/plain content-type but valid JSON content."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+    
+    # Mock response with text/plain content type but valid JSON body
+    json_content = '{"stationtype": "GW3000", "version": "1.1.0"}'
+    
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_version",
+              status=200,
+              body=json_content,
+              headers={'content-type': 'text/plain'})
+        
+        result = await api._make_request("/get_version")
+        
+        assert result == {"stationtype": "GW3000", "version": "1.1.0"}
+    
+    await api.close()

@@ -163,10 +163,36 @@ class EcowittLocalAPI:
                     raise ConnectionError(f"HTTP {response.status}: {await response.text()}")
                 
                 try:
-                    data: Dict[str, Any] = await response.json()
-                    return data
+                    # Check content type first
+                    content_type = response.headers.get('content-type', '').lower()
+                    
+                    if 'application/json' in content_type:
+                        # Standard JSON response
+                        response_data: Dict[str, Any] = await response.json()
+                        return response_data
+                    elif 'text/html' in content_type or 'text/plain' in content_type:
+                        # Gateway returned HTML/text instead of JSON, try to parse as JSON anyway
+                        text_content = await response.text()
+                        try:
+                            import json
+                            response_data = json.loads(text_content)
+                            return response_data
+                        except json.JSONDecodeError:
+                            # If it's not valid JSON, check if it looks like JSON-ish content
+                            if text_content.strip().startswith('{') and text_content.strip().endswith('}'):
+                                raise DataError(f"Gateway returned malformed JSON with content-type '{content_type}': {text_content[:200]}...")
+                            else:
+                                raise DataError(f"Gateway returned non-JSON content with content-type '{content_type}': {text_content[:200]}...")
+                    else:
+                        # Unknown content type, try JSON parsing anyway
+                        response_data = await response.json()
+                        return response_data
+                        
+                except DataError:
+                    # Re-raise DataError as-is
+                    raise
                 except Exception as err:
-                    raise DataError(f"Invalid JSON response: {err}") from err
+                    raise DataError(f"Invalid JSON response: {response.status}, message='{err}'") from err
                     
         except asyncio.TimeoutError as err:
             raise ConnectionError("Request timeout") from err
