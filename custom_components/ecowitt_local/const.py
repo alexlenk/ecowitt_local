@@ -271,6 +271,93 @@ SENSOR_TYPES: Final = {
         "unit": "ppm",
         "device_class": "carbon_dioxide"
     },
+    
+    # WH69 7-in-1 Weather Station hex ID sensors
+    "0x02": {
+        "name": "Outdoor Temperature",
+        "unit": "°C",
+        "device_class": "temperature"
+    },
+    "0x03": {
+        "name": "Dewpoint Temperature", 
+        "unit": "°C",
+        "device_class": "temperature"
+    },
+    "0x07": {
+        "name": "Outdoor Humidity",
+        "unit": "%",
+        "device_class": "humidity"
+    },
+    "0x0B": {
+        "name": "Wind Speed",
+        "unit": "m/s",
+        "device_class": "wind_speed"
+    },
+    "0x0C": {
+        "name": "Wind Gust",
+        "unit": "m/s", 
+        "device_class": "wind_speed"
+    },
+    "0x19": {
+        "name": "Max Daily Gust",
+        "unit": "m/s",
+        "device_class": "wind_speed"
+    },
+    "0x0A": {
+        "name": "Wind Direction",
+        "unit": "°",
+        "icon": "mdi:compass"
+    },
+    "0x6D": {
+        "name": "Wind Direction Avg",
+        "unit": "°", 
+        "icon": "mdi:compass"
+    },
+    "0x15": {
+        "name": "Solar Radiation",
+        "unit": "W/m²",
+        "device_class": "irradiance"
+    },
+    "0x17": {
+        "name": "UV Index",
+        "unit": "UV Index",
+        "icon": "mdi:weather-sunny-alert"
+    },
+    "0x0D": {
+        "name": "Rain Event",
+        "unit": "mm",
+        "device_class": "precipitation"
+    },
+    "0x0E": {
+        "name": "Rain Rate", 
+        "unit": "mm/Hr",
+        "device_class": "precipitation_intensity"
+    },
+    "0x7C": {
+        "name": "Daily Rain",
+        "unit": "mm",
+        "device_class": "precipitation"
+    },
+    "0x10": {
+        "name": "Weekly Rain",
+        "unit": "mm", 
+        "device_class": "precipitation"
+    },
+    "0x11": {
+        "name": "Monthly Rain",
+        "unit": "mm",
+        "device_class": "precipitation"
+    },
+    "0x12": {
+        "name": "Yearly Rain",
+        "unit": "mm",
+        "device_class": "precipitation"
+    },
+    "0x13": {
+        "name": "Total Rain",
+        "unit": "mm",
+        "device_class": "precipitation"
+    },
 }
 
 # Add dynamically generated channel sensors
@@ -374,6 +461,10 @@ BATTERY_SENSORS: Final = {
     "co2_batt": {
         "name": "CO2 Combo Sensor Battery",
         "sensor_key": "co2"
+    },
+    "wh69batt": {
+        "name": "WH69 Weather Station Battery",
+        "sensor_key": "0x02"
     },
 }
 

@@ -179,3 +179,40 @@ def test_invalid_sensor_data(sensor_mapper: SensorMapper):
     # Should handle gracefully without crashing
     stats = sensor_mapper.get_mapping_stats()
     assert stats["total_sensors"] >= 0
+
+
+def test_wh69_sensor_mapping():
+    """Test WH69 7-in-1 weather station sensor mapping."""
+    mapper = SensorMapper()
+    
+    # WH69 sensor data based on user issue #3
+    wh69_sensors = [
+        {
+            "id": "BB",
+            "img": "wh69",
+            "name": "Temp & Humidity & Solar & Wind & Rain",
+            "batt": "0",
+            "signal": "4",
+        }
+    ]
+    
+    mapper.update_mapping(wh69_sensors)
+    
+    # Check hardware ID mapping
+    assert mapper.get_hardware_id("0x02") == "BB"  # Temperature
+    assert mapper.get_hardware_id("0x07") == "BB"  # Humidity
+    assert mapper.get_hardware_id("0x0B") == "BB"  # Wind speed
+    assert mapper.get_hardware_id("0x15") == "BB"  # Solar radiation
+    assert mapper.get_hardware_id("0x17") == "BB"  # UV index
+    assert mapper.get_hardware_id("wh69batt") == "BB"  # Battery
+    
+    # Check sensor info
+    sensor_info = mapper.get_sensor_info("BB")
+    assert sensor_info is not None
+    assert sensor_info["sensor_type"] == "WH69"
+    assert sensor_info["hardware_id"] == "BB"
+    
+    # Test entity ID generation for WH69 hex sensors
+    entity_id, friendly_name = mapper.generate_entity_id("0x02", "BB")
+    assert "bb" in entity_id.lower()
+    assert friendly_name == "Outdoor Temperature"
