@@ -473,7 +473,9 @@ Analyze the issue and provide your assessment:
             "custom_components/ecowitt_local/sensor_mapper.py", 
             "custom_components/ecowitt_local/const.py",
             "custom_components/ecowitt_local/coordinator.py",
-            "custom_components/ecowitt_local/__init__.py"
+            "custom_components/ecowitt_local/__init__.py",
+            "custom_components/ecowitt_local/sensor.py",
+            "custom_components/ecowitt_local/binary_sensor.py"
         ]
         
         # SECURITY: Only allow modifications to integration files
@@ -1178,6 +1180,21 @@ Generate the fix:
                     lines[line_num - 1] = error_line.replace('},lass"', '"class"')
                     fixed = True
                     print("Fixed },lass syntax error")
+                
+                # Fix mismatched parentheses/brackets
+                elif "closing parenthesis ')' does not match opening parenthesis '['" in test_output:
+                    # Look for pattern like DataUpdateCoordinator[Dict[str, Any]])
+                    if 'DataUpdateCoordinator[' in error_line and error_line.endswith(']:'):
+                        lines[line_num - 1] = error_line.replace(']):', ']:')
+                        fixed = True
+                        print("Fixed mismatched parentheses in type annotation")
+                    elif '[' in error_line and error_line.count('[') != error_line.count(']'):
+                        # Try to balance brackets
+                        bracket_diff = error_line.count('[') - error_line.count(']')
+                        if bracket_diff > 0:
+                            lines[line_num - 1] = error_line + ']' * bracket_diff
+                            fixed = True
+                            print("Fixed unmatched opening brackets")
                 
                 # Fix other common syntax errors
                 elif '",lass"' in error_line:
