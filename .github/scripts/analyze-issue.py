@@ -321,6 +321,51 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
         except Exception as e:
             return f"❌ Error analyzing issue: {str(e)}\n\nPlease try again or contact @alexlenk for assistance."
     
+    def should_respond_to_comment(self, comment, issue) -> bool:
+        """Determine if the bot should respond to a comment"""
+        comment_body = comment.body.lower()
+        
+        # Always respond to explicit bot mentions
+        if '@bot' in comment_body:
+            return True
+        
+        # Don't respond to maintainer comments unless they mention @bot
+        if comment.user.login == 'alexlenk':
+            return False
+        
+        # Response indicators - user is providing information or asking for help
+        response_indicators = [
+            'here is', 'here\'s', 'attached', 'json', 'logs', 'error',
+            'tried', 'still', 'now', 'updated', 'installed', 'getting',
+            'any help', 'please help', 'what should', 'how do', 'can you',
+            'dump', 'output', 'curl', 'gateway', 'version', 'firmware'
+        ]
+        
+        # Non-response indicators - user is just commenting, thanking, etc.
+        non_response_indicators = [
+            'thanks', 'thank you', 'got it', 'okay', 'ok', 'understood',
+            'will try', 'working on it', 'investigating', 'looking into',
+            'duplicate of', 'same as', 'closing', 'resolved'
+        ]
+        
+        # Check for non-response indicators first (more specific)
+        for indicator in non_response_indicators:
+            if indicator in comment_body:
+                return False
+        
+        # Check for response indicators
+        for indicator in response_indicators:
+            if indicator in comment_body:
+                return True
+        
+        # If comment is longer than 50 words, likely contains useful information
+        word_count = len(comment_body.split())
+        if word_count > 50:
+            return True
+        
+        # Default to not responding for short, unclear comments
+        return False
+
     def add_labels_based_on_analysis(self, issue, analysis: str):
         """Add appropriate labels based on analysis"""
         labels_to_add = []
@@ -370,11 +415,15 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
             comments = issue.get_comments()
             bot_comments = [c for c in comments if c.user.login == "github-actions[bot]"]
             
-            # If triggered by a comment, get the triggering comment
+            # If triggered by a comment, get the triggering comment and assess if response is needed
             triggering_comment = None
             if comment_id:
                 try:
                     triggering_comment = issue.get_comment(int(comment_id))
+                    # Check if bot response makes sense
+                    if not self.should_respond_to_comment(triggering_comment, issue):
+                        print(f"Comment doesn't require bot response, skipping")
+                        return
                 except:
                     pass
             
