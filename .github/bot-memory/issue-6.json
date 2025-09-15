@@ -1,0 +1,15 @@
+{
+  "issue_number": 6,
+  "first_analyzed": "2025-09-15T08:52:38.440107",
+  "analysis_count": 1,
+  "status": "new",
+  "previous_responses": [
+    {
+      "timestamp": "2025-09-15T08:52:56.656630",
+      "analysis": "I'll analyze this issue as a first response since it appears to be a new report about the WH90 weather station not creating entities.\n\n## Analysis\n**Classification**: Bug\n**Complexity**: Moderate\n**Device**: Ecowitt WH90 Weather Station with GW3000 Gateway\n\n## Initial Findings\n\n1. The WH90 device is being detected (hardware ID B845) but no entities are being created\n2. The live data JSON shows valid sensor readings using hex IDs (0x02, 0x07, etc.)\n3. The GW3000 gateway is partially working but s..."
+    }
+  ],
+  "user_provided_data": [],
+  "similar_issues": [],
+  "estimated_complexity": "unknown"
+}
