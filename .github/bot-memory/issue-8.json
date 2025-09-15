@@ -1,0 +1,21 @@
+{
+  "issue_number": 8,
+  "first_analyzed": "2025-09-15T08:36:50.068494",
+  "analysis_count": 1,
+  "status": "new",
+  "previous_responses": [
+    {
+      "timestamp": "2025-09-15T08:37:04.862894",
+      "analysis": "\ud83d\udc4b Looking at this continued conversation about your GW1200 connection issue, let's dig deeper into the JSON parsing error.\n\nThe error log you shared suggests there's an issue with the data format being returned from the gateway:\n```\nFailed to parse response: JSON decode error\n```\n\nThis typically happens when either:\n1. The gateway returns malformed JSON\n2. The gateway returns HTML/text instead of JSON\n3. The response is empty or invalid\n\nTo help diagnose this, I need a few specific things:\n\n1. *..."
+    }
+  ],
+  "user_provided_data": [],
+  "similar_issues": [
+    {
+      "number": 4,
+      "title": "GW1200B - Invalid JSON response",
+      "url": "https://github.com/alexlenk/ecowitt_local/issues/4"
+    }
+  ],
+  "estimated_complexity": "unknown"
+}
