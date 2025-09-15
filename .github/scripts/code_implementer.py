@@ -41,7 +41,7 @@ class CodeImplementer:
             r'token\s*[:=]',  # Token manipulation
         ]
         
-        combined_text = issue.title + " " + issue.body + " " + analysis
+        combined_text = str(issue.title or "") + " " + str(issue.body or "") + " " + str(analysis or "")
         
         for pattern in dangerous_patterns:
             if re.search(pattern, combined_text, re.IGNORECASE):
@@ -79,7 +79,7 @@ class CodeImplementer:
                 "confidence": 0.0
             }
         
-        issue_text = issue.title + " " + issue.body
+        issue_text = str(issue.title or "") + " " + str(issue.body or "")
         
         # Check for known patterns and verify they need implementation
         
