@@ -233,7 +233,7 @@ class IssueBot:
                 try:
                     # Use Claude's vision capability to analyze the image
                     vision_response = self.claude.messages.create(
-                        model="claude-3-5-sonnet-4-20250514",
+                        model="claude-sonnet-4-20250514",
                         max_tokens=1000,
                         messages=[
                             {
@@ -304,7 +304,7 @@ class IssueBot:
                         
                         # Analyze the file content with Claude
                         analysis_response = self.claude.messages.create(
-                            model="claude-3-5-sonnet-4-20250514",
+                            model="claude-sonnet-4-20250514",
                             max_tokens=1000,
                             messages=[{
                                 "role": "user",
@@ -322,7 +322,7 @@ class IssueBot:
                 if len(code_block) > 100:  # Only analyze substantial code blocks
                     try:
                         analysis_response = self.claude.messages.create(
-                            model="claude-3-5-sonnet-4-20250514",
+                            model="claude-sonnet-4-20250514",
                             max_tokens=1000,
                             messages=[{
                                 "role": "user",
@@ -536,7 +536,7 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
 
         try:
             response = self.claude.messages.create(
-                model="claude-3-5-sonnet-4-20250514",
+                model="claude-sonnet-4-20250514",
                 max_tokens=2000,
                 messages=[{"role": "user", "content": prompt}]
             )
