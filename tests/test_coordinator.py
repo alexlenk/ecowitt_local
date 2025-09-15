@@ -342,6 +342,35 @@ async def test_coordinator_convert_sensor_value_special_cases(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_convert_sensor_value_embedded_units(coordinator):
+    """Test _convert_sensor_value with embedded units (GW2000/WS90 issue)."""
+    # Test pressure values with embedded units
+    assert coordinator._convert_sensor_value("29.40 inHg", None) == 29.40
+    assert coordinator._convert_sensor_value("30.03 inHg", None) == 30.03
+    assert coordinator._convert_sensor_value("0.071 inHg", None) == 0.071
+    
+    # Test temperature values with units  
+    assert coordinator._convert_sensor_value("46.4 F", None) == 46.4
+    assert coordinator._convert_sensor_value("23.5 C", None) == 23.5
+    
+    # Test humidity with percentage
+    assert coordinator._convert_sensor_value("89%", None) == 89
+    assert coordinator._convert_sensor_value("45.5%", None) == 45.5
+    
+    # Test wind speed with units
+    assert coordinator._convert_sensor_value("1.34 mph", None) == 1.34
+    assert coordinator._convert_sensor_value("2.1 m/s", None) == 2.1
+    
+    # Test integers with units
+    assert coordinator._convert_sensor_value("25 rpm", None) == 25
+    assert coordinator._convert_sensor_value("180 deg", None) == 180
+    
+    # Test negative values with units
+    assert coordinator._convert_sensor_value("-5.2 C", None) == -5.2
+    assert coordinator._convert_sensor_value("-10 F", None) == -10
+
+
+@pytest.mark.asyncio
 async def test_coordinator_convert_sensor_value_error_handling(coordinator):
     """Test sensor value conversion error handling."""
     # Test with a value that causes exception in the conversion logic

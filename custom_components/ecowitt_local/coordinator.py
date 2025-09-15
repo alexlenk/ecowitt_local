@@ -429,7 +429,23 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             # Handle special cases
             if str_value.lower() in ("--", "null", "none", "n/a"):
                 return None
+            
+            # Handle values with embedded units (e.g., "29.40 inHg", "46.4 F", "89%")
+            import re
+            # Extract numeric part from strings with units
+            unit_match = re.match(r'^([-+]?\d*\.?\d+)\s*([a-zA-Z%/]+.*)?$', str_value)
+            if unit_match:
+                numeric_part = unit_match.group(1)
+                try:
+                    # Try integer first
+                    if '.' not in numeric_part:
+                        return int(numeric_part)
+                    else:
+                        return float(numeric_part)
+                except ValueError:
+                    pass
                 
+            # Fallback to original logic for pure numeric strings
             # Try integer first
             try:
                 return int(str_value)
