@@ -69,7 +69,7 @@ class CodeImplementer:
 
     def can_implement_fix(self, issue: Issue, analysis: str) -> Tuple[bool, str, Dict[str, Any]]:
         """
-        Determine if bot can automatically implement a fix
+        Determine if bot can automatically implement a fix using AI analysis
         
         Returns:
             (can_fix, fix_type, fix_details)
@@ -83,85 +83,13 @@ class CodeImplementer:
         
         issue_text = str(issue.title or "") + " " + str(issue.body or "")
         
-        # Check for known patterns and verify they need implementation
-        # Order matters: Check more specific/severe errors first
+        # Use AI to analyze if this issue can be fixed automatically
+        fix_assessment = self._ai_assess_fixability(issue, analysis)
         
-        # Pattern 1: Unhashable type errors (device registry issues) - HIGHEST PRIORITY
-        if self._matches_unhashable_type_pattern(issue_text, analysis):
-            return True, "unhashable_type_fix", {
-                "pattern": "unhashable_type_error",
-                "files": ["custom_components/ecowitt_local/__init__.py"],
-                "description": "Fix unhashable type list error in device registry",
-                "confidence": 0.9
-            }
-        
-        # Pattern 2: Content-type issues (GW3000, GW1200B)
-        if self._matches_content_type_pattern(issue_text, analysis):
-            # Check if fix already exists in main
-            if self._is_content_type_fix_already_implemented():
-                return False, "already_implemented", {
-                    "pattern": "content_type_mismatch", 
-                    "message": "Content-type fallback parsing is already implemented in the current version",
-                    "confidence": 0.0
-                }
-            
-            return True, "content_type_fix", {
-                "pattern": "content_type_mismatch",
-                "files": ["custom_components/ecowitt_local/api.py"],
-                "description": "Add fallback JSON parsing for content-type mismatch",
-                "confidence": 0.9
-            }
-        
-        # Pattern 3: Embedded unit parsing (GW2000)
-        if self._matches_embedded_units_pattern(issue_text, analysis):
-            # Check if embedded units fix already exists
-            if self._is_embedded_units_fix_already_implemented():
-                return False, "already_implemented", {
-                    "pattern": "embedded_units",
-                    "message": "Embedded unit parsing is already implemented in the current version",
-                    "confidence": 0.0
-                }
-            
-            return True, "embedded_units_fix", {
-                "pattern": "embedded_units",
-                "files": ["custom_components/ecowitt_local/coordinator.py"],
-                "description": "Enhance embedded unit parsing for sensor values",
-                "confidence": 0.8
-            }
-        
-        # Pattern 4: Missing hex ID sensor mapping (WH69, WS90, WH90) - LOWER PRIORITY
-        # This should be last since "entities not created" is very general
-        hex_device = self._extract_hex_device_model(issue_text, analysis)
-        if hex_device:
-            # Check if device mapping already exists
-            if self._is_hex_device_already_implemented(hex_device):
-                return False, "already_implemented", {
-                    "pattern": "hex_id_sensors",
-                    "message": f"{hex_device} hex sensor mapping is already implemented in the current version",
-                    "confidence": 0.0
-                }
-            
-            return True, "hex_sensor_mapping", {
-                "pattern": "hex_id_sensors",
-                "device_model": hex_device,
-                "files": [
-                    "custom_components/ecowitt_local/sensor_mapper.py",
-                    "custom_components/ecowitt_local/const.py"
-                ],
-                "description": f"Add {hex_device} hex ID sensor mapping",
-                "confidence": 0.85
-            }
-        
-        # Check for explicit fix requests from maintainer
-        if self._is_explicit_fix_request(issue_text, analysis):
-            return True, "explicit_fix_request", {
-                "pattern": "maintainer_fix_request",
-                "files": self._determine_likely_files(issue_text, analysis),
-                "description": "Implement fix based on maintainer's explicit request",
-                "confidence": 0.95
-            }
-        
-        return False, "unknown", {}
+        if fix_assessment["can_fix"]:
+            return True, "ai_generated_fix", fix_assessment
+        else:
+            return False, "unfixable", fix_assessment
     
     def _matches_content_type_pattern(self, issue_text: str, analysis: str) -> bool:
         """Check if issue matches content-type mismatch pattern"""
@@ -237,6 +165,124 @@ class CodeImplementer:
                                 for indicator in device_indicators)
         
         return has_error and has_device_context
+    
+    def _ai_assess_fixability(self, issue: Issue, analysis: str) -> Dict[str, Any]:
+        """Use AI to assess if an issue can be automatically fixed"""
+        try:
+            assessment_prompt = f"""
+You are an expert code analyzer for Home Assistant integrations. Analyze this issue to determine if it can be automatically fixed.
+
+## Issue Details:
+**Title**: {issue.title}
+**Description**: {issue.body}
+**Bot Analysis**: {analysis}
+
+## Your Task:
+Determine if this issue can be automatically fixed by modifying code in the `custom_components/ecowitt_local/` directory.
+
+## Assessment Criteria:
+✅ **CAN FIX** if issue involves:
+- Clear error messages with traceback/line numbers
+- Missing imports, type errors, attribute errors
+- Device mapping issues (hex IDs, sensor definitions)
+- API communication problems (content-type, parsing)
+- Configuration or initialization errors
+- Code patterns that have clear solutions
+
+❌ **CANNOT FIX** if issue involves:
+- Hardware problems or network connectivity
+- Home Assistant core issues outside the integration
+- User configuration errors (passwords, IP addresses)
+- Feature requests requiring new functionality
+- Issues without clear technical details
+- External dependencies or services
+
+## Response Format:
+Respond with JSON:
+{{
+    "can_fix": true/false,
+    "confidence": 0.0-1.0,
+    "pattern": "brief_description_of_issue_type",
+    "files": ["list", "of", "likely", "files", "to", "modify"],
+    "description": "Brief description of the fix needed",
+    "reasoning": "Why this can/cannot be fixed automatically"
+}}
+
+## Examples:
+- TypeError with traceback → can_fix: true, high confidence
+- "Entities not created" with device data → can_fix: true, medium confidence  
+- "Can't connect to gateway" → can_fix: false, low confidence
+- Missing feature request → can_fix: false, high confidence
+
+Analyze the issue and provide your assessment:
+"""
+
+            response = self.claude.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=1000,
+                messages=[{"role": "user", "content": assessment_prompt}]
+            )
+            
+            # Parse AI response
+            ai_response = response.content[0].text
+            
+            # Try to extract JSON from response
+            import json
+            import re
+            
+            # Look for JSON block in response
+            json_match = re.search(r'\{.*\}', ai_response, re.DOTALL)
+            if json_match:
+                try:
+                    assessment = json.loads(json_match.group())
+                    
+                    # Validate and normalize the response
+                    return {
+                        "can_fix": assessment.get("can_fix", False),
+                        "confidence": float(assessment.get("confidence", 0.0)),
+                        "pattern": assessment.get("pattern", "unknown"),
+                        "files": assessment.get("files", ["custom_components/ecowitt_local/__init__.py"]),
+                        "description": assessment.get("description", "AI-generated fix"),
+                        "reasoning": assessment.get("reasoning", "No reasoning provided"),
+                        "ai_analysis": ai_response
+                    }
+                except json.JSONDecodeError:
+                    pass
+            
+            # Fallback: Parse response heuristically
+            can_fix = "can_fix: true" in ai_response.lower() or "\"can_fix\": true" in ai_response.lower()
+            confidence = 0.7 if can_fix else 0.1
+            
+            return {
+                "can_fix": can_fix,
+                "confidence": confidence,
+                "pattern": "ai_heuristic_analysis", 
+                "files": self._determine_likely_files(issue.title + " " + issue.body, analysis),
+                "description": "AI-powered heuristic fix",
+                "reasoning": "Heuristic parsing of AI response",
+                "ai_analysis": ai_response
+            }
+            
+        except Exception as e:
+            print(f"Error in AI assessment: {e}")
+            # Fallback to explicit request detection
+            if self._is_explicit_fix_request(issue.title + " " + issue.body, analysis):
+                return {
+                    "can_fix": True,
+                    "confidence": 0.8,
+                    "pattern": "explicit_request",
+                    "files": self._determine_likely_files(issue.title + " " + issue.body, analysis),
+                    "description": "Fix based on explicit request",
+                    "reasoning": "Maintainer explicitly requested fix"
+                }
+            else:
+                return {
+                    "can_fix": False,
+                    "confidence": 0.0,
+                    "pattern": "assessment_failed",
+                    "description": "Could not assess fixability",
+                    "reasoning": f"AI assessment failed: {str(e)}"
+                }
     
     def _is_explicit_fix_request(self, issue_text: str, analysis: str) -> bool:
         """Check if maintainer is explicitly requesting the bot to implement a fix"""
@@ -367,6 +413,8 @@ class CodeImplementer:
                 success = self._implement_unhashable_type_fix(branch_name)
             elif fix_type == "explicit_fix_request":
                 success = self._implement_explicit_fix(branch_name, issue, fix_details)
+            elif fix_type == "ai_generated_fix":
+                success = self._implement_ai_fix(branch_name, issue, fix_details)
             else:
                 return False, f"Unknown fix type: {fix_type}"
             
@@ -868,6 +916,152 @@ Provide your analysis and the specific code changes needed to fix this issue.
         content = content.replace('config["', 'config.get("')
         
         return content
+    
+    def _implement_ai_fix(self, branch_name: str, issue: Issue, fix_details: dict) -> bool:
+        """Implement a fix using AI analysis and code generation"""
+        try:
+            files_to_modify = fix_details.get("files", ["custom_components/ecowitt_local/__init__.py"])
+            
+            # Get current repository context
+            repo_context = self._get_relevant_file_contents(files_to_modify)
+            
+            # Use AI to generate the actual fix
+            fix_prompt = f"""
+You are an expert Python developer fixing a Home Assistant integration issue.
+
+## Issue Details:
+**Title**: {issue.title}
+**Description**: {issue.body}
+**AI Assessment**: {fix_details.get('reasoning', '')}
+
+## Current Code Context:
+{repo_context}
+
+## Your Task:
+Generate the exact code changes needed to fix this issue.
+
+## Requirements:
+1. Only modify files in custom_components/ecowitt_local/
+2. Make minimal, targeted changes
+3. Follow Python and Home Assistant best practices
+4. Ensure type safety and error handling
+5. Maintain backward compatibility
+
+## Response Format:
+For each file that needs changes, provide:
+```
+FILE: path/to/file.py
+OLD_CODE:
+[exact code to replace]
+
+NEW_CODE:
+[exact replacement code]
+---
+```
+
+Generate the fix:
+"""
+
+            response = self.claude.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=3000,
+                messages=[{"role": "user", "content": fix_prompt}]
+            )
+            
+            fix_response = response.content[0].text
+            
+            # Parse the AI response and apply changes
+            success = self._apply_ai_generated_changes(branch_name, fix_response, issue)
+            
+            return success
+            
+        except Exception as e:
+            print(f"Error implementing AI fix: {e}")
+            # Fallback to heuristic fixes
+            return self._apply_heuristic_fixes(branch_name, issue, fix_details)
+    
+    def _get_relevant_file_contents(self, file_paths: list) -> str:
+        """Get contents of relevant files for AI context"""
+        context = ""
+        
+        for file_path in file_paths[:3]:  # Limit to 3 files for token management
+            try:
+                file_obj = self.repo.get_contents(file_path)
+                content = file_obj.decoded_content.decode()
+                
+                # Truncate if too long
+                if len(content) > 5000:
+                    content = content[:5000] + "\n# ... (truncated for context)"
+                
+                context += f"\n## {file_path}\n```python\n{content}\n```\n"
+                
+            except Exception as e:
+                context += f"\n## {file_path}\n(Could not read file: {e})\n"
+        
+        return context
+    
+    def _apply_ai_generated_changes(self, branch_name: str, fix_response: str, issue: Issue) -> bool:
+        """Parse and apply AI-generated code changes"""
+        import re
+        
+        # Parse the AI response for file changes
+        file_changes = []
+        
+        # Look for FILE: ... OLD_CODE: ... NEW_CODE: ... patterns
+        file_pattern = r'FILE:\s*([^\n]+)\s*\n.*?OLD_CODE:\s*\n(.*?)\n\s*NEW_CODE:\s*\n(.*?)(?=\n---|\nFILE:|$)'
+        matches = re.findall(file_pattern, fix_response, re.DOTALL)
+        
+        for file_path, old_code, new_code in matches:
+            file_path = file_path.strip()
+            old_code = old_code.strip()
+            new_code = new_code.strip()
+            
+            # Validate file path
+            if not self._validate_file_path(file_path):
+                continue
+            
+            file_changes.append({
+                "file_path": file_path,
+                "old_code": old_code,
+                "new_code": new_code
+            })
+        
+        # Apply the changes
+        applied_changes = 0
+        for change in file_changes:
+            try:
+                file_obj = self.repo.get_contents(change["file_path"], ref=branch_name)
+                content = file_obj.decoded_content.decode()
+                
+                # Apply the change
+                if change["old_code"] in content:
+                    new_content = content.replace(change["old_code"], change["new_code"])
+                    
+                    self.repo.update_file(
+                        change["file_path"],
+                        f"AI-generated fix for issue #{self.current_issue_number}\\n\\nAddresses: {issue.title}\\n\\nChanges made based on AI analysis.",
+                        new_content,
+                        file_obj.sha,
+                        branch=branch_name
+                    )
+                    applied_changes += 1
+                    
+            except Exception as e:
+                print(f"Error applying change to {change['file_path']}: {e}")
+                continue
+        
+        return applied_changes > 0
+    
+    def _apply_heuristic_fixes(self, branch_name: str, issue: Issue, fix_details: dict) -> bool:
+        """Apply heuristic fixes as fallback when AI parsing fails"""
+        files_to_modify = fix_details.get("files", ["custom_components/ecowitt_local/__init__.py"])
+        
+        success = False
+        for file_path in files_to_modify:
+            if self._apply_heuristic_fix(branch_name, file_path, issue, ""):
+                success = True
+        
+        return success
     
     def _run_tests(self, branch_name: str) -> Tuple[bool, str]:
         """Run the full test suite on the branch"""
