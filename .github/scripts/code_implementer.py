@@ -5,6 +5,7 @@ Handles automatic code fixes for known device patterns
 """
 import os
 import json
+import re
 import subprocess
 import tempfile
 from typing import Dict, List, Optional, Tuple, Any
