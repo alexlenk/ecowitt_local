@@ -1482,7 +1482,8 @@ Automated fix for issue #{issue.number}: {issue.title}
 {fix_details['description']}
 
 ## Testing
-✅ All tests passed on branch `{branch_name}`
+⚠️ Local tests passed - **CI validation pending**
+Note: GitHub Actions CI will run when PR is created
 
 ## Related Issue
 Closes #{issue.number}
