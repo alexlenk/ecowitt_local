@@ -84,8 +84,18 @@ class CodeImplementer:
         issue_text = str(issue.title or "") + " " + str(issue.body or "")
         
         # Check for known patterns and verify they need implementation
+        # Order matters: Check more specific/severe errors first
         
-        # Pattern 1: Content-type issues (GW3000, GW1200B)
+        # Pattern 1: Unhashable type errors (device registry issues) - HIGHEST PRIORITY
+        if self._matches_unhashable_type_pattern(issue_text, analysis):
+            return True, "unhashable_type_fix", {
+                "pattern": "unhashable_type_error",
+                "files": ["custom_components/ecowitt_local/__init__.py"],
+                "description": "Fix unhashable type list error in device registry",
+                "confidence": 0.9
+            }
+        
+        # Pattern 2: Content-type issues (GW3000, GW1200B)
         if self._matches_content_type_pattern(issue_text, analysis):
             # Check if fix already exists in main
             if self._is_content_type_fix_already_implemented():
@@ -100,28 +110,6 @@ class CodeImplementer:
                 "files": ["custom_components/ecowitt_local/api.py"],
                 "description": "Add fallback JSON parsing for content-type mismatch",
                 "confidence": 0.9
-            }
-        
-        # Pattern 2: Missing hex ID sensor mapping (WH69, WS90, WH90)
-        hex_device = self._extract_hex_device_model(issue_text, analysis)
-        if hex_device:
-            # Check if device mapping already exists
-            if self._is_hex_device_already_implemented(hex_device):
-                return False, "already_implemented", {
-                    "pattern": "hex_id_sensors",
-                    "message": f"{hex_device} hex sensor mapping is already implemented in the current version",
-                    "confidence": 0.0
-                }
-            
-            return True, "hex_sensor_mapping", {
-                "pattern": "hex_id_sensors",
-                "device_model": hex_device,
-                "files": [
-                    "custom_components/ecowitt_local/sensor_mapper.py",
-                    "custom_components/ecowitt_local/const.py"
-                ],
-                "description": f"Add {hex_device} hex ID sensor mapping",
-                "confidence": 0.85
             }
         
         # Pattern 3: Embedded unit parsing (GW2000)
@@ -141,13 +129,27 @@ class CodeImplementer:
                 "confidence": 0.8
             }
         
-        # Pattern 4: Unhashable type errors (device registry issues)
-        if self._matches_unhashable_type_pattern(issue_text, analysis):
-            return True, "unhashable_type_fix", {
-                "pattern": "unhashable_type_error",
-                "files": ["custom_components/ecowitt_local/__init__.py"],
-                "description": "Fix unhashable type list error in device registry",
-                "confidence": 0.9
+        # Pattern 4: Missing hex ID sensor mapping (WH69, WS90, WH90) - LOWER PRIORITY
+        # This should be last since "entities not created" is very general
+        hex_device = self._extract_hex_device_model(issue_text, analysis)
+        if hex_device:
+            # Check if device mapping already exists
+            if self._is_hex_device_already_implemented(hex_device):
+                return False, "already_implemented", {
+                    "pattern": "hex_id_sensors",
+                    "message": f"{hex_device} hex sensor mapping is already implemented in the current version",
+                    "confidence": 0.0
+                }
+            
+            return True, "hex_sensor_mapping", {
+                "pattern": "hex_id_sensors",
+                "device_model": hex_device,
+                "files": [
+                    "custom_components/ecowitt_local/sensor_mapper.py",
+                    "custom_components/ecowitt_local/const.py"
+                ],
+                "description": f"Add {hex_device} hex ID sensor mapping",
+                "confidence": 0.85
             }
         
         # Check for explicit fix requests from maintainer
