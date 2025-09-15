@@ -422,16 +422,11 @@ Analyze the issue and provide your assessment:
                 print(f"Fix implementation failed for {fix_type}")
                 return False, f"Failed to implement code changes (type: {fix_type})"
             
-            # Run tests
-            test_success, test_output = self._run_tests(branch_name)
+            # Run tests with iterative error fixing
+            test_success, test_output = self._run_tests_with_iterative_fixing(branch_name, issue, fix_details)
+            
             if not test_success:
-                # Check if it's a syntax error that we can automatically fix
-                if "SyntaxError" in test_output and self._try_fix_syntax_error(branch_name, test_output):
-                    print("Syntax error detected and fixed, retrying tests...")
-                    test_success, test_output = self._run_tests(branch_name)
-                
-                if not test_success:
-                    return False, f"Tests failed: {test_output}"
+                return False, f"Tests failed after iterative fixing: {test_output}"
             
             # Create PR
             pr_url = self._create_pull_request(issue, branch_name, fix_type, fix_details)
@@ -1229,6 +1224,198 @@ Generate the fix:
             return False
         
         return False
+    
+    def _run_tests_with_iterative_fixing(self, branch_name: str, issue: Issue, fix_details: dict, max_iterations: int = 3):
+        """Run tests and iteratively fix errors until success or max iterations reached"""
+        
+        for iteration in range(max_iterations):
+            print(f"Running tests (iteration {iteration + 1}/{max_iterations})")
+            
+            test_success, test_output = self._run_tests(branch_name)
+            
+            if test_success:
+                print(f"✅ Tests passed after {iteration + 1} iteration(s)")
+                return True, test_output
+            
+            print(f"❌ Tests failed (iteration {iteration + 1}): {test_output[:200]}...")
+            
+            # Try to fix the error
+            error_fixed = False
+            
+            # 1. Try syntax error fixing
+            if "SyntaxError" in test_output:
+                print("Attempting to fix syntax error...")
+                if self._try_fix_syntax_error(branch_name, test_output):
+                    error_fixed = True
+                    print("✅ Syntax error fixed")
+            
+            # 2. Try import error fixing
+            elif "ImportError" in test_output or "ModuleNotFoundError" in test_output:
+                print("Attempting to fix import error...")
+                if self._try_fix_import_error(branch_name, test_output, issue):
+                    error_fixed = True
+                    print("✅ Import error fixed")
+            
+            # 3. Try attribute/name error fixing
+            elif "AttributeError" in test_output or "NameError" in test_output:
+                print("Attempting to fix attribute/name error...")
+                if self._try_fix_attribute_error(branch_name, test_output, issue):
+                    error_fixed = True
+                    print("✅ Attribute/name error fixed")
+            
+            # 4. Try type error fixing
+            elif "TypeError" in test_output:
+                print("Attempting to fix type error...")
+                if self._try_fix_type_error(branch_name, test_output, issue):
+                    error_fixed = True
+                    print("✅ Type error fixed")
+            
+            # 5. As last resort, use AI to analyze and fix the error
+            else:
+                print("Attempting AI-powered error fixing...")
+                if self._try_ai_error_fix(branch_name, test_output, issue, fix_details):
+                    error_fixed = True
+                    print("✅ AI fixed the error")
+            
+            if not error_fixed:
+                print(f"❌ Could not fix error in iteration {iteration + 1}")
+                if iteration == max_iterations - 1:
+                    return False, f"Tests failed after {max_iterations} fix attempts: {test_output}"
+                # Continue to next iteration to try different approaches
+        
+        return False, f"Tests failed after {max_iterations} iterations"
+    
+    def _try_fix_import_error(self, branch_name: str, test_output: str, issue: Issue) -> bool:
+        """Try to fix import errors"""
+        import re
+        
+        # Extract missing module from error
+        missing_module_pattern = r"No module named '([^']+)'"
+        match = re.search(missing_module_pattern, test_output)
+        
+        if not match:
+            return False
+        
+        missing_module = match.group(1)
+        print(f"Missing module: {missing_module}")
+        
+        # Common import fixes
+        import_fixes = {
+            "homeassistant.core": "from homeassistant.core import HomeAssistant",
+            "homeassistant.helpers.entity": "from homeassistant.helpers.entity import Entity",
+            "homeassistant.helpers.update_coordinator": "from homeassistant.helpers.update_coordinator import DataUpdateCoordinator",
+            "typing": "from typing import Dict, Any, Optional",
+        }
+        
+        if missing_module in import_fixes:
+            # Find files that might need the import
+            files_to_check = ["custom_components/ecowitt_local/__init__.py", 
+                            "custom_components/ecowitt_local/coordinator.py"]
+            
+            for file_path in files_to_check:
+                try:
+                    file_content = self.repo.get_contents(file_path, ref=branch_name)
+                    content = file_content.decoded_content.decode()
+                    
+                    if import_fixes[missing_module] not in content:
+                        # Add import at the top
+                        lines = content.split('\n')
+                        import_line = import_fixes[missing_module]
+                        
+                        # Find where to insert import
+                        insert_pos = 0
+                        for i, line in enumerate(lines):
+                            if line.startswith('from ') or line.startswith('import '):
+                                insert_pos = i + 1
+                        
+                        lines.insert(insert_pos, import_line)
+                        new_content = '\n'.join(lines)
+                        
+                        self.repo.update_file(
+                            file_path,
+                            f"🔧 Fix import error: add {missing_module}",
+                            new_content,
+                            file_content.sha,
+                            branch=branch_name
+                        )
+                        return True
+                
+                except Exception as e:
+                    print(f"Error fixing imports in {file_path}: {e}")
+                    continue
+        
+        return False
+    
+    def _try_fix_attribute_error(self, branch_name: str, test_output: str, issue: Issue) -> bool:
+        """Try to fix attribute and name errors"""
+        # This could be expanded with more specific attribute error fixes
+        return False
+    
+    def _try_fix_type_error(self, branch_name: str, test_output: str, issue: Issue) -> bool:
+        """Try to fix type errors"""
+        # This could be expanded with more specific type error fixes
+        return False
+    
+    def _try_ai_error_fix(self, branch_name: str, test_output: str, issue: Issue, fix_details: dict) -> bool:
+        """Use AI to analyze test failure and generate a fix"""
+        try:
+            # Get current state of modified files
+            modified_files = fix_details.get("files", [])
+            current_code = ""
+            
+            for file_path in modified_files[:2]:  # Limit to prevent token overflow
+                try:
+                    file_content = self.repo.get_contents(file_path, ref=branch_name)
+                    content = file_content.decoded_content.decode()
+                    current_code += f"\n## {file_path}\n```python\n{content}\n```\n"
+                except:
+                    continue
+            
+            ai_fix_prompt = f"""
+You are a Python expert fixing test failures in a Home Assistant integration.
+
+# Test Failure
+```
+{test_output[-2000:]}  # Last 2000 chars of error
+```
+
+# Current Code State
+{current_code}
+
+# Original Issue
+{issue.title}: {issue.body[:500]}
+
+Analyze the test failure and provide a specific fix. Focus on:
+1. Syntax errors
+2. Import issues  
+3. Type mismatches
+4. Missing attributes/methods
+
+Provide the fix in this format:
+FILE: path/to/file.py
+OLD_CODE:
+[exact code to replace]
+NEW_CODE:  
+[corrected code]
+
+Only provide ONE specific fix for the most critical error.
+"""
+
+            response = self.claude.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=1500,
+                messages=[{"role": "user", "content": ai_fix_prompt}]
+            )
+            
+            ai_response = response.content[0].text
+            print(f"AI error fix response: {ai_response[:300]}...")
+            
+            # Apply the AI-generated fix
+            return self._apply_ai_generated_changes(branch_name, ai_response, issue)
+            
+        except Exception as e:
+            print(f"AI error fix failed: {e}")
+            return False
     
     def _apply_heuristic_fixes(self, branch_name: str, issue: Issue, fix_details: dict) -> bool:
         """Apply heuristic fixes as fallback when AI parsing fails"""
