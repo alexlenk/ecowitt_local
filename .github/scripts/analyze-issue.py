@@ -326,14 +326,12 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
         try:
             issue = self.repo.get_issue(issue_number)
             
-            # Skip if bot already commented recently
+            # Skip if bot already commented (any bot comment means we've analyzed this issue)
             comments = issue.get_comments()
             bot_comments = [c for c in comments if c.user.login == "github-actions[bot]"]
             if bot_comments:
-                last_bot_comment = max(bot_comments, key=lambda x: x.created_at)
-                if datetime.now() - last_bot_comment.created_at.replace(tzinfo=None) < timedelta(hours=1):
-                    print("Bot commented recently, skipping to avoid spam")
-                    return
+                print(f"Bot already commented on issue #{issue_number}, skipping duplicate analysis")
+                return
             
             # Analyze issue
             print(f"Analyzing issue #{issue_number}: {issue.title}")
