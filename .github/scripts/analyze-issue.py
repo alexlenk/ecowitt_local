@@ -165,7 +165,8 @@ class IssueBot:
             manifest_content = manifest_file.decoded_content.decode()
             import json
             manifest_data = json.loads(manifest_content)
-            return manifest_data.get("version", "unknown")
+            version = manifest_data.get("version", "unknown")
+            return str(version)  # Ensure it's always a string
         except:
             return "unknown"
     
@@ -460,18 +461,18 @@ You are having a CONVERSATION with users to help resolve their issues. This may 
 - Remember previous interactions with this issue
 
 # Issue Context
-**Issue #{issue.number}**: {issue.title}
-**Author**: {issue.user.login}
-**Labels**: {[label.name for label in issue.labels]}
-**Created**: {issue.created_at}
+**Issue #{str(issue.number)}**: {str(issue.title)}
+**Author**: {str(issue.user.login)}
+**Labels**: {[str(label.name) for label in issue.labels]}
+**Created**: {str(issue.created_at)}
 
 # Issue Description
-{issue.body}
+{str(issue.body) if issue.body else "No description provided"}
 
 # Bot Memory
-Previous analysis count: {memory["analysis_count"]}
-Issue status: {memory["status"]}
-Similar issues found: {len(similar_issues)}
+Previous analysis count: {str(memory["analysis_count"])}
+Issue status: {str(memory["status"])}
+Similar issues found: {str(len(similar_issues))}
 
 # Repository Context
 Current Integration Version: v{current_version}
