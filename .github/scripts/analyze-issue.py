@@ -683,33 +683,20 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
                 print(f"Analysis failed for issue #{issue_number}, exiting silently")
                 return
             
-            # Check if bot can implement a fix automatically
+            # Check if bot can analyze and recommend a fix (implementation disabled)
             can_fix, fix_type, fix_details = self.code_implementer.can_implement_fix(issue, analysis)
             
             implementation_section = ""
             if can_fix:
                 implementation_section = f"""
 
-## 🔧 **Automated Fix Available**
-I can implement a fix for this issue automatically:
+## 🔍 **Fix Analysis Available**
+I can analyze this issue and provide implementation recommendations:
 - **Pattern**: {fix_details['description']}
 - **Confidence**: {fix_details['confidence']:.0%}
 - **Files**: {', '.join(fix_details['files'])}
 
-I'll create a branch, implement the fix, run tests, and create a PR for review."""
-
-                # Implement the fix
-                self.code_implementer.set_current_issue_number(issue.number)
-                fix_success, fix_message = self.code_implementer.implement_fix(issue, fix_type, fix_details)
-                
-                if fix_success:
-                    implementation_section += f"""
-
-✅ **Fix Implemented**: {fix_message}"""
-                else:
-                    implementation_section += f"""
-
-❌ **Fix Failed**: {fix_message}"""
+**Note**: Automatic implementation is currently disabled. The maintainer will review this analysis and implement the fix manually."""
             
             elif fix_type == "already_implemented":
                 implementation_section = f"""
@@ -727,7 +714,7 @@ Please update to the latest version (v{current_version}) and test if the issue p
 {analysis}{implementation_section}
 
 ---
-*This is an automated analysis. For complex issues, @alexlenk will review manually.*
+*This is an automated analysis only. Implementation is done manually by @alexlenk.*
 *Bot powered by Claude AI • [Report issues](https://github.com/alexlenk/ecowitt_local/issues)*"""
 
             issue.create_comment(comment_body)
