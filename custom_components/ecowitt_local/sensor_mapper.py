@@ -110,7 +110,30 @@ class SensorMapper:
                 ch_num = None
             
         # Map sensor types to live data keys
-        if sensor_type.lower() in ("wh51", "soil"):
+        if sensor_type.lower() in ("wh90",):
+            # WH90 - Temp & Humidity & Solar & Wind & Rain sensor
+            # Uses piezoRain section and hex IDs
+            keys.extend([
+                "0x0D",  # Rain daily
+                "0x0E",  # Rain rate
+                "0x7C",  # Rain event
+                "0x10",  # Rain hourly
+                "0x11",  # Rain weekly
+                "0x12",  # Rain monthly
+                "0x13",  # Rain yearly
+                "0x02",  # Temperature
+                "0x07",  # Humidity
+                "0x03",  # Dew point
+                "0x0B",  # Wind speed
+                "0x0C",  # Wind gust
+                "0x19",  # Max daily gust
+                "0x15",  # Solar radiation
+                "0x17",  # UV index
+                "0x0A",  # Wind direction
+                "0x6D",  # Wind direction 10min avg
+                "srain_piezo",  # Piezo rain status
+            ])
+        elif sensor_type.lower() in ("wh51", "soil"):
             # Soil moisture sensors
             if ch_num:
                 keys.extend([
