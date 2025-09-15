@@ -147,6 +147,131 @@ class IssueBot:
         
         return context
     
+    def analyze_images_in_issue(self, issue) -> str:
+        """Extract and analyze images from issue body and comments"""
+        import re
+        
+        image_analysis = ""
+        
+        # Extract images from issue body
+        image_urls = re.findall(r'!\[.*?\]\((https://[^)]+)\)', issue.body)
+        
+        # Also check comments for images
+        comments = issue.get_comments()
+        for comment in comments:
+            comment_images = re.findall(r'!\[.*?\]\((https://[^)]+)\)', comment.body)
+            image_urls.extend(comment_images)
+        
+        if image_urls:
+            image_analysis = f"\n# Images Found ({len(image_urls)} total)\n"
+            for i, url in enumerate(image_urls[:3]):  # Limit to 3 images for token management
+                try:
+                    # Use Claude's vision capability to analyze the image
+                    vision_response = self.claude.messages.create(
+                        model="claude-3-5-sonnet-20241022",
+                        max_tokens=1000,
+                        messages=[
+                            {
+                                "role": "user", 
+                                "content": [
+                                    {
+                                        "type": "image",
+                                        "source": {
+                                            "type": "url",
+                                            "url": url
+                                        }
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "Analyze this screenshot/image in the context of a Home Assistant integration issue. Describe what you see: error messages, UI elements, configuration screens, logs, device information, etc. Focus on technical details that would help diagnose integration problems."
+                                    }
+                                ]
+                            }
+                        ]
+                    )
+                    
+                    image_analysis += f"\n**Image {i+1} Analysis:**\n{vision_response.content[0].text}\n"
+                    
+                except Exception as e:
+                    image_analysis += f"\n**Image {i+1}**: Error analyzing image - {str(e)}\n"
+        
+        return image_analysis
+    
+    def analyze_files_in_issue(self, issue) -> str:
+        """Extract and analyze attached files/logs from issue and comments"""
+        import re
+        import requests
+        
+        file_analysis = ""
+        
+        # Look for GitHub file attachments and links to logs/files
+        file_patterns = [
+            r'https://github\.com/[^/]+/[^/]+/files/[0-9]+/[^\s)]+',  # GitHub file attachments
+            r'https://files\.github\.com/[^\s)]+',  # GitHub Files
+            r'\[([^]]+\.(?:log|txt|json|yaml|yml))\]\(([^)]+)\)',  # Named log files
+            r'```(?:log|text|yaml|json)\n(.*?)\n```',  # Code blocks with logs
+        ]
+        
+        all_text = issue.body
+        comments = issue.get_comments()
+        for comment in comments:
+            all_text += "\n" + comment.body
+        
+        found_files = []
+        code_blocks = []
+        
+        for pattern in file_patterns:
+            matches = re.findall(pattern, all_text, re.DOTALL)
+            if pattern.endswith(r'```'):  # Code block pattern
+                code_blocks.extend(matches)
+            else:
+                found_files.extend([match if isinstance(match, str) else match[1] for match in matches])
+        
+        if found_files or code_blocks:
+            file_analysis = f"\n# Files/Logs Found\n"
+            
+            # Analyze attached files (limit to prevent token overuse)
+            for i, file_url in enumerate(found_files[:2]):
+                try:
+                    response = requests.get(file_url, timeout=10)
+                    if response.status_code == 200:
+                        content = response.text[:5000]  # Limit content size
+                        
+                        # Analyze the file content with Claude
+                        analysis_response = self.claude.messages.create(
+                            model="claude-3-5-sonnet-20241022",
+                            max_tokens=1000,
+                            messages=[{
+                                "role": "user",
+                                "content": f"Analyze this log/file content from a Home Assistant integration issue. Extract key error messages, device information, and diagnostic details:\n\n{content}"
+                            }]
+                        )
+                        
+                        file_analysis += f"\n**File {i+1} ({file_url}):**\n{analysis_response.content[0].text}\n"
+                        
+                except Exception as e:
+                    file_analysis += f"\n**File {i+1}**: Error analyzing file - {str(e)}\n"
+            
+            # Analyze code blocks (logs in markdown)
+            for i, code_block in enumerate(code_blocks[:2]):
+                if len(code_block) > 100:  # Only analyze substantial code blocks
+                    try:
+                        analysis_response = self.claude.messages.create(
+                            model="claude-3-5-sonnet-20241022",
+                            max_tokens=1000,
+                            messages=[{
+                                "role": "user",
+                                "content": f"Analyze this log content from a Home Assistant integration issue. Extract key error messages and diagnostic information:\n\n{code_block[:3000]}"
+                            }]
+                        )
+                        
+                        file_analysis += f"\n**Log Block {i+1}:**\n{analysis_response.content[0].text}\n"
+                        
+                    except Exception as e:
+                        file_analysis += f"\n**Log Block {i+1}**: Error analyzing logs - {str(e)}\n"
+        
+        return file_analysis
+    
     def find_similar_issues(self, issue_text: str) -> List[Dict[str, Any]]:
         """Find similar closed issues for context"""
         # Search for similar issues
@@ -195,6 +320,12 @@ class IssueBot:
         
         # Get repository context
         repo_context = self.get_repo_context(issue.body + " " + issue.title)
+        
+        # Extract and analyze images from issue and comments
+        image_analysis = self.analyze_images_in_issue(issue)
+        
+        # Extract and analyze attached files/logs
+        file_analysis = self.analyze_files_in_issue(issue)
         
         # Get conversation context and device patterns
         conversation_context = self.memory.get_conversation_context()
@@ -253,6 +384,10 @@ Similar issues found: {len(similar_issues)}
 
 # Similar Issues (for reference)
 {json.dumps(similar_issues, indent=2) if similar_issues else "None found"}
+
+{image_analysis}
+
+{file_analysis}
 
 {conversation_history}
 
