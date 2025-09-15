@@ -10,6 +10,10 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import anthropic
 from github import Github, Auth
+import sys
+import os
+sys.path.append(os.path.dirname(__file__))
+from code_implementer import CodeImplementer
 
 class IssueBotMemory:
     """Handle bot memory using GitHub repository files"""
@@ -95,6 +99,7 @@ class IssueBot:
         self.repo = self.github.get_repo(os.environ["GITHUB_REPOSITORY"])
         self.memory = IssueBotMemory(self.repo, os.environ["GITHUB_TOKEN"])
         self.monthly_budget = float(os.environ.get("MONTHLY_BUDGET", "10.00"))
+        self.code_implementer = CodeImplementer(self.repo, os.environ["GITHUB_TOKEN"])
         
     def check_budget(self) -> bool:
         """Check if we're within monthly budget"""
@@ -431,10 +436,38 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
             print(f"Analyzing issue #{issue_number}: {issue.title}")
             analysis = self.analyze_issue(issue, triggering_comment)
             
+            # Check if bot can implement a fix automatically
+            can_fix, fix_type, fix_details = self.code_implementer.can_implement_fix(issue, analysis)
+            
+            implementation_section = ""
+            if can_fix:
+                implementation_section = f"""
+
+## 🔧 **Automated Fix Available**
+I can implement a fix for this issue automatically:
+- **Pattern**: {fix_details['description']}
+- **Confidence**: {fix_details['confidence']:.0%}
+- **Files**: {', '.join(fix_details['files'])}
+
+I'll create a branch, implement the fix, run tests, and create a PR for review."""
+
+                # Implement the fix
+                self.code_implementer.set_current_issue_number(issue.number)
+                fix_success, fix_message = self.code_implementer.implement_fix(issue, fix_type, fix_details)
+                
+                if fix_success:
+                    implementation_section += f"""
+
+✅ **Fix Implemented**: {fix_message}"""
+                else:
+                    implementation_section += f"""
+
+❌ **Fix Failed**: {fix_message}"""
+
             # Post comment
             comment_body = f"""🤖 **Ecowitt Local Bot Analysis**
 
-{analysis}
+{analysis}{implementation_section}
 
 ---
 *This is an automated analysis. For complex issues, @alexlenk will review manually.*

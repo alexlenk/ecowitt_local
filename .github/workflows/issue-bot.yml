@@ -31,6 +31,7 @@ jobs:
       issues: write
       contents: write
       pull-requests: write
+      actions: read
     
     steps:
       - name: Checkout repository
@@ -43,7 +44,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install anthropic PyGithub requests
+          pip install anthropic PyGithub requests pytest mypy flake8
       
       - name: Analyze Issue
         env:
