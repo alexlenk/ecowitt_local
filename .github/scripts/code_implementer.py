@@ -22,6 +22,48 @@ class CodeImplementer:
         self.github = Github(auth=auth)
         self.github_token = github_token
         
+    def _validate_security(self, issue: Issue, analysis: str) -> bool:
+        """Validate that the issue and analysis are safe to process"""
+        
+        # Check for potential malicious patterns
+        dangerous_patterns = [
+            r'\.github/workflows/',  # GitHub Actions modification
+            r'\.github/bot-memory/',  # Bot memory corruption
+            r'rm\s+-rf',  # Destructive commands
+            r'sudo\s+',  # Privilege escalation
+            r'exec\s*\(',  # Code execution
+            r'eval\s*\(',  # Code evaluation
+            r'subprocess\.',  # System commands
+            r'os\.system',  # OS commands
+            r'__import__',  # Dynamic imports
+            r'secrets\.',  # Access to secrets
+            r'token\s*[:=]',  # Token manipulation
+        ]
+        
+        combined_text = issue.title + " " + issue.body + " " + analysis
+        
+        for pattern in dangerous_patterns:
+            if re.search(pattern, combined_text, re.IGNORECASE):
+                print(f"SECURITY WARNING: Detected potentially dangerous pattern: {pattern}")
+                return False
+        
+        # Check if trying to modify unauthorized files
+        unauthorized_paths = [
+            '.github/workflows/',
+            '.github/bot-memory/',
+            '.github/scripts/',
+            'requirements.txt',
+            'setup.py',
+            'Dockerfile'
+        ]
+        
+        for path in unauthorized_paths:
+            if path in combined_text:
+                print(f"SECURITY WARNING: Attempt to modify unauthorized path: {path}")
+                return False
+        
+        return True
+
     def can_implement_fix(self, issue: Issue, analysis: str) -> Tuple[bool, str, Dict[str, Any]]:
         """
         Determine if bot can automatically implement a fix
@@ -29,6 +71,13 @@ class CodeImplementer:
         Returns:
             (can_fix, fix_type, fix_details)
         """
+        # SECURITY: Validate input before processing
+        if not self._validate_security(issue, analysis):
+            return False, "security_violation", {
+                "error": "Security validation failed - request rejected",
+                "confidence": 0.0
+            }
+        
         issue_text = issue.title + " " + issue.body
         
         # Check for known patterns
@@ -178,11 +227,33 @@ class CodeImplementer:
             else:
                 raise
     
+    def _validate_file_path(self, file_path: str) -> bool:
+        """Validate that file path is safe to modify"""
+        safe_paths = [
+            "custom_components/ecowitt_local/api.py",
+            "custom_components/ecowitt_local/sensor_mapper.py", 
+            "custom_components/ecowitt_local/const.py",
+            "custom_components/ecowitt_local/coordinator.py",
+            "custom_components/ecowitt_local/__init__.py"
+        ]
+        
+        # SECURITY: Only allow modifications to integration files
+        if file_path not in safe_paths:
+            print(f"SECURITY WARNING: Attempt to modify unauthorized file: {file_path}")
+            return False
+        
+        return True
+
     def _implement_content_type_fix(self, branch_name: str) -> bool:
         """Implement content-type fallback fix in api.py"""
         try:
+            # SECURITY: Validate file path
+            file_path = "custom_components/ecowitt_local/api.py"
+            if not self._validate_file_path(file_path):
+                return False
+            
             # Get current api.py content
-            api_file = self.repo.get_contents("custom_components/ecowitt_local/api.py", ref=branch_name)
+            api_file = self.repo.get_contents(file_path, ref=branch_name)
             content = api_file.decoded_content.decode()
             
             # Look for the _make_request method and enhance it
