@@ -384,9 +384,11 @@ class IssueBot:
         similar_issues = self.find_similar_issues(issue.body)
         memory["similar_issues"] = similar_issues
         
-        # Get repository context and current version
-        repo_context = self.get_repo_context(issue.body + " " + issue.title)
+        # Get current version first (needed for prompt construction)
         current_version = self.get_current_version()
+        
+        # Get repository context 
+        repo_context = self.get_repo_context(issue.body + " " + issue.title)
         
         # Extract and analyze images from issue and comments
         image_analysis = self.analyze_images_in_issue(issue)
