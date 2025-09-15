@@ -32,6 +32,8 @@ jobs:
       contents: write
       pull-requests: write
       actions: read
+      metadata: read
+      repository-projects: read
     
     steps:
       - name: Checkout repository
