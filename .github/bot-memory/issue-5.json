@@ -1,0 +1,15 @@
+{
+  "issue_number": 5,
+  "first_analyzed": "2025-09-15T11:00:43.667832",
+  "analysis_count": 1,
+  "status": "new",
+  "previous_responses": [
+    {
+      "timestamp": "2025-09-15T11:01:02.806674",
+      "analysis": "I'll analyze this issue and provide guidance for both users experiencing similar problems with the GW2000.\n\n### Issue Analysis\n**Type**: Bug\n**Complexity**: Moderate\n**Labels Suggested**: `bug`, `GW2000`, `authentication`\n\n### Key Observations\n1. Two users reporting similar issues with GW2000:\n   - Password authentication failing during setup\n   - Limited sensor detection compared to core integration\n   - Specific issue with WH69 sensor showing as unavailable\n   - Missing sensors like UV, Lux, R..."
+    }
+  ],
+  "user_provided_data": [],
+  "similar_issues": [],
+  "estimated_complexity": "unknown"
+}
