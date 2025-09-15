@@ -9,5 +9,5 @@
   "issue_tracker": "https://github.com/alexlenk/ecowitt_local/issues",
   "quality_scale": "platinum",
   "requirements": ["aiohttp>=3.8.0"],
-  "version": "1.4.7"
+  "version": "1.4.8"
 }
