@@ -451,9 +451,18 @@ Analyze the issue and provide your assessment:
             self.repo.create_git_ref(f"refs/heads/{branch_name}", main_sha)
         except Exception as e:
             if "already exists" in str(e):
-                # Branch exists, update it to latest main
-                branch_ref = self.repo.get_git_ref(f"heads/{branch_name}")
-                branch_ref.edit(main_sha)
+                # Branch exists, delete and recreate it to avoid non-fast-forward issues
+                try:
+                    print(f"Branch {branch_name} already exists, deleting and recreating...")
+                    branch_ref = self.repo.get_git_ref(f"heads/{branch_name}")
+                    branch_ref.delete()
+                    # Create fresh branch
+                    self.repo.create_git_ref(f"refs/heads/{branch_name}", main_sha)
+                except Exception as delete_error:
+                    # If delete fails, try force update
+                    print(f"Could not delete branch, trying force update: {delete_error}")
+                    branch_ref = self.repo.get_git_ref(f"heads/{branch_name}")
+                    branch_ref.edit(main_sha, force=True)
             else:
                 raise
     
