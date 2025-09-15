@@ -192,6 +192,118 @@ SENSOR_TYPES: Final = {
         "device_class": "precipitation"
     },
 
+    # WH90 hex ID sensors (piezoRain section)
+    "0x0D": {
+        "name": "Daily Rain",
+        "unit": "mm",
+        "device_class": "precipitation",
+        "icon": "mdi:weather-rainy"
+    },
+    "0x0E": {
+        "name": "Rain Rate",
+        "unit": "mm/hr",
+        "device_class": "precipitation_intensity",
+        "icon": "mdi:weather-pouring"
+    },
+    "0x7C": {
+        "name": "Event Rain",
+        "unit": "mm",
+        "device_class": "precipitation",
+        "icon": "mdi:weather-rainy"
+    },
+    "0x10": {
+        "name": "Hourly Rain",
+        "unit": "mm",
+        "device_class": "precipitation",
+        "icon": "mdi:weather-rainy"
+    },
+    "0x11": {
+        "name": "Weekly Rain",
+        "unit": "mm",
+        "device_class": "precipitation",
+        "icon": "mdi:weather-rainy"
+    },
+    "0x12": {
+        "name": "Monthly Rain",
+        "unit": "mm",
+        "device_class": "precipitation",
+        "icon": "mdi:weather-rainy"
+    },
+    "0x13": {
+        "name": "Yearly Rain",
+        "unit": "mm",
+        "device_class": "precipitation",
+        "icon": "mdi:weather-rainy"
+    },
+    "0x02": {
+        "name": "Temperature",
+        "unit": "°C",
+        "device_class": "temperature",
+        "icon": "mdi:thermometer"
+    },
+    "0x07": {
+        "name": "Humidity",
+        "unit": "%",
+        "device_class": "humidity",
+        "icon": "mdi:water-percent"
+    },
+    "0x03": {
+        "name": "Dew Point",
+        "unit": "°C",
+        "device_class": "temperature",
+        "icon": "mdi:thermometer-water"
+    },
+    "0x0B": {
+        "name": "Wind Speed",
+        "unit": "m/s",
+        "device_class": "wind_speed",
+        "icon": "mdi:weather-windy"
+    },
+    "0x0C": {
+        "name": "Wind Gust",
+        "unit": "m/s",
+        "device_class": "wind_speed",
+        "icon": "mdi:weather-windy-variant"
+    },
+    "0x19": {
+        "name": "Max Daily Gust",
+        "unit": "m/s",
+        "device_class": "wind_speed",
+        "icon": "mdi:weather-windy-variant"
+    },
+    "0x15": {
+        "name": "Solar Radiation",
+        "unit": "W/m²",
+        "device_class": "irradiance",
+        "icon": "mdi:solar-power"
+    },
+    "0x17": {
+        "name": "UV Index",
+        "unit": "",
+        "icon": "mdi:sun-wireless"
+    },
+    "0x0A": {
+        "name": "Wind Direction",
+        "unit": "°",
+        "icon": "mdi:compass"
+    },
+    "0x6D": {
+        "name": "Wind Direction 10min Avg",
+        "unit": "°",
+        "icon": "mdi:compass"
+    },
+    "srain_piezo": {
+        "name": "Piezo Rain Status",
+        "unit": "",
+        "icon": "mdi:rain-gauge"
+    },
+
+    "totalrainin": {
+        "name": "Total Rain",
+        "unit": "in",
+        "device_class": "precipitation"
+    },
+
     # Solar and UV sensors
     "solarradiation": {
         "name": "Solar Radiation",
