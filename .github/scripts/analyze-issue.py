@@ -11,7 +11,6 @@ from typing import Dict, List, Optional, Any
 import anthropic
 from github import Github, Auth
 import sys
-import os
 sys.path.append(os.path.dirname(__file__))
 from code_implementer import CodeImplementer
 
@@ -648,6 +647,7 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
         
         try:
             issue = self.repo.get_issue(issue_number)
+            current_version = self.get_current_version()
             
             # Check if this is a continuation of an existing conversation
             comments = issue.get_comments()
