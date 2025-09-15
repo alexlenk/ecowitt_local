@@ -28,3 +28,6 @@ Thumbs.db
 
 # Test planning documents (local development only)
 TEST_PLAN.md
+
+# Claude Code workspace file
+CLAUDE.md
