@@ -262,7 +262,7 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
 
         try:
             response = self.claude.messages.create(
-                model="claude-3-5-sonnet-20250108",
+                model="claude-3-5-sonnet-20241022",
                 max_tokens=2000,
                 messages=[{"role": "user", "content": prompt}]
             )
