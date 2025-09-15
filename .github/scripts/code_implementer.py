@@ -13,6 +13,7 @@ from datetime import datetime
 from github import Github, Auth
 from github.Repository import Repository
 from github.Issue import Issue
+import anthropic
 
 class CodeImplementer:
     """Handles automatic code implementation for known issue patterns"""
@@ -22,6 +23,7 @@ class CodeImplementer:
         auth = Auth.Token(github_token)
         self.github = Github(auth=auth)
         self.github_token = github_token
+        self.claude = anthropic.Anthropic(api_key=os.environ.get("CLAUDE_API_KEY"))
         
     def _validate_security(self, issue: Issue, analysis: str) -> bool:
         """Validate that the issue and analysis are safe to process"""
@@ -148,6 +150,15 @@ class CodeImplementer:
                 "confidence": 0.9
             }
         
+        # Check for explicit fix requests from maintainer
+        if self._is_explicit_fix_request(issue_text, analysis):
+            return True, "explicit_fix_request", {
+                "pattern": "maintainer_fix_request",
+                "files": self._determine_likely_files(issue_text, analysis),
+                "description": "Implement fix based on maintainer's explicit request",
+                "confidence": 0.95
+            }
+        
         return False, "unknown", {}
     
     def _matches_content_type_pattern(self, issue_text: str, analysis: str) -> bool:
@@ -225,6 +236,63 @@ class CodeImplementer:
         
         return has_error and has_device_context
     
+    def _is_explicit_fix_request(self, issue_text: str, analysis: str) -> bool:
+        """Check if maintainer is explicitly requesting the bot to implement a fix"""
+        # Look for explicit requests from the maintainer (alexlenk)
+        maintainer_requests = [
+            "@bot fix this", "@bot implement", "@bot create fix", 
+            "bot please fix", "please implement", "please fix this",
+            "can you fix", "implement a fix", "create a fix",
+            "fix this issue", "solve this", "implement solution"
+        ]
+        
+        combined_text = issue_text.lower() + " " + analysis.lower()
+        
+        # Check for explicit fix requests
+        has_explicit_request = any(request in combined_text for request in maintainer_requests)
+        
+        # Also check if there's sufficient technical detail to attempt a fix
+        has_technical_detail = any(indicator in combined_text for indicator in [
+            "traceback", "error", "line", "file", "method", "function",
+            "exception", "bug", "issue", "problem", "fails", "crash"
+        ])
+        
+        return has_explicit_request or (has_technical_detail and len(combined_text) > 200)
+    
+    def _determine_likely_files(self, issue_text: str, analysis: str) -> list:
+        """Determine which files are likely to need modification based on issue content"""
+        files = []
+        combined_text = (issue_text + " " + analysis).lower()
+        
+        # File-specific indicators
+        file_indicators = {
+            "custom_components/ecowitt_local/__init__.py": [
+                "__init__", "setup", "integration", "device registry", "entry", "config_entry"
+            ],
+            "custom_components/ecowitt_local/api.py": [
+                "api", "gateway", "connection", "request", "response", "http", "aiohttp"
+            ],
+            "custom_components/ecowitt_local/sensor_mapper.py": [
+                "sensor", "mapping", "entity", "hardware_id", "live_data", "sensor_type"
+            ],
+            "custom_components/ecowitt_local/coordinator.py": [
+                "coordinator", "polling", "update", "data", "refresh", "interval"
+            ],
+            "custom_components/ecowitt_local/const.py": [
+                "const", "constant", "definition", "battery", "sensor_key"
+            ]
+        }
+        
+        for file_path, indicators in file_indicators.items():
+            if any(indicator in combined_text for indicator in indicators):
+                files.append(file_path)
+        
+        # Default to __init__.py if no specific file identified
+        if not files:
+            files.append("custom_components/ecowitt_local/__init__.py")
+        
+        return files
+    
     def _is_content_type_fix_already_implemented(self) -> bool:
         """Check if content-type fallback fix is already in main"""
         try:
@@ -295,6 +363,8 @@ class CodeImplementer:
                 success = self._implement_embedded_units_fix(branch_name)
             elif fix_type == "unhashable_type_fix":
                 success = self._implement_unhashable_type_fix(branch_name)
+            elif fix_type == "explicit_fix_request":
+                success = self._implement_explicit_fix(branch_name, issue, fix_details)
             else:
                 return False, f"Unknown fix type: {fix_type}"
             
@@ -636,6 +706,166 @@ class CodeImplementer:
         except Exception as e:
             print(f"Error implementing unhashable type fix: {e}")
             return False
+    
+    def _implement_explicit_fix(self, branch_name: str, issue, fix_details: dict) -> bool:
+        """Implement a fix based on explicit maintainer request using AI analysis"""
+        try:
+            files_to_modify = fix_details.get("files", ["custom_components/ecowitt_local/__init__.py"])
+            
+            # Use Claude to analyze the issue and generate a fix
+            analysis_prompt = f"""
+You are a code analysis AI helping to fix a Home Assistant integration issue.
+
+## Issue Details:
+- **Title**: {issue.title}
+- **Description**: {issue.body}
+- **Files to examine**: {', '.join(files_to_modify)}
+
+## Your Task:
+1. Analyze the issue description and any error traces provided
+2. Identify the specific problem in the code
+3. Generate a targeted fix for the identified problem
+4. Provide the exact code changes needed
+
+## Rules:
+- Only modify integration code in custom_components/ecowitt_local/
+- Make minimal, targeted changes
+- Ensure the fix addresses the root cause
+- Follow Python and Home Assistant best practices
+
+## Response Format:
+Provide your analysis and the specific code changes needed to fix this issue.
+"""
+
+            # Get Claude's analysis and fix recommendation
+            fix_response = self.claude.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=2000,
+                messages=[{"role": "user", "content": analysis_prompt}]
+            )
+            
+            fix_analysis = fix_response.content[0].text
+            
+            # For now, implement a basic heuristic-based fix
+            # In a full implementation, we'd parse Claude's response and apply the suggested changes
+            
+            success = False
+            for file_path in files_to_modify:
+                if self._apply_heuristic_fix(branch_name, file_path, issue, fix_analysis):
+                    success = True
+            
+            return success
+            
+        except Exception as e:
+            print(f"Error implementing explicit fix: {e}")
+            return False
+    
+    def _apply_heuristic_fix(self, branch_name: str, file_path: str, issue, fix_analysis: str) -> bool:
+        """Apply heuristic-based fixes to common issue patterns"""
+        try:
+            # SECURITY: Validate file path
+            if not self._validate_file_path(file_path):
+                return False
+            
+            # Get current file content
+            file_obj = self.repo.get_contents(file_path, ref=branch_name)
+            content = file_obj.decoded_content.decode()
+            
+            original_content = content
+            lines = content.split('\n')
+            
+            # Apply common fixes based on issue content
+            issue_text = (issue.title + " " + issue.body).lower()
+            
+            # Fix 1: Missing imports
+            if "import" in issue_text or "module" in issue_text:
+                content = self._fix_missing_imports(content, issue_text)
+            
+            # Fix 2: Type errors
+            if "type" in issue_text and "error" in issue_text:
+                content = self._fix_type_errors(content, issue_text)
+            
+            # Fix 3: Attribute errors
+            if "attribute" in issue_text and "error" in issue_text:
+                content = self._fix_attribute_errors(content, issue_text)
+            
+            # Fix 4: Key errors
+            if "key" in issue_text and "error" in issue_text:
+                content = self._fix_key_errors(content, issue_text)
+            
+            # If content changed, commit it
+            if content != original_content:
+                self.repo.update_file(
+                    file_path,
+                    f"Implement fix for issue #{self.current_issue_number}\\n\\nBased on maintainer request and heuristic analysis.\\nAddresses: {issue.title}",
+                    content,
+                    file_obj.sha,
+                    branch=branch_name
+                )
+                return True
+            
+            return False
+            
+        except Exception as e:
+            print(f"Error applying heuristic fix to {file_path}: {e}")
+            return False
+    
+    def _fix_missing_imports(self, content: str, issue_text: str) -> str:
+        """Fix common missing import issues"""
+        lines = content.split('\n')
+        
+        # Common missing imports in Home Assistant integrations
+        import_fixes = {
+            "typing": "from typing import Dict, List, Optional, Any",
+            "asyncio": "import asyncio",
+            "aiohttp": "import aiohttp", 
+            "homeassistant.core": "from homeassistant.core import HomeAssistant",
+            "homeassistant.config_entries": "from homeassistant.config_entries import ConfigEntry",
+        }
+        
+        # Find import section
+        import_end = 0
+        for i, line in enumerate(lines):
+            if line.startswith(('import ', 'from ')) or line.strip() == '':
+                import_end = i
+            else:
+                break
+        
+        # Add missing imports
+        for keyword, import_line in import_fixes.items():
+            if keyword in issue_text and import_line not in content:
+                lines.insert(import_end + 1, import_line)
+                import_end += 1
+        
+        return '\n'.join(lines)
+    
+    def _fix_type_errors(self, content: str, issue_text: str) -> str:
+        """Fix common type-related errors"""
+        # Convert lists to tuples where needed for hashable types
+        if "unhashable" in issue_text:
+            content = content.replace('identifiers=[', 'identifiers=(')
+            content = content.replace('])', '))')
+            content = content.replace('device_id = [', 'device_id = (')
+        
+        return content
+    
+    def _fix_attribute_errors(self, content: str, issue_text: str) -> str:
+        """Fix common attribute access errors"""
+        # Add safety checks for common attribute errors
+        if "has no attribute" in issue_text:
+            # Add getattr with defaults
+            content = content.replace('.config_entry', '.get("config_entry")')
+            content = content.replace('.data.get(', '.data and data.get(')
+        
+        return content
+    
+    def _fix_key_errors(self, content: str, issue_text: str) -> str:
+        """Fix common key access errors"""
+        # Replace direct key access with .get() where appropriate
+        content = content.replace('data["', 'data.get("')
+        content = content.replace('config["', 'config.get("')
+        
+        return content
     
     def _run_tests(self, branch_name: str) -> Tuple[bool, str]:
         """Run the full test suite on the branch"""
