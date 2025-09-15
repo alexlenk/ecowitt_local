@@ -1,21 +1,15 @@
 {
-  "issue_number": 8,
+  "issue_number": "8",
   "first_analyzed": "2025-09-15T08:36:50.068494",
-  "analysis_count": 1,
+  "analysis_count": "2",
   "status": "new",
   "previous_responses": [
-    {
-      "timestamp": "2025-09-15T08:37:04.862894",
-      "analysis": "\ud83d\udc4b Looking at this continued conversation about your GW1200 connection issue, let's dig deeper into the JSON parsing error.\n\nThe error log you shared suggests there's an issue with the data format being returned from the gateway:\n```\nFailed to parse response: JSON decode error\n```\n\nThis typically happens when either:\n1. The gateway returns malformed JSON\n2. The gateway returns HTML/text instead of JSON\n3. The response is empty or invalid\n\nTo help diagnose this, I need a few specific things:\n\n1. *..."
-    }
+    "{'timestamp': '2025-09-15T08:37:04.862894', 'analysis': \"\ud83d\udc4b Looking at this continued conversation about your GW1200 connection issue, let's dig deeper into the JSON parsing error.\\n\\nThe error log you shared suggests there's an issue with the data format being returned from the gateway:\\n```\\nFailed to parse response: JSON decode error\\n```\\n\\nThis typically happens when either:\\n1. The gateway returns malformed JSON\\n2. The gateway returns HTML/text instead of JSON\\n3. The response is empty or invalid\\n\\nTo help diagnose this, I need a few specific things:\\n\\n1. *...\"}",
+    "{'timestamp': '2025-09-15T11:56:41.161502', 'analysis': \"\ud83e\udd16 **Ecowitt Local Bot Analysis**\\n\\nHello! I see you've been waiting for help with your GW1200 gateway JSON parsing error. Let me pick up where we left off and get this resolved.\\n\\n## Current Status Summary\\n- **Gateway**: GW1200 (firmware v1.6.8) with WH68 outdoor sensor\\n- **Issue**: JSON decode error causing integration setup failure\\n- **Previous**: Initial analysis was interrupted by an API issue\\n\\n## Next Diagnostic Steps\\n\\nTo properly diagnose the JSON parsing issue, I need to see what your gatew...\"}"
   ],
   "user_provided_data": [],
   "similar_issues": [
-    {
-      "number": 4,
-      "title": "GW1200B - Invalid JSON response",
-      "url": "https://github.com/alexlenk/ecowitt_local/issues/4"
-    }
+    "{'number': 4, 'title': 'GW1200B - Invalid JSON response', 'url': 'https://github.com/alexlenk/ecowitt_local/issues/4'}"
   ],
   "estimated_complexity": "unknown"
 }
