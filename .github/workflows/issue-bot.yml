@@ -18,7 +18,7 @@ jobs:
        (contains(github.event.issue.labels.*.name, 'bug') || 
         contains(github.event.issue.labels.*.name, 'enhancement'))) ||
       (github.event_name == 'issue_comment' && 
-       contains(github.event.comment.body, '@bot'))
+       github.event.comment.user.login != 'github-actions[bot]')
     
     # Prevent multiple simultaneous runs for the same issue
     concurrency:

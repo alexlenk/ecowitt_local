@@ -176,7 +176,7 @@ class IssueBot:
         
         return similar
     
-    def analyze_issue(self, issue) -> str:
+    def analyze_issue(self, issue, triggering_comment=None) -> str:
         """Analyze issue and generate response"""
         # Get or create memory for this issue
         memory = self.memory.get_issue_memory(issue.number)
@@ -195,8 +195,32 @@ class IssueBot:
         conversation_context = self.memory.get_conversation_context()
         device_patterns = self.memory.get_device_patterns()
         
+        # Get all comments for conversation history
+        all_comments = issue.get_comments()
+        bot_comments = [c for c in all_comments if c.user.login == "github-actions[bot]"]
+        user_comments = [c for c in all_comments if c.user.login != "github-actions[bot]"]
+        
+        # Determine conversation context
+        is_continuation = len(bot_comments) > 0
+        conversation_history = ""
+        
+        if is_continuation:
+            conversation_history = "\n# Previous Conversation\n"
+            # Show last few exchanges
+            recent_comments = sorted(all_comments, key=lambda x: x.created_at)[-6:]  # Last 6 comments
+            for comment in recent_comments:
+                author = "🤖 Bot" if comment.user.login == "github-actions[bot]" else f"👤 {comment.user.login}"
+                conversation_history += f"\n**{author}** ({comment.created_at.strftime('%Y-%m-%d %H:%M')}):\n{comment.body[:500]}{'...' if len(comment.body) > 500 else ''}\n"
+        
+        # Handle triggering comment
+        triggering_context = ""
+        if triggering_comment:
+            triggering_context = f"\n# Latest Comment (triggered this analysis)\n**👤 {triggering_comment.user.login}**:\n{triggering_comment.body}\n"
+        
         # Prepare Claude prompt
         prompt = f"""You are an expert GitHub issue analyzer for the Ecowitt Local Home Assistant integration. 
+
+You are having a CONVERSATION with users to help resolve their issues. This may be your first response or a continuation of an ongoing conversation. 
 
 # Your Role
 - Analyze GitHub issues for bugs, feature requests, and support questions
@@ -225,6 +249,10 @@ Similar issues found: {len(similar_issues)}
 # Similar Issues (for reference)
 {json.dumps(similar_issues, indent=2) if similar_issues else "None found"}
 
+{conversation_history}
+
+{triggering_context}
+
 # Development History & Context
 {json.dumps(conversation_context.get('previous_bug_fixes', {}), indent=2) if conversation_context else "Loading..."}
 
@@ -232,7 +260,15 @@ Similar issues found: {len(similar_issues)}
 {json.dumps(device_patterns.get('patterns', {}), indent=2) if device_patterns else "Loading..."}
 
 # Instructions
-1. **Analyze** the issue thoroughly
+If this is a CONTINUATION (previous conversation exists):
+1. **Acknowledge** the user's latest comment/information
+2. **Analyze** any new information provided
+3. **Continue** the troubleshooting process
+4. **Ask follow-up questions** or **provide solutions** based on new data
+5. **Reference** previous conversation context
+
+If this is the FIRST response:
+1. **Analyze** the issue thoroughly  
 2. **Classify** it as: bug, enhancement, question, invalid
 3. **Determine complexity**: simple, moderate, complex
 4. **Request information** if needed (be specific about what JSON endpoints, device models, etc.)
@@ -244,6 +280,8 @@ Similar issues found: {len(similar_issues)}
 Your response will be posted as a GitHub comment. Use markdown formatting.
 
 Be helpful, professional, and specific. If you need more information, tell the user exactly what to provide and how to get it.
+
+IMPORTANT: If this is a continuation, acknowledge what the user provided and build on the previous conversation. Don't repeat yourself.
 
 Focus on:
 - Home Assistant integration issues
@@ -328,16 +366,21 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
         try:
             issue = self.repo.get_issue(issue_number)
             
-            # Skip if bot already commented (any bot comment means we've analyzed this issue)
+            # Check if this is a continuation of an existing conversation
             comments = issue.get_comments()
             bot_comments = [c for c in comments if c.user.login == "github-actions[bot]"]
-            if bot_comments:
-                print(f"Bot already commented on issue #{issue_number}, skipping duplicate analysis")
-                return
             
-            # Analyze issue
+            # If triggered by a comment, get the triggering comment
+            triggering_comment = None
+            if comment_id:
+                try:
+                    triggering_comment = issue.get_comment(int(comment_id))
+                except:
+                    pass
+            
+            # Analyze issue (pass triggering comment for conversation context)
             print(f"Analyzing issue #{issue_number}: {issue.title}")
-            analysis = self.analyze_issue(issue)
+            analysis = self.analyze_issue(issue, triggering_comment)
             
             # Post comment
             comment_body = f"""🤖 **Ecowitt Local Bot Analysis**
