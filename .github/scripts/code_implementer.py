@@ -425,7 +425,13 @@ Analyze the issue and provide your assessment:
             # Run tests
             test_success, test_output = self._run_tests(branch_name)
             if not test_success:
-                return False, f"Tests failed: {test_output}"
+                # Check if it's a syntax error that we can automatically fix
+                if "SyntaxError" in test_output and self._try_fix_syntax_error(branch_name, test_output):
+                    print("Syntax error detected and fixed, retrying tests...")
+                    test_success, test_output = self._run_tests(branch_name)
+                
+                if not test_success:
+                    return False, f"Tests failed: {test_output}"
             
             # Create PR
             pr_url = self._create_pull_request(issue, branch_name, fix_type, fix_details)
@@ -1117,6 +1123,86 @@ Generate the fix:
         except Exception as e:
             print(f"Simple fix approach failed: {e}")
             return False
+    
+    def _try_fix_syntax_error(self, branch_name: str, test_output: str) -> bool:
+        """Try to automatically fix syntax errors detected in test output"""
+        import re
+        
+        # Extract file and line number from syntax error
+        # Example: "File "/path/file.py", line 297"
+        file_pattern = r'File "([^"]+)", line (\d+)'
+        match = re.search(file_pattern, test_output)
+        
+        if not match:
+            print("Could not extract file/line from syntax error")
+            return False
+        
+        file_path = match.group(1)
+        line_num = int(match.group(2))
+        
+        # Convert to relative path if it's absolute
+        if file_path.startswith('/tmp/'):
+            # Extract the relative path
+            rel_match = re.search(r'/tmp/[^/]+/(.*)', file_path)
+            if rel_match:
+                file_path = rel_match.group(1)
+            else:
+                print(f"Could not extract relative path from {file_path}")
+                return False
+        
+        print(f"Attempting to fix syntax error in {file_path} at line {line_num}")
+        
+        try:
+            # Get the current file content
+            file_content = self.repo.get_contents(file_path, ref=branch_name)
+            content = file_content.decoded_content.decode()
+            lines = content.split('\n')
+            
+            # Look for common syntax errors
+            if line_num <= len(lines):
+                error_line = lines[line_num - 1]
+                print(f"Error line: {error_line}")
+                
+                fixed = False
+                # Fix the specific error: },lass": should be "class":
+                if '},lass"' in error_line:
+                    lines[line_num - 1] = error_line.replace('},lass"', '"class"')
+                    fixed = True
+                    print("Fixed },lass syntax error")
+                
+                # Fix other common syntax errors
+                elif '",lass"' in error_line:
+                    lines[line_num - 1] = error_line.replace('",lass"', '"class"')
+                    fixed = True
+                elif 'device_lass' in error_line:
+                    lines[line_num - 1] = error_line.replace('device_lass', 'device_class')
+                    fixed = True
+                elif error_line.strip().endswith(',lass"'):
+                    lines[line_num - 1] = error_line.replace(',lass"', '"class"')
+                    fixed = True
+                
+                if fixed:
+                    # Write the fixed content back
+                    new_content = '\n'.join(lines)
+                    
+                    self.repo.update_file(
+                        file_path,
+                        f"🔧 Fix syntax error in {file_path}",
+                        new_content,
+                        file_content.sha,
+                        branch=branch_name
+                    )
+                    print(f"Successfully fixed syntax error in {file_path}")
+                    return True
+                else:
+                    print(f"Could not automatically fix syntax error: {error_line}")
+                    return False
+            
+        except Exception as e:
+            print(f"Error fixing syntax error: {e}")
+            return False
+        
+        return False
     
     def _apply_heuristic_fixes(self, branch_name: str, issue: Issue, fix_details: dict) -> bool:
         """Apply heuristic fixes as fallback when AI parsing fails"""
