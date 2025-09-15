@@ -139,6 +139,15 @@ class CodeImplementer:
                 "confidence": 0.8
             }
         
+        # Pattern 4: Unhashable type errors (device registry issues)
+        if self._matches_unhashable_type_pattern(issue_text, analysis):
+            return True, "unhashable_type_fix", {
+                "pattern": "unhashable_type_error",
+                "files": ["custom_components/ecowitt_local/__init__.py"],
+                "description": "Fix unhashable type list error in device registry",
+                "confidence": 0.9
+            }
+        
         return False, "unknown", {}
     
     def _matches_content_type_pattern(self, issue_text: str, analysis: str) -> bool:
@@ -196,6 +205,25 @@ class CodeImplementer:
         has_gateway = any(indicator in issue_text.lower() for indicator in gateway_indicators)
         
         return has_unit_issue and has_gateway
+    
+    def _matches_unhashable_type_pattern(self, issue_text: str, analysis: str) -> bool:
+        """Check if issue matches unhashable type list error pattern"""
+        error_indicators = [
+            "unhashable type", "unhashable type: 'list'", "typeerror: unhashable",
+            "cannot use list as dict key", "list object is unhashable"
+        ]
+        
+        device_indicators = [
+            "device registry", "device_id", "__init__.py", "refresh mapping",
+            "entities not created", "device creation"
+        ]
+        
+        has_error = any(indicator in issue_text.lower() or indicator in analysis.lower() 
+                       for indicator in error_indicators)
+        has_device_context = any(indicator in issue_text.lower() or indicator in analysis.lower() 
+                                for indicator in device_indicators)
+        
+        return has_error and has_device_context
     
     def _is_content_type_fix_already_implemented(self) -> bool:
         """Check if content-type fallback fix is already in main"""
@@ -265,6 +293,8 @@ class CodeImplementer:
                 success = self._implement_hex_sensor_mapping(branch_name, fix_details["device_model"])
             elif fix_type == "embedded_units_fix":
                 success = self._implement_embedded_units_fix(branch_name)
+            elif fix_type == "unhashable_type_fix":
+                success = self._implement_unhashable_type_fix(branch_name)
             else:
                 return False, f"Unknown fix type: {fix_type}"
             
@@ -524,6 +554,88 @@ class CodeImplementer:
         # This would enhance the _convert_sensor_value method
         # TODO: Implement the regex enhancement
         return True
+    
+    def _implement_unhashable_type_fix(self, branch_name: str) -> bool:
+        """Fix unhashable type list error in device registry"""
+        try:
+            # SECURITY: Validate file path
+            file_path = "custom_components/ecowitt_local/__init__.py"
+            if not self._validate_file_path(file_path):
+                return False
+            
+            # Get current __init__.py content
+            init_file = self.repo.get_contents(file_path, ref=branch_name)
+            content = init_file.decoded_content.decode()
+            
+            # Look for the problematic line around line 155
+            lines = content.split('\n')
+            
+            # Common patterns that cause unhashable type errors:
+            # 1. Using a list as a device identifier instead of a string/tuple
+            # 2. Passing a list where a hashable key is expected
+            
+            fixed = False
+            for i, line in enumerate(lines):
+                line_num = i + 1
+                
+                # Look for common problematic patterns around line 155
+                if 145 <= line_num <= 165:  # Search around the reported line
+                    # Pattern 1: device_id being set to a list
+                    if 'device_id' in line and '[' in line and ']' in line:
+                        # Convert list to tuple (hashable) or comma-separated string
+                        if 'device_id = [' in line:
+                            lines[i] = line.replace('device_id = [', 'device_id = tuple([').replace(']', '])')
+                            fixed = True
+                        elif 'device_id' in line and '= [' in line:
+                            lines[i] = line.replace('= [', '= tuple([').replace(']', '])')
+                            fixed = True
+                    
+                    # Pattern 2: identifiers being passed as lists
+                    elif 'identifiers' in line and '{[' in line:
+                        # Convert list in identifiers to tuple
+                        import re
+                        lines[i] = re.sub(r'identifiers.*?\{(\[.*?\])\}', 
+                                        lambda m: line.replace(m.group(1), f'({m.group(1)[1:-1]})'), 
+                                        line)
+                        fixed = True
+                    
+                    # Pattern 3: hardware_id as list
+                    elif 'hardware_id' in line and '[' in line and ']' in line:
+                        if '=' in line and line.split('=')[1].strip().startswith('['):
+                            lines[i] = line.replace('[', 'tuple([').replace(']', '])')
+                            fixed = True
+            
+            if not fixed:
+                # Fallback: Add a general fix for common device ID issues
+                # Look for device registry calls and ensure proper hashable types
+                for i, line in enumerate(lines):
+                    if 'device_registry' in line and 'identifiers' in line:
+                        # Add tuple conversion for safety
+                        if 'tuple(' not in line:
+                            lines[i] = line.replace('identifiers=', 'identifiers=tuple(') + ')'
+                            fixed = True
+                            break
+            
+            if fixed:
+                new_content = '\n'.join(lines)
+                
+                # Commit the change
+                self.repo.update_file(
+                    file_path,
+                    f"Fix unhashable type list error in device registry\\n\\nConvert list device identifiers to hashable tuples.\\nFixes issue #{self.current_issue_number}",
+                    new_content,
+                    init_file.sha,
+                    branch=branch_name
+                )
+                
+                return True
+            else:
+                print("Could not identify specific unhashable type pattern to fix")
+                return False
+                
+        except Exception as e:
+            print(f"Error implementing unhashable type fix: {e}")
+            return False
     
     def _run_tests(self, branch_name: str) -> Tuple[bool, str]:
         """Run the full test suite on the branch"""
