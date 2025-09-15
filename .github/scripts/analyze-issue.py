@@ -556,7 +556,8 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
             return analysis
             
         except Exception as e:
-            return f"❌ Error analyzing issue: {str(e)}\n\nPlease try again or contact @alexlenk for assistance."
+            print(f"❌ Error analyzing issue: {str(e)}")
+            return None
     
     def should_respond_to_comment(self, comment, issue) -> bool:
         """Determine if the bot should respond to a comment"""
@@ -668,6 +669,11 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
             print(f"Analyzing issue #{issue_number}: {issue.title}")
             analysis = self.analyze_issue(issue, triggering_comment)
             
+            # If analysis failed, exit silently
+            if analysis is None:
+                print(f"Analysis failed for issue #{issue_number}, exiting silently")
+                return
+            
             # Check if bot can implement a fix automatically
             can_fix, fix_type, fix_details = self.code_implementer.can_implement_fix(issue, analysis)
             
@@ -724,12 +730,7 @@ Please update to the latest version (v{current_version}) and test if the issue p
             
         except Exception as e:
             print(f"❌ Error processing issue: {e}")
-            # Try to post error comment
-            try:
-                issue = self.repo.get_issue(issue_number)
-                issue.create_comment(f"🤖 Error analyzing issue: {str(e)}\n\n@alexlenk please review manually.")
-            except:
-                pass
+            # Fail silently - don't spam issue subscribers with error comments
 
 if __name__ == "__main__":
     bot = IssueBot()
