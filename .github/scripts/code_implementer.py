@@ -80,10 +80,18 @@ class CodeImplementer:
         
         issue_text = issue.title + " " + issue.body
         
-        # Check for known patterns
+        # Check for known patterns and verify they need implementation
         
         # Pattern 1: Content-type issues (GW3000, GW1200B)
         if self._matches_content_type_pattern(issue_text, analysis):
+            # Check if fix already exists in main
+            if self._is_content_type_fix_already_implemented():
+                return False, "already_implemented", {
+                    "pattern": "content_type_mismatch", 
+                    "message": "Content-type fallback parsing is already implemented in the current version",
+                    "confidence": 0.0
+                }
+            
             return True, "content_type_fix", {
                 "pattern": "content_type_mismatch",
                 "files": ["custom_components/ecowitt_local/api.py"],
@@ -94,6 +102,14 @@ class CodeImplementer:
         # Pattern 2: Missing hex ID sensor mapping (WH69, WS90, WH90)
         hex_device = self._extract_hex_device_model(issue_text, analysis)
         if hex_device:
+            # Check if device mapping already exists
+            if self._is_hex_device_already_implemented(hex_device):
+                return False, "already_implemented", {
+                    "pattern": "hex_id_sensors",
+                    "message": f"{hex_device} hex sensor mapping is already implemented in the current version",
+                    "confidence": 0.0
+                }
+            
             return True, "hex_sensor_mapping", {
                 "pattern": "hex_id_sensors",
                 "device_model": hex_device,
@@ -107,6 +123,14 @@ class CodeImplementer:
         
         # Pattern 3: Embedded unit parsing (GW2000)
         if self._matches_embedded_units_pattern(issue_text, analysis):
+            # Check if embedded units fix already exists
+            if self._is_embedded_units_fix_already_implemented():
+                return False, "already_implemented", {
+                    "pattern": "embedded_units",
+                    "message": "Embedded unit parsing is already implemented in the current version",
+                    "confidence": 0.0
+                }
+            
             return True, "embedded_units_fix", {
                 "pattern": "embedded_units",
                 "files": ["custom_components/ecowitt_local/coordinator.py"],
@@ -171,6 +195,54 @@ class CodeImplementer:
         has_gateway = any(indicator in issue_text.lower() for indicator in gateway_indicators)
         
         return has_unit_issue and has_gateway
+    
+    def _is_content_type_fix_already_implemented(self) -> bool:
+        """Check if content-type fallback fix is already in main"""
+        try:
+            api_file = self.repo.get_contents("custom_components/ecowitt_local/api.py")
+            content = api_file.decoded_content.decode()
+            
+            # Look for the content-type fix signature
+            return "# Check content type first" in content or "text/html" in content
+        except:
+            return False
+    
+    def _is_hex_device_already_implemented(self, device_model: str) -> bool:
+        """Check if hex device mapping is already in main"""
+        try:
+            # Check sensor_mapper.py
+            mapper_file = self.repo.get_contents("custom_components/ecowitt_local/sensor_mapper.py")
+            mapper_content = mapper_file.decoded_content.decode()
+            
+            # Check const.py
+            const_file = self.repo.get_contents("custom_components/ecowitt_local/const.py")
+            const_content = const_file.decoded_content.decode()
+            
+            device_lower = device_model.lower()
+            
+            # Look for device mapping in sensor_mapper.py
+            mapper_has_device = f'"{device_lower}"' in mapper_content or f"'{device_lower}'" in mapper_content
+            
+            # Look for battery mapping in const.py  
+            const_has_battery = f'"{device_lower}batt"' in const_content
+            
+            return mapper_has_device and const_has_battery
+        except:
+            return False
+    
+    def _is_embedded_units_fix_already_implemented(self) -> bool:
+        """Check if embedded units parsing is already in main"""
+        try:
+            coordinator_file = self.repo.get_contents("custom_components/ecowitt_local/coordinator.py")
+            content = coordinator_file.decoded_content.decode()
+            
+            # Look for embedded unit parsing signatures
+            has_regex = "re.match" in content or "unit_match" in content
+            has_embedded_logic = "embedded unit" in content.lower() or "inhg" in content.lower()
+            
+            return has_regex and has_embedded_logic
+        except:
+            return False
     
     def implement_fix(self, issue: Issue, fix_type: str, fix_details: Dict[str, Any]) -> Tuple[bool, str]:
         """
