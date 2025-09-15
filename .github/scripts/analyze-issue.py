@@ -30,7 +30,11 @@ class IssueBotMemory:
         try:
             file_path = f"{self.memory_path}/issue-{issue_number}.json"
             contents = self.repo.get_contents(file_path)
-            return json.loads(contents.decoded_content.decode())
+            memory = json.loads(contents.decoded_content.decode())
+            # Normalize types that might have become strings
+            memory["issue_number"] = int(memory.get("issue_number", issue_number))
+            memory["analysis_count"] = int(memory.get("analysis_count", 0))
+            return memory
         except:
             return {
                 "issue_number": issue_number,
@@ -376,7 +380,8 @@ class IssueBot:
         """Analyze issue and generate response"""
         # Get or create memory for this issue
         memory = self.memory.get_issue_memory(issue.number)
-        memory["analysis_count"] += 1
+        # Ensure analysis_count is an integer
+        memory["analysis_count"] = int(memory.get("analysis_count", 0)) + 1
         if memory["first_analyzed"] is None:
             memory["first_analyzed"] = datetime.now().isoformat()
         
@@ -556,7 +561,10 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
             return analysis
             
         except Exception as e:
+            import traceback
             print(f"❌ Error analyzing issue: {str(e)}")
+            print("Full traceback in analyze_issue:")
+            print(traceback.format_exc())
             return None
     
     def should_respond_to_comment(self, comment, issue) -> bool:
@@ -730,7 +738,10 @@ Please update to the latest version (v{current_version}) and test if the issue p
             print(f"✅ Successfully analyzed issue #{issue_number}")
             
         except Exception as e:
+            import traceback
             print(f"❌ Error processing issue: {e}")
+            print("Full traceback:")
+            print(traceback.format_exc())
             # Fail silently - don't spam issue subscribers with error comments
 
 if __name__ == "__main__":
