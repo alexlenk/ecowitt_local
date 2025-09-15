@@ -1,0 +1,201 @@
+{
+  "conversation_date": "2025-01-15",
+  "context_type": "development_history",
+  "description": "Complete development context and memory for the Ecowitt Local integration bot",
+  "
+": {
+    "primary_purpose": "Automate GitHub issue analysis and fixes for Ecowitt Local Home Assistant integration",
+    "development_approach": "Step-by-step implementation with budget controls and safety mechanisms",
+    "user_requirements": [
+      "Production environment deployment (not test repo)",
+      "Issue analysis and additional information requests", 
+      "Issue lifecycle management",
+      "Memory system for bot context",
+      "Budget-conscious implementation ($10-20/month acceptable)"
+    ]
+  },
+  "technical_implementation": {
+    "architecture": "GitHub Actions + Claude API + Repository-based memory",
+    "memory_system": "JSON files in .github/bot-memory/ directory",
+    "budget_strategy": "Smart context selection, token limits, monthly caps",
+    "security": "Repository secrets, minimal permissions, human oversight gates"
+  },
+  "previous_bug_fixes": {
+    "issues_resolved": [
+      {
+        "issue_numbers": [1, 4],
+        "problem": "GW3000/GW1200B gateway content-type mismatch",
+        "solution": "Enhanced _make_request() in api.py to handle HTML content-type with JSON body",
+        "version": "1.4.4",
+        "pattern": "Gateway compatibility - content-type fallback parsing"
+      },
+      {
+        "issue_number": 3,
+        "problem": "WH69 weather station showing hex IDs instead of friendly names",
+        "solution": "Added WH69 hex ID sensor mapping to sensor_mapper.py and const.py",
+        "version": "1.4.5", 
+        "pattern": "Hex ID weather stations - common_list mapping"
+      },
+      {
+        "issue_number": 5,
+        "problem": "GW2000/WS90 data conversion errors with embedded units",
+        "solution": "Enhanced _convert_sensor_value() to parse embedded units like '29.40 inHg'",
+        "version": "1.4.6",
+        "pattern": "Embedded unit parsing - regex extraction"
+      },
+      {
+        "issue_number": 6,
+        "problem": "WH90 weather station not creating entities",
+        "solution": "Added WH90 sensor mapping following WH69/WS90 pattern",
+        "version": "1.4.7",
+        "pattern": "Weather station mapping - hex ID system"
+      }
+    ],
+    "common_patterns": {
+      "gateway_compatibility": "Content-type mismatches require fallback JSON parsing",
+      "hex_id_sensors": "WH69/WS90/WH90 use 0x02, 0x07, etc. in common_list for sensor IDs",
+      "embedded_units": "Some gateways return '29.40 inHg' format requiring regex parsing",
+      "sensor_mapping": "Hardware ID stability achieved through sensor_mapper.py system"
+    }
+  },
+  "codebase_knowledge": {
+    "key_files": {
+      "custom_components/ecowitt_local/api.py": {
+        "purpose": "Gateway communication and authentication",
+        "key_methods": ["_make_request", "_convert_sensor_value"],
+        "recent_changes": "Enhanced content-type handling and embedded unit parsing"
+      },
+      "custom_components/ecowitt_local/sensor_mapper.py": {
+        "purpose": "Hardware ID mapping and entity ID generation", 
+        "key_methods": ["_generate_live_data_keys", "update_mapping"],
+        "recent_changes": "Added WH69, WS90, WH90 hex ID mappings"
+      },
+      "custom_components/ecowitt_local/const.py": {
+        "purpose": "Sensor definitions and battery mappings",
+        "recent_changes": "Added hex ID sensor definitions (0x02, 0x07, etc.)"
+      },
+      "custom_components/ecowitt_local/coordinator.py": {
+        "purpose": "Data polling and processing",
+        "recent_changes": "Enhanced sensor value conversion for embedded units"
+      }
+    },
+    "architecture": {
+      "entity_organization": "Individual devices per sensor rather than gateway grouping",
+      "hardware_id_strategy": "Stable entity IDs based on extracted hardware IDs",
+      "device_registry": "Created before platform setup to ensure proper entity-device relationships",
+      "migration_system": "Handles updates from older versions with entity reassignment"
+    }
+  },
+  "user_feedback_learnings": {
+    "critical_corrections": [
+      {
+        "correction": "Never claim something is 'tested' unless verified with actual hardware",
+        "context": "User corrected premature claims about fix effectiveness",
+        "memorized": "Distinguish between unit tested vs device tested - never claim success until users confirm with actual hardware"
+      },
+      {
+        "correction": "Don't claim fixes 'work perfectly' until user confirmation",
+        "context": "User caught overconfident success claims",
+        "memorized": "Implementation vs confirmation - be accurate about status"
+      },
+      {
+        "correction": "First commit and release and then comment",
+        "context": "User corrected workflow order when trying to comment before releasing",
+        "memorized": "Proper GitHub workflow: implement → commit → release → respond to issues"
+      }
+    ],
+    "workflow_preferences": [
+      "Copy-paste GitHub issue links for analysis",
+      "Implement fixes based on user-provided data",
+      "Ask users to test with actual hardware",
+      "Create releases through HACS",
+      "Respond to issues after implementation"
+    ]
+  },
+  "device_knowledge": {
+    "gateway_models": {
+      "GW3000": {
+        "issue": "Returns JSON with text/html content-type",
+        "solution": "Fallback JSON parsing in _make_request()",
+        "fixed_in": "1.4.4"
+      },
+      "GW1200B": {
+        "issue": "Same content-type issue as GW3000", 
+        "solution": "Same fallback parsing fix",
+        "fixed_in": "1.4.4"
+      },
+      "GW2000": {
+        "issue": "Embedded units in sensor values (29.40 inHg)",
+        "solution": "Regex parsing in _convert_sensor_value()",
+        "fixed_in": "1.4.6"
+      }
+    },
+    "weather_stations": {
+      "WH69": {
+        "characteristics": "7-in-1 outdoor sensor, uses hex IDs in common_list",
+        "hex_ids": ["0x02", "0x03", "0x07", "0x0B", "0x0C", "0x19", "0x0A", "0x6D", "0x15", "0x17", "0x0D", "0x0E", "0x7C", "0x10", "0x11", "0x12", "0x13"],
+        "battery_key": "wh69batt",
+        "fixed_in": "1.4.5"
+      },
+      "WS90": {
+        "characteristics": "Similar to WH69, uses same hex ID system",
+        "battery_key": "ws90batt", 
+        "fixed_in": "1.4.6"
+      },
+      "WH90": {
+        "characteristics": "Similar to WH69/WS90, uses same hex ID system",
+        "battery_key": "wh90batt",
+        "fixed_in": "1.4.7"
+      }
+    }
+  },
+  "testing_approach": {
+    "test_commands": [
+      "PYTHONPATH=\"$PWD\" python -m pytest tests/ -v",
+      "PYTHONPATH=\"$PWD\" python -m pytest tests/ --cov=custom_components/ecowitt_local --cov-report=term-missing"
+    ],
+    "validation_steps": [
+      "Run mypy for type checking",
+      "Run flake8 for linting", 
+      "Execute full test suite",
+      "Ask users to test with actual hardware"
+    ]
+  },
+  "bot_memory_system": {
+    "storage_method": "JSON files in .github/bot-memory/ directory",
+    "memory_structure": {
+      "issue_number": "GitHub issue number",
+      "first_analyzed": "ISO timestamp of first analysis",
+      "analysis_count": "Number of times analyzed",
+      "status": "Current issue status",
+      "previous_responses": "Array of bot response summaries",
+      "user_provided_data": "Array of user-provided diagnostic data",
+      "similar_issues": "Array of related issues found",
+      "estimated_complexity": "Simple/moderate/complex classification"
+    },
+    "context_usage": "Bot references this data for informed responses and pattern recognition"
+  },
+  "cost_analysis": {
+    "realistic_estimate": "$10-20/month",
+    "token_usage_per_issue": "25,000-150,000 tokens",
+    "optimization_strategies": [
+      "Smart file selection based on issue content",
+      "Context truncation for large files",
+      "Incremental analysis approach",
+      "Monthly budget caps and monitoring"
+    ]
+  },
+  "next_steps": {
+    "immediate": [
+      "Set CLAUDE_API_KEY in GitHub secrets",
+      "Test bot with sample issue",
+      "Monitor initial performance and costs"
+    ],
+    "ongoing": [
+      "Track user satisfaction with bot responses",
+      "Refine analysis prompts based on feedback",
+      "Expand device knowledge base",
+      "Optimize token usage patterns"
+    ]
+  }
+}

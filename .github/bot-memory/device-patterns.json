@@ -1,0 +1,124 @@
+{
+  "device_patterns": {
+    "description": "Known device patterns and fixes for automated issue analysis",
+    "last_updated": "2025-01-15",
+    "patterns": {
+      "content_type_issues": {
+        "symptoms": [
+          "JSON parsing error",
+          "Content-type mismatch", 
+          "text/html when expecting application/json",
+          "Gateway connection established but data parsing fails"
+        ],
+        "affected_devices": ["GW3000", "GW1200B"],
+        "diagnostic_requests": [
+          "Gateway model and firmware version",
+          "curl -s http://YOUR_IP/get_livedata_info output",
+          "Home Assistant logs showing parsing errors"
+        ],
+        "solution_pattern": "Enhanced _make_request() with fallback JSON parsing",
+        "code_location": "custom_components/ecowitt_local/api.py:165-195",
+        "fixed_in_version": "1.4.4"
+      },
+      "hex_id_sensors": {
+        "symptoms": [
+          "Sensor showing hex IDs like 0x02, 0x07",
+          "Weather station not creating friendly entities",
+          "Device showing in common_list but no entities created",
+          "Hex values displayed instead of sensor names"
+        ],
+        "affected_devices": ["WH69", "WS90", "WH90"],
+        "diagnostic_requests": [
+          "Device model (WH69, WS90, WH90)",
+          "JSON output from /get_sensors_info",
+          "JSON output from /get_livedata_info showing hex IDs",
+          "Hardware ID from sensor mapping (like BB, B845)"
+        ],
+        "solution_pattern": "Add device type to sensor_mapper.py with hex ID mappings",
+        "code_locations": [
+          "custom_components/ecowitt_local/sensor_mapper.py:182-247",
+          "custom_components/ecowitt_local/const.py:275-361"
+        ],
+        "hex_id_mappings": {
+          "0x02": "Outdoor Temperature",
+          "0x03": "Dewpoint Temperature", 
+          "0x07": "Outdoor Humidity",
+          "0x0B": "Wind Speed",
+          "0x0C": "Wind Gust",
+          "0x19": "Max Daily Gust",
+          "0x0A": "Wind Direction",
+          "0x6D": "Wind Direction Avg",
+          "0x15": "Solar Radiation", 
+          "0x17": "UV Index",
+          "0x0D": "Rain Event",
+          "0x0E": "Rain Rate",
+          "0x7C": "Daily Rain",
+          "0x10": "Weekly Rain",
+          "0x11": "Monthly Rain",
+          "0x12": "Yearly Rain",
+          "0x13": "Total Rain"
+        }
+      },
+      "embedded_units": {
+        "symptoms": [
+          "ValueError: could not convert string to float",
+          "Data conversion errors",
+          "Sensor values like '29.40 inHg', '46.4 F', '89%'",
+          "Float conversion failing on sensor readings"
+        ],
+        "affected_devices": ["GW2000", "WS90", "some WH sensors"],
+        "diagnostic_requests": [
+          "Exact error message from Home Assistant logs",
+          "Sample sensor values showing the format",
+          "JSON output from /get_livedata_info",
+          "Gateway model and firmware version"
+        ],
+        "solution_pattern": "Enhanced _convert_sensor_value() with regex unit parsing",
+        "code_location": "custom_components/ecowitt_local/coordinator.py",
+        "regex_pattern": "r'^([-+]?\\d*\\.?\\d+)\\s*([a-zA-Z%/]+.*)?'",
+        "fixed_in_version": "1.4.6"
+      },
+      "missing_entities": {
+        "symptoms": [
+          "Device detected but no entities created",
+          "Integration loads but no sensors appear",
+          "Hardware ID found but entities missing",
+          "Sensor mapping successful but entity creation fails"
+        ],
+        "diagnostic_requests": [
+          "Complete JSON dump from /get_sensors_info",
+          "Complete JSON dump from /get_livedata_info", 
+          "Home Assistant logs during integration reload",
+          "List of expected vs actual entities created",
+          "Device model and hardware ID"
+        ],
+        "common_causes": [
+          "Missing sensor type mapping in sensor_mapper.py",
+          "Hardware ID not properly extracted",
+          "Sensor keys not matching live data format",
+          "Battery sensor mapping missing"
+        ],
+        "solution_approach": "Add sensor type to _generate_live_data_keys() method"
+      },
+      "device_registry_errors": {
+        "symptoms": [
+          "unhashable type: 'list' error",
+          "Device creation failures",
+          "TypeError in device registry"
+        ],
+        "status": "Known issue, solution pending",
+        "diagnostic_requests": [
+          "Full error traceback",
+          "Device information structure",
+          "Integration version"
+        ]
+      }
+    },
+    "response_templates": {
+      "need_json_data": "To help resolve this issue, please provide a JSON dump from your gateway:\n\n1. **Live data**: `curl -s http://YOUR_GATEWAY_IP/get_livedata_info | jq .`\n2. **Sensor mapping**: `curl -s http://YOUR_GATEWAY_IP/get_sensors_info | jq .`\n\nReplace `YOUR_GATEWAY_IP` with your actual gateway IP address.",
+      "device_model_request": "Please provide:\n1. Your gateway model (GW2000, GW3000, etc.)\n2. Weather station model (WH69, WS90, WH90, etc.)\n3. Firmware version if available",
+      "logs_request": "Please share the relevant Home Assistant logs showing the error. You can find these in:\n- **Settings** → **System** → **Logs**\n- Look for entries containing `ecowitt_local`",
+      "similar_issue_reference": "This appears similar to issue #{issue_number} which was resolved in version {version}. Please update to the latest version and test."
+    }
+  }
+}

@@ -1,0 +1,49 @@
+# Issue Analysis Bot
+# Analyzes GitHub issues, asks for clarification, and manages issue lifecycle
+
+name: Issue Bot
+
+on:
+  issues:
+    types: [opened, reopened, labeled]
+  issue_comment:
+    types: [created]
+
+jobs:
+  analyze-issue:
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'issues' && 
+       (contains(github.event.issue.labels.*.name, 'bug') || 
+        contains(github.event.issue.labels.*.name, 'enhancement') ||
+        github.event.action == 'opened')) ||
+      (github.event_name == 'issue_comment' && 
+       contains(github.event.comment.body, '@bot'))
+    
+    permissions:
+      issues: write
+      contents: read
+      pull-requests: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install anthropic PyGithub requests
+      
+      - name: Analyze Issue
+        env:
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || github.event.issue.number }}
+          COMMENT_ID: ${{ github.event.comment.id || '' }}
+          MONTHLY_BUDGET: ${{ vars.CLAUDE_MONTHLY_BUDGET || '10.00' }}
+        run: python .github/scripts/analyze-issue.py
