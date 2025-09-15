@@ -278,10 +278,10 @@ class IssueBot:
             r'```(?:log|text|yaml|json)\n(.*?)\n```',  # Code blocks with logs
         ]
         
-        all_text = issue.body
+        all_text = str(issue.body or "")
         comments = issue.get_comments()
         for comment in comments:
-            all_text += "\n" + comment.body
+            all_text += "\n" + str(comment.body or "")
         
         found_files = []
         code_blocks = []
@@ -388,7 +388,7 @@ class IssueBot:
         current_version = self.get_current_version()
         
         # Get repository context 
-        repo_context = self.get_repo_context(issue.body + " " + issue.title)
+        repo_context = self.get_repo_context(str(issue.body or "") + " " + str(issue.title or ""))
         
         # Extract and analyze images from issue and comments
         image_analysis = self.analyze_images_in_issue(issue)
@@ -547,7 +547,7 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
             # Update memory
             memory["previous_responses"].append({
                 "timestamp": datetime.now().isoformat(),
-                "analysis": analysis[:500] + "..." if len(analysis) > 500 else analysis
+                "analysis": str(analysis)[:500] + "..." if len(str(analysis)) > 500 else str(analysis)
             })
             
             # Save memory
@@ -625,7 +625,7 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
             r"WS\d+": "weather-station"
         }
         
-        issue_text = issue.title + " " + issue.body + " " + analysis
+        issue_text = str(issue.title or "") + " " + str(issue.body or "") + " " + str(analysis or "")
         for pattern, label in device_patterns.items():
             if re.search(pattern, issue_text, re.IGNORECASE):
                 labels_to_add.append(label)
