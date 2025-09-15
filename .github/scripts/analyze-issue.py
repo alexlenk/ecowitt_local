@@ -159,6 +159,17 @@ class IssueBot:
         # For now, assume we're under budget
         return True
     
+    def get_current_version(self) -> str:
+        """Get current version from manifest.json"""
+        try:
+            manifest_file = self.repo.get_contents("custom_components/ecowitt_local/manifest.json")
+            manifest_content = manifest_file.decoded_content.decode()
+            import json
+            manifest_data = json.loads(manifest_content)
+            return manifest_data.get("version", "unknown")
+        except:
+            return "unknown"
+    
     def get_repo_context(self, issue_text: str) -> str:
         """Get relevant repository context based on issue content"""
         relevant_files = []
@@ -177,10 +188,13 @@ class IssueBot:
         if any(word in issue_text.lower() for word in ["config", "setup", "integration"]):
             relevant_files.append("custom_components/ecowitt_local/__init__.py")
         
+        # Always include manifest for version info
+        if "custom_components/ecowitt_local/manifest.json" not in relevant_files:
+            relevant_files.append("custom_components/ecowitt_local/manifest.json")
+        
         # Default to manifest and const if no specific files identified
-        if not relevant_files:
-            relevant_files = ["custom_components/ecowitt_local/manifest.json", 
-                            "custom_components/ecowitt_local/const.py"]
+        if len(relevant_files) == 1:  # Only manifest was added
+            relevant_files.append("custom_components/ecowitt_local/const.py")
         
         context = "# Ecowitt Local Integration - Relevant Code Context\n\n"
         
@@ -370,8 +384,9 @@ class IssueBot:
         similar_issues = self.find_similar_issues(issue.body)
         memory["similar_issues"] = similar_issues
         
-        # Get repository context
+        # Get repository context and current version
         repo_context = self.get_repo_context(issue.body + " " + issue.title)
+        current_version = self.get_current_version()
         
         # Extract and analyze images from issue and comments
         image_analysis = self.analyze_images_in_issue(issue)
@@ -458,6 +473,8 @@ Issue status: {memory["status"]}
 Similar issues found: {len(similar_issues)}
 
 # Repository Context
+Current Integration Version: v{current_version}
+
 {repo_context}
 
 # Similar Issues (for reference)
@@ -685,7 +702,7 @@ Good news! The fix for this issue pattern is already implemented:
 - **Pattern**: {fix_details.get('pattern', 'Unknown')}
 - **Status**: {fix_details.get('message', 'Already resolved in current version')}
 
-Please update to the latest version (v1.4.7+) and test if the issue persists. If you're already on the latest version and still experiencing problems, please provide additional details about your specific setup."""
+Please update to the latest version (v{current_version}) and test if the issue persists. If you're already on the latest version and still experiencing problems, please provide additional details about your specific setup."""
 
             # Post comment
             comment_body = f"""🤖 **Ecowitt Local Bot Analysis**
