@@ -419,7 +419,8 @@ Analyze the issue and provide your assessment:
                 return False, f"Unknown fix type: {fix_type}"
             
             if not success:
-                return False, "Failed to implement code changes"
+                print(f"Fix implementation failed for {fix_type}")
+                return False, f"Failed to implement code changes (type: {fix_type})"
             
             # Run tests
             test_success, test_output = self._run_tests(branch_name)
@@ -825,22 +826,33 @@ Provide your analysis and the specific code changes needed to fix this issue.
             lines = content.split('\n')
             
             # Apply common fixes based on issue content
-            issue_text = (issue.title + " " + issue.body).lower()
+            issue_text = (issue.title + " " + issue.body + " " + fix_analysis).lower()
             
-            # Fix 1: Missing imports
+            print(f"Applying heuristic fixes to {file_path} based on: {issue_text[:100]}...")
+            
+            # Fix 1: Unhashable type errors (most common in this codebase)
+            if "unhashable" in issue_text or "list" in issue_text:
+                print("Applying unhashable type fixes...")
+                content = self._fix_unhashable_types(content)
+            
+            # Fix 2: Missing imports
             if "import" in issue_text or "module" in issue_text:
+                print("Applying import fixes...")
                 content = self._fix_missing_imports(content, issue_text)
             
-            # Fix 2: Type errors
+            # Fix 3: Type errors
             if "type" in issue_text and "error" in issue_text:
+                print("Applying type error fixes...")
                 content = self._fix_type_errors(content, issue_text)
             
-            # Fix 3: Attribute errors
+            # Fix 4: Attribute errors
             if "attribute" in issue_text and "error" in issue_text:
+                print("Applying attribute error fixes...")
                 content = self._fix_attribute_errors(content, issue_text)
             
-            # Fix 4: Key errors
+            # Fix 5: Key errors
             if "key" in issue_text and "error" in issue_text:
+                print("Applying key error fixes...")
                 content = self._fix_key_errors(content, issue_text)
             
             # If content changed, commit it
@@ -917,6 +929,22 @@ Provide your analysis and the specific code changes needed to fix this issue.
         
         return content
     
+    def _fix_unhashable_types(self, content: str) -> str:
+        """Fix unhashable type errors by converting lists to tuples"""
+        # Common unhashable type fixes
+        content = content.replace('identifiers=[', 'identifiers=(')
+        content = content.replace('identifiers = [', 'identifiers = (')  
+        content = content.replace('])', '))')
+        content = content.replace('device_id = [', 'device_id = (')
+        content = content.replace('device_id=[', 'device_id=(')
+        
+        # Fix list comprehensions that should be tuples
+        import re
+        content = re.sub(r'identifiers\s*=\s*\[(.*?)\]', r'identifiers = (\1)', content)
+        content = re.sub(r'device_id\s*=\s*\[(.*?)\]', r'device_id = (\1)', content)
+        
+        return content
+    
     def _implement_ai_fix(self, branch_name: str, issue: Issue, fix_details: dict) -> bool:
         """Implement a fix using AI analysis and code generation"""
         try:
@@ -969,15 +997,20 @@ Generate the fix:
             )
             
             fix_response = response.content[0].text
+            print(f"AI Fix Response: {fix_response[:500]}...")
             
             # Parse the AI response and apply changes
             success = self._apply_ai_generated_changes(branch_name, fix_response, issue)
+            print(f"AI changes applied successfully: {success}")
             
             return success
             
         except Exception as e:
+            import traceback
             print(f"Error implementing AI fix: {e}")
+            print(f"Full traceback: {traceback.format_exc()}")
             # Fallback to heuristic fixes
+            print("Falling back to heuristic fixes...")
             return self._apply_heuristic_fixes(branch_name, issue, fix_details)
     
     def _get_relevant_file_contents(self, file_paths: list) -> str:
@@ -1010,6 +1043,7 @@ Generate the fix:
         # Look for FILE: ... OLD_CODE: ... NEW_CODE: ... patterns
         file_pattern = r'FILE:\s*([^\n]+)\s*\n.*?OLD_CODE:\s*\n(.*?)\n\s*NEW_CODE:\s*\n(.*?)(?=\n---|\nFILE:|$)'
         matches = re.findall(file_pattern, fix_response, re.DOTALL)
+        print(f"Found {len(matches)} file changes in AI response")
         
         for file_path, old_code, new_code in matches:
             file_path = file_path.strip()
@@ -1050,7 +1084,39 @@ Generate the fix:
                 print(f"Error applying change to {change['file_path']}: {e}")
                 continue
         
+        print(f"Applied {applied_changes} changes successfully")
+        
+        # If no changes applied, try simpler approach
+        if applied_changes == 0:
+            print("No changes applied via structured parsing, trying simple approach...")
+            return self._try_simple_ai_fix(branch_name, fix_response, issue)
+        
         return applied_changes > 0
+    
+    def _try_simple_ai_fix(self, branch_name: str, fix_response: str, issue: Issue) -> bool:
+        """Try to apply fixes using a simpler approach when structured parsing fails"""
+        try:
+            # Look for any file paths mentioned in the AI response
+            import re
+            file_mentions = re.findall(r'(custom_components/ecowitt_local/[a-zA-Z_]+\.py)', fix_response)
+            
+            if not file_mentions:
+                print("No file paths found in AI response")
+                return False
+            
+            # Try to apply basic heuristic fixes to mentioned files
+            applied = 0
+            for file_path in set(file_mentions):
+                if self._validate_file_path(file_path):
+                    print(f"Applying heuristic fixes to {file_path}")
+                    if self._apply_heuristic_fix(branch_name, file_path, issue, fix_response):
+                        applied += 1
+            
+            return applied > 0
+            
+        except Exception as e:
+            print(f"Simple fix approach failed: {e}")
+            return False
     
     def _apply_heuristic_fixes(self, branch_name: str, issue: Issue, fix_details: dict) -> bool:
         """Apply heuristic fixes as fallback when AI parsing fails"""
