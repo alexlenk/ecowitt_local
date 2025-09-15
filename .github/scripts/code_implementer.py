@@ -249,10 +249,131 @@ class CodeImplementer:
     
     def _implement_hex_sensor_mapping(self, branch_name: str, device_model: str) -> bool:
         """Implement hex sensor mapping for device model"""
-        # This would implement the hex sensor mapping logic
-        # Similar to what we did for WH69, WS90, WH90
-        # TODO: Implement based on device_model
-        return True
+        try:
+            # 1. Update sensor_mapper.py
+            success = self._add_hex_mapping_to_sensor_mapper(branch_name, device_model)
+            if not success:
+                return False
+            
+            # 2. Update const.py with battery mapping
+            success = self._add_hex_battery_mapping_to_const(branch_name, device_model)
+            if not success:
+                return False
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error implementing hex sensor mapping: {e}")
+            return False
+    
+    def _add_hex_mapping_to_sensor_mapper(self, branch_name: str, device_model: str) -> bool:
+        """Add hex sensor mapping to sensor_mapper.py"""
+        try:
+            # Get current sensor_mapper.py content
+            file = self.repo.get_contents("custom_components/ecowitt_local/sensor_mapper.py", ref=branch_name)
+            content = file.decoded_content.decode()
+            
+            # Check if mapping already exists
+            if f'sensor_type.lower() in ("{device_model.lower()}"' in content:
+                return True  # Already exists
+            
+            # Find the location to insert the new mapping (after WH90 or before WH25)
+            insert_point = content.find('elif sensor_type.lower() in ("wh25", "indoor_station"):')
+            if insert_point == -1:
+                return False
+            
+            # Generate the mapping code
+            device_mapping = f'''        elif sensor_type.lower() in ("{device_model.lower()}", "weather_station_{device_model.lower()}"):
+            # {device_model} outdoor sensor array (similar to WH69/WS90, uses hex IDs in common_list)
+            keys.extend([
+                "0x02",  # Temperature
+                "0x03",  # Temperature (alternate)
+                "0x07",  # Humidity
+                "0x0B",  # Wind speed
+                "0x0C",  # Wind speed (alternate)
+                "0x19",  # Wind gust
+                "0x0A",  # Wind direction
+                "0x6D",  # Wind direction (alternate)
+                "0x15",  # Solar radiation
+                "0x17",  # UV index
+                "0x0D",  # Rain event
+                "0x0E",  # Rain rate
+                "0x7C",  # Rain daily
+                "0x10",  # Rain weekly
+                "0x11",  # Rain monthly
+                "0x12",  # Rain yearly
+                "0x13",  # Rain total
+                "{device_model.lower()}batt",  # Battery level
+            ])
+        '''
+            
+            # Insert the mapping
+            new_content = content[:insert_point] + device_mapping + content[insert_point:]
+            
+            # Commit the change
+            self.repo.update_file(
+                "custom_components/ecowitt_local/sensor_mapper.py",
+                f"Add {device_model} hex sensor mapping\n\nAdd support for {device_model} weather station hex ID sensors.\nFixes issue #{self.current_issue_number}",
+                new_content,
+                file.sha,
+                branch=branch_name
+            )
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error updating sensor_mapper.py: {e}")
+            return False
+    
+    def _add_hex_battery_mapping_to_const(self, branch_name: str, device_model: str) -> bool:
+        """Add battery mapping to const.py"""
+        try:
+            # Get current const.py content
+            file = self.repo.get_contents("custom_components/ecowitt_local/const.py", ref=branch_name)
+            content = file.decoded_content.decode()
+            
+            # Check if mapping already exists
+            if f'"{device_model.lower()}batt"' in content:
+                return True  # Already exists
+            
+            # Find the battery sensors section and add the new mapping
+            insert_point = content.find('    "wh90batt": {')
+            if insert_point != -1:
+                # WH90 exists, add after it
+                end_point = content.find('    },', insert_point) + 6
+                battery_mapping = f'''    "{device_model.lower()}batt": {{
+        "name": "{device_model} Weather Station Battery",
+        "sensor_key": "0x02"
+    }},
+'''
+                new_content = content[:end_point] + battery_mapping + content[end_point:]
+            else:
+                # Add before the closing of BATTERY_SENSORS
+                insert_point = content.find('}\n\n# Add dynamically generated battery sensors')
+                if insert_point == -1:
+                    return False
+                
+                battery_mapping = f'''    "{device_model.lower()}batt": {{
+        "name": "{device_model} Weather Station Battery",
+        "sensor_key": "0x02"
+    }},
+'''
+                new_content = content[:insert_point] + battery_mapping + content[insert_point:]
+            
+            # Commit the change
+            self.repo.update_file(
+                "custom_components/ecowitt_local/const.py",
+                f"Add {device_model} battery sensor mapping\n\nAdd battery support for {device_model} weather station.\nFixes issue #{self.current_issue_number}",
+                new_content,
+                file.sha,
+                branch=branch_name
+            )
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error updating const.py: {e}")
+            return False
     
     def _implement_embedded_units_fix(self, branch_name: str) -> bool:
         """Implement embedded units parsing fix"""
@@ -274,6 +395,10 @@ class CodeImplementer:
                     "--single-branch"
                 ]
                 subprocess.run(clone_cmd, check=True, capture_output=True)
+                
+                # Install test dependencies first
+                install_cmd = ["pip", "install", "-r", "requirements_test.txt"]
+                subprocess.run(install_cmd, cwd=temp_dir, check=True, capture_output=True)
                 
                 # Run tests
                 test_cmd = [
