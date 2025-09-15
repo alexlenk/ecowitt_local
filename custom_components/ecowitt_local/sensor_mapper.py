@@ -223,7 +223,7 @@ class SensorMapper:
                 "0x13",  # Rain total
                 "ws90batt",  # Battery level
             ])
-        elif sensor_type.lower() in ("wh90", "weather_station_wh90"):
+        elif sensor_type.lower() in ("wh90", "weather_station_wh90") or "temp & humidity & solar & wind & rain" in sensor_type.lower():
             # WH90 outdoor sensor array (similar to WH69/WS90, uses hex IDs in common_list)
             keys.extend([
                 "0x02",  # Temperature
