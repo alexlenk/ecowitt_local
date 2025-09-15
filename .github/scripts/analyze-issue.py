@@ -9,14 +9,15 @@ import re
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import anthropic
-from github import Github
+from github import Github, Auth
 
 class IssueBotMemory:
     """Handle bot memory using GitHub repository files"""
     
     def __init__(self, repo, github_token: str):
         self.repo = repo
-        self.github = Github(github_token)
+        auth = Auth.Token(github_token)
+        self.github = Github(auth=auth)
         self.memory_path = ".github/bot-memory"
         self._conversation_context = None
         self._device_patterns = None
@@ -89,7 +90,8 @@ class IssueBot:
     
     def __init__(self):
         self.claude = anthropic.Anthropic(api_key=os.environ["CLAUDE_API_KEY"])
-        self.github = Github(os.environ["GITHUB_TOKEN"])
+        auth = Auth.Token(os.environ["GITHUB_TOKEN"])
+        self.github = Github(auth=auth)
         self.repo = self.github.get_repo(os.environ["GITHUB_REPOSITORY"])
         self.memory = IssueBotMemory(self.repo, os.environ["GITHUB_TOKEN"])
         self.monthly_budget = float(os.environ.get("MONTHLY_BUDGET", "10.00"))
@@ -260,7 +262,7 @@ Remember: Never claim something is "tested" or "works perfectly" until users con
 
         try:
             response = self.claude.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-3-5-sonnet-20250108",
                 max_tokens=2000,
                 messages=[{"role": "user", "content": prompt}]
             )
