@@ -197,20 +197,52 @@ elif sensor_type.lower() in ("wh90", "weather_station_wh90") or "temp & humidity
 
 # 🧪 Testing & Validation Requirements
 
+## CRITICAL: CI Monitoring and Learning
+
+**MANDATORY PROCESS**: After implementing any changes, the bot MUST:
+
+1. **Monitor CI Results**: Wait for GitHub Actions CI to complete on the created branch
+2. **Analyze Failures**: If CI fails, analyze the test failures and error messages
+3. **Fix Issues**: Update the implementation to address any test failures
+4. **Learn from Failures**: Update approach based on what the tests reveal
+5. **Iterate Until Success**: Continue fixing until all tests pass
+
+### CI Workflow Monitoring
+
+The CI runs on `claude/**` branches and includes:
+- Full test suite (225+ tests)
+- Coverage reporting (must maintain >89%)  
+- Multiple Python versions (3.11, 3.12)
+- Code quality checks
+
+**If CI fails, the implementation is WRONG and must be fixed.**
+
+### Learning from Test Failures
+
+Common test failure patterns and their meanings:
+
+- **Duplicate entity errors**: Usually indicates hex ID duplication (follow anti-patterns)
+- **Entity naming inconsistencies**: Indicates architectural violation
+- **Coverage drops**: Missing test coverage for new code paths
+- **Regression failures**: Changes broke existing device functionality
+
+**Update implementation based on test feedback - tests reveal architectural violations.**
+
 ## Before Any Device Support Changes
 
 1. **Understand the architecture**: Read the Anti-Patterns section
-2. **Check existing patterns**: See how WH69/WS90 work
-3. **Run tests**: `PYTHONPATH="$PWD" python -m pytest tests/ -v`
-4. **Maintain coverage**: Keep >89% coverage
+2. **Check existing patterns**: See how WH69/WS90 work  
+3. **Plan minimal changes**: Single line additions preferred
+4. **Commit and monitor**: Wait for CI results and fix any failures
 
 ## Device Addition Checklist
 - [ ] Device type string added to `sensor_mapper.py` ONLY
 - [ ] NO new hex ID definitions created
 - [ ] Uses existing hex ID system from const.py
 - [ ] Battery mapping added if needed (device-specific key only)
-- [ ] All tests pass
+- [ ] **CI passes completely** (all tests, all Python versions)
 - [ ] No regressions in existing devices
+- [ ] Implementation follows minimal approach
 
 ---
 
@@ -225,6 +257,39 @@ When adding device support:
 4. ❌ Never duplicate existing definitions
 
 **When in doubt**: Look at WH69/WS90 implementation and follow that EXACT pattern.
+
+---
+
+# 🧠 Memory and Learning Requirements
+
+## Update Memory with Learnings
+
+After each implementation attempt, the bot MUST update its memory with:
+
+### What Worked
+- Successful patterns that passed CI
+- Minimal changes that achieved the goal
+- Architectural approaches that maintained compatibility
+
+### What Failed  
+- Approaches that caused test failures
+- Anti-patterns that violated architecture
+- Complex solutions that created problems
+
+### Key Learnings
+- Why the existing architecture exists
+- How hex ID system reusability works
+- Importance of minimal, surgical changes
+
+## Apply Learnings to Future Issues
+
+Use accumulated knowledge to:
+- **Recognize similar patterns** in future issues
+- **Avoid repeating mistakes** that caused test failures  
+- **Default to proven approaches** that have worked before
+- **Respect architectural boundaries** learned through testing
+
+**Memory should compound - each successful fix should make future fixes better and more architecturally sound.**
 
 ---
 
