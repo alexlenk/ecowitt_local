@@ -1,11 +1,12 @@
 {
   "issue_number": "11",
   "first_analyzed": "2025-09-16T08:55:08.274409",
-  "analysis_count": "2",
+  "analysis_count": "3",
   "status": "new",
   "previous_responses": [
     "{'timestamp': '2025-09-16T08:55:43.901235', 'analysis': 'Hi @ChristophCaina! Thank you for this detailed issue report and for providing the comprehensive diagnostic data. I can see you\\'re experiencing sensor mapping issues with your GW2000A + WH69 setup where entities aren\\'t being created properly, and some sensors are showing as unnamed (like \"3\" and \"5\").\\n\\nLet me analyze your data:\\n\\n## Issue Analysis\\n\\nLooking at your `get_live_data_info`, I can see the problem. Your WH69 sensor (ID \"77\") is providing data with **numeric string keys** (\"3\", \"5\") and ...'}",
-    "{'timestamp': '2025-09-16T09:12:13.796449', 'analysis': \"\ud83e\udd16 **Ecowitt Local Bot Analysis - Continuing**\\n\\nExcellent suggestion about adding diagnostic data support! That would definitely make troubleshooting much easier. I'll add that as an enhancement to consider.\\n\\n## Current Status Analysis\\n\\nBased on your updated information, I can see the core issue now. Your WH69 is providing data with hex IDs in the `common_list` section, but the current sensor mapping logic has a critical flaw in how it handles WH69 sensors.\\n\\nLooking at your data:\\n- **Missing enti...\"}"
+    "{'timestamp': '2025-09-16T09:12:13.796449', 'analysis': \"\ud83e\udd16 **Ecowitt Local Bot Analysis - Continuing**\\n\\nExcellent suggestion about adding diagnostic data support! That would definitely make troubleshooting much easier. I'll add that as an enhancement to consider.\\n\\n## Current Status Analysis\\n\\nBased on your updated information, I can see the core issue now. Your WH69 is providing data with hex IDs in the `common_list` section, but the current sensor mapping logic has a critical flaw in how it handles WH69 sensors.\\n\\nLooking at your data:\\n- **Missing enti...\"}",
+    "{'timestamp': '2025-09-16T09:29:40.719705', 'analysis': '\ud83e\udd16 **Ecowitt Local Bot Analysis - Entity List Review**\\n\\nYes, that entity list is **extremely helpful**! It confirms exactly what I suspected from your earlier data. Looking at the entities that were actually created:\\n\\n## Current Entity Analysis\\n\\n**\u2705 Entities Created (but problematic):**\\n- `sensor.ecowitt_0x_77` - This is malformed (should be `0x02`, `0x03`, etc.)\\n- `sensor.ecowitt_sensor_77` - Generic sensor entity\\n- `sensor.ecowitt_0x0b_77` - Wind speed (0x0B) \u2713\\n- `sensor.ecowitt_0x0c_77` - Wind...'}"
   ],
   "user_provided_data": [],
   "similar_issues": [
