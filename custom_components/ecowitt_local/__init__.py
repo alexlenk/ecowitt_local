@@ -152,7 +152,10 @@ async def _async_register_services(hass: HomeAssistant) -> None:
         if device_id:
             # Find coordinator for specific device
             device_registry = dr.async_get(hass)
-            device = device_registry.async_get(device_id)
+            # Handle case where device_id might be passed as a list
+            if isinstance(device_id, list):
+                device_id = device_id[0] if device_id else None
+            device = device_registry.async_get(device_id) if device_id else None
             if device:
                 for entry_id in device.config_entries:
                     if entry_id in hass.data.get(DOMAIN, {}):
@@ -181,7 +184,10 @@ async def _async_register_services(hass: HomeAssistant) -> None:
         if device_id:
             # Find coordinator for specific device
             device_registry = dr.async_get(hass)
-            device = device_registry.async_get(device_id)
+            # Handle case where device_id might be passed as a list
+            if isinstance(device_id, list):
+                device_id = device_id[0] if device_id else None
+            device = device_registry.async_get(device_id) if device_id else None
             if device:
                 for entry_id in device.config_entries:
                     if entry_id in hass.data.get(DOMAIN, {}):
