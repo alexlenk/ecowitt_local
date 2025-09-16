@@ -1,0 +1,16 @@
+{
+  "issue_number": "11",
+  "first_analyzed": "2025-09-16T08:55:08.274409",
+  "analysis_count": "1",
+  "status": "new",
+  "previous_responses": [
+    "{'timestamp': '2025-09-16T08:55:43.901235', 'analysis': 'Hi @ChristophCaina! Thank you for this detailed issue report and for providing the comprehensive diagnostic data. I can see you\\'re experiencing sensor mapping issues with your GW2000A + WH69 setup where entities aren\\'t being created properly, and some sensors are showing as unnamed (like \"3\" and \"5\").\\n\\nLet me analyze your data:\\n\\n## Issue Analysis\\n\\nLooking at your `get_live_data_info`, I can see the problem. Your WH69 sensor (ID \"77\") is providing data with **numeric string keys** (\"3\", \"5\") and ...'}"
+  ],
+  "user_provided_data": [],
+  "similar_issues": [
+    "{'number': 10, 'title': 'Service \"Refresh Sensor Mapping\" and \"update live data\" returns an unknown error', 'url': 'https://github.com/alexlenk/ecowitt_local/issues/10'}",
+    "{'number': 10, 'title': 'Service \"Refresh Sensor Mapping\" and \"update live data\" returns an unknown error', 'url': 'https://github.com/alexlenk/ecowitt_local/issues/10'}",
+    "{'number': 6, 'title': 'WH90 not creating entities', 'url': 'https://github.com/alexlenk/ecowitt_local/issues/6'}"
+  ],
+  "estimated_complexity": "unknown"
+}
