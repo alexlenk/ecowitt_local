@@ -1,18 +1,15 @@
-name: Claude Code Integration
+name: Claude Code
 
 on:
   issues:
     types: [opened, edited]
   issue_comment:
     types: [created]
-
-permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  pull_request_review_comment:
+    types: [created]
 
 jobs:
-  claude-code:
+  claude:
     # Only trigger for WH77 test issue - restrict to test scenario only
     if: |
       (contains(github.event.issue.title, 'WH77 Multi-Sensor Station') || 
@@ -21,14 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Run Claude Code
-        uses: anthropics/claude-code-github-action@v1
+      - uses: anthropics/claude-code-action@v1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-          # Additional configuration
-          max-iterations: 5
-          model: claude-3-5-sonnet-20241022
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
