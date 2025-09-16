@@ -1,0 +1,12 @@
+{
+  "issue_number": "10",
+  "first_analyzed": "2025-09-16T07:25:42.646888",
+  "analysis_count": "1",
+  "status": "new",
+  "previous_responses": [
+    "{'timestamp': '2025-09-16T07:26:09.385712', 'analysis': \"Looking at this error, I can see the issue is in the `async_refresh_mapping` service where we're trying to pass a list to the device registry's `async_get` method, which expects a single device ID string.\\n\\nThe error occurs at line 155 in `__init__.py`:\\n```python\\ndevice = device_registry.async_get(device_id)\\n```\\n\\nThe `TypeError: unhashable type: 'list'` indicates that `device_id` is a list when it should be a string.\\n\\n## Analysis\\n\\nThis is a **bug** in the service implementation - likely the servi...\"}"
+  ],
+  "user_provided_data": [],
+  "similar_issues": [],
+  "estimated_complexity": "unknown"
+}
