@@ -8,6 +8,12 @@ on:
   pull_request_review_comment:
     types: [created]
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
 jobs:
   claude:
     # Only trigger for WH77 test issue - restrict to test scenario only
