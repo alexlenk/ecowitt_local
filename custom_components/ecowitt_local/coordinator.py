@@ -218,7 +218,9 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         _LOGGER.debug("Total sensor items to process: %d", len(all_sensor_items))
         
         for item in all_sensor_items:
-            sensor_key = item.get("id") or ""
+            # For hex ID devices (WH69/WS90/WH90/WH77), use "ch" field as sensor_key
+            # For other devices, use "id" field as sensor_key  
+            sensor_key = item.get("ch") or item.get("id") or ""
             sensor_value = item.get("val") or ""
             
             if not sensor_key:
@@ -232,8 +234,13 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             # Get hardware ID for this sensor (only for non-gateway sensors)
             hardware_id = None
             if sensor_key not in GATEWAY_SENSORS:
-                hardware_id = self.sensor_mapper.get_hardware_id(sensor_key)
-                _LOGGER.debug("Hardware ID lookup for %s: %s", sensor_key, hardware_id)
+                # For hex ID devices, use the original "id" field as hardware_id directly
+                if item.get("ch") and sensor_key.startswith("0x"):
+                    hardware_id = item.get("id")
+                    _LOGGER.debug("Hex ID device - using direct hardware ID: %s -> %s", sensor_key, hardware_id)
+                else:
+                    hardware_id = self.sensor_mapper.get_hardware_id(sensor_key)
+                    _LOGGER.debug("Hardware ID lookup for %s: %s", sensor_key, hardware_id)
             
             # Generate entity information
             entity_id, friendly_name = self.sensor_mapper.generate_entity_id(
