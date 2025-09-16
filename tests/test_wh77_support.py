@@ -141,9 +141,9 @@ class TestWH77Support:
         critical_hex_ids = ["0x02", "0x07", "0x0B", "0x0C"]
         
         for hex_id in critical_hex_ids:
-            assert hex_id in SENSOR_MAPPING
+            assert hex_id in SENSOR_TYPES
             # The sensor mapping should remain consistent
-            original_mapping = SENSOR_MAPPING[hex_id]
+            original_mapping = SENSOR_TYPES[hex_id]
             assert original_mapping is not None
         
         # Validate that the fix is minimal and surgical
