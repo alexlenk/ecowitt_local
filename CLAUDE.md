@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Home Assistant custom integration for Ecowitt weather stations that uses local web interface polling instead of webhooks. The integration creates stable entity IDs based on hardware IDs and organizes sensors into individual devices for better management.
 
+## ⚠️ CRITICAL: Read Anti-Patterns Section Before Making Changes
+
+**IMPORTANT**: This codebase has a specific architecture for handling hex ID sensors. Creating duplicate hex ID definitions is the #1 mistake. Always check the Anti-Patterns section below before implementing device support.
+
 ## Development Commands
 
 ### Testing
@@ -91,13 +95,13 @@ The integration uses Home Assistant's config flow with these key options:
 
 ---
 
-# 🎯 **Issue Analysis Patterns & Solutions**
+# 🎯 Issue Analysis Patterns & Solutions
 
-*The following patterns were learned through extensive issue analysis and bot development. These guide how to approach common problems in this integration.*
+*The following patterns were learned through extensive issue analysis. These guide how to approach common problems in this integration.*
 
 ## Common Device Mapping Issues
 
-### **Pattern: Device Type String Mismatch** 
+### Pattern: Device Type String Mismatch
 - **Problem**: New weather stations report device type strings that don't match expected patterns
 - **Example**: WH90 reports as `"Temp & Humidity & Solar & Wind & Rain"` instead of `"wh90"`
 - **Solution**: Add device type string matching to `sensor_mapper.py` 
@@ -105,21 +109,137 @@ The integration uses Home Assistant's config flow with these key options:
 - **Approach**: Extend existing `elif` conditions with `or "actual device string" in sensor_type.lower()`
 - **Fixed in**: v1.4.8 (WH90 support)
 
-### **Pattern: Hex ID Sensor Mapping**
+### Pattern: Hex ID Sensor Mapping
 - **Problem**: Weather stations using hex IDs (0x02, 0x07, etc.) not creating entities
-- **Devices**: WH69, WS90, WH90, WH25
+- **Devices**: WH69, WS90, WH90, and similar multi-sensor stations
 - **Solution**: Ensure device type detection uses existing hex ID system
 - **Architecture**: All hex ID devices share the same sensor definitions in `const.py` (lines 276-350)
 - **Key Principle**: **Reuse existing hex ID system - never duplicate definitions**
 
-### **Pattern: Content-Type API Issues**
+---
+
+# ❌ Anti-Patterns (CRITICAL - DO NOT DO)
+
+*These approaches have been tried and cause problems. Avoid them at all costs.*
+
+## DO NOT: Create Duplicate Hex ID Definitions
+- ❌ **Wrong**: Adding device-specific hex ID mappings like:
+  ```python
+  keys.extend([
+      "0x02",  # Temperature
+      "0x07",  # Humidity
+      ...
+  ])
+  ```
+- ✅ **Correct**: Device should fall through to use existing common_list hex ID handling
+- **Why**: Causes conflicts, breaks existing devices, violates architecture
+
+## DO NOT: Device-Specific Sensor Lists
+- ❌ **Wrong**: Creating WH90-specific, WH69-specific sensor definitions
+- ✅ **Correct**: Add only device type detection, reuse existing hex ID system
+- **Why**: Maintenance nightmare, naming inconsistency, architectural violation
+
+## DO NOT: Break Existing Device Compatibility
+- ❌ **Wrong**: Modifying existing WH69/WS90 conditions to "fix" new devices
+- ✅ **Correct**: Extend patterns without changing existing ones
+- **Why**: Regression in working devices is unacceptable
+
+---
+
+# 🏗️ Architecture Principles
+
+## Hex ID System Architecture
+
+The hex ID system is designed with **reusability** as the core principle:
+
+1. **Single source of truth**: All hex IDs (0x02, 0x07, etc.) are defined ONCE in `const.py` (lines 276-350)
+2. **Shared definitions**: WH69, WS90, WH90, and similar devices all use the SAME hex ID mappings
+3. **Device type detection**: Only add device type string matching in `sensor_mapper.py`
+4. **Automatic handling**: Once device type is detected, hex IDs in common_list are automatically processed
+
+### How It Works:
+```python
+# In sensor_mapper.py - CORRECT approach for new hex ID device:
+elif sensor_type.lower() in ("wh90", "weather_station_wh90") or "temp & humidity & solar & wind & rain" in sensor_type.lower():
+    # Device uses hex IDs - no need to list them, they're handled automatically
+    pass  # Falls through to common_list processing
+```
+
+## Minimal, Surgical Changes
+
+- **Prefer single-line additions** over large modifications
+- **Test compatibility** with existing devices
+- **Validate against architecture** before implementing
+
+---
+
+# 🏆 Success Patterns
+
+## Example: WH90 Support (v1.4.8)
+
+**Problem**: WH90 not creating entities  
+**Root Cause**: Device type string mismatch  
+**Solution**: Single line addition to sensor_mapper.py
+
+```python
+# BEFORE: WH90 not detected
+elif sensor_type.lower() in ("wh69", "weather_station_wh69"):
+    # WH69 handling
+    
+# AFTER: WH90 works perfectly (ONE LINE ADDED)
+elif sensor_type.lower() in ("wh90", "weather_station_wh90") or "temp & humidity & solar & wind & rain" in sensor_type.lower():
+    # WH90 now detected, uses same hex ID system as WH69
+```
+
+**Key**: Added detection without duplicating any hex ID definitions
+
+---
+
+# 🧪 Testing & Validation Requirements
+
+## Before Any Device Support Changes
+
+1. **Understand the architecture**: Read the Anti-Patterns section
+2. **Check existing patterns**: See how WH69/WS90 work
+3. **Run tests**: `PYTHONPATH="$PWD" python -m pytest tests/ -v`
+4. **Maintain coverage**: Keep >89% coverage
+
+## Device Addition Checklist
+- [ ] Device type string added to `sensor_mapper.py` ONLY
+- [ ] NO new hex ID definitions created
+- [ ] Uses existing hex ID system from const.py
+- [ ] Battery mapping added if needed (device-specific key only)
+- [ ] All tests pass
+- [ ] No regressions in existing devices
+
+---
+
+# Implementation Philosophy
+
+**"Extend existing patterns rather than creating new ones"**
+
+When adding device support:
+1. ✅ Add device type detection (1-2 lines maximum)
+2. ✅ Reuse existing hex ID system entirely
+3. ❌ Never create device-specific hex ID lists
+4. ❌ Never duplicate existing definitions
+
+**When in doubt**: Look at WH69/WS90 implementation and follow that EXACT pattern.
+
+---
+
+# 📋 Additional Patterns
+
+## API and Data Handling Issues
+
+### Pattern: Content-Type API Issues
 - **Problem**: Gateway returns JSON data with wrong HTTP content-type header
 - **Devices**: GW3000, GW1200B  
 - **Solution**: Implement fallback JSON parsing in `api.py`
 - **Files**: `custom_components/ecowitt_local/api.py` (`_make_request` method)
 - **Fixed in**: v1.4.4
 
-### **Pattern: Embedded Unit Parsing**
+### Pattern: Embedded Unit Parsing
 - **Problem**: Sensor values contain units in the string (e.g., "29.40 inHg")
 - **Devices**: GW2000, WS90
 - **Solution**: Regex parsing in coordinator's `_convert_sensor_value` method
@@ -128,7 +248,7 @@ The integration uses Home Assistant's config flow with these key options:
 
 ## Service Parameter Handling Issues
 
-### **Pattern: Unhashable Type Errors**
+### Pattern: Unhashable Type Errors
 - **Problem**: `TypeError: unhashable type: 'list'` in service calls
 - **Root Cause**: Home Assistant passes device_id as list instead of string
 - **Solution**: Defensive type checking before using device_id
@@ -140,114 +260,3 @@ if isinstance(device_id, list):
 device = device_registry.async_get(device_id) if device_id else None
 ```
 - **Fixed in**: v1.4.9
-
----
-
-# ❌ **Anti-Patterns (Critical - DO NOT DO)**
-
-*These approaches have been tried and cause problems. Avoid them at all costs.*
-
-## **DO NOT: Create Duplicate Hex ID Definitions**
-- ❌ **Wrong**: Adding device-specific hex ID mappings to `const.py`
-- ❌ **Wrong**: Creating separate `"0x02"` definitions for different devices  
-- ✅ **Correct**: Use existing shared hex ID system (lines 276-350 in `const.py`)
-- **Why**: Causes conflicts, breaks existing devices, violates architecture
-
-## **DO NOT: Device-Specific Sensor Definitions**
-- ❌ **Wrong**: Creating WH90-specific, WH69-specific sensor definitions
-- ✅ **Correct**: Use shared sensor definitions, extend device type matching
-- **Why**: Maintenance nightmare, naming inconsistency, architectural violation
-
-## **DO NOT: Break Existing Device Compatibility**
-- ❌ **Wrong**: Modifying existing WH69/WS90 mappings to "fix" WH90
-- ✅ **Correct**: Extend patterns without changing existing ones
-- **Why**: Regression in working devices is unacceptable
-
-## **DO NOT: Inconsistent Entity Naming**
-- ❌ **Wrong**: WH69 "Outdoor Temperature" vs WH90 "Temperature"  
-- ✅ **Correct**: Use consistent naming from shared definitions
-- **Why**: Confuses users, breaks entity recognition patterns
-
----
-
-# 🏗️ **Architecture Principles**
-
-## **Follow Existing Patterns**
-When adding support for new devices, always:
-
-1. **Study existing implementations** (WH69, WS90, WH68 patterns)
-2. **Reuse existing systems** (hex ID mapping, battery definitions)
-3. **Extend, don't replace** (add conditions, don't modify existing ones)
-4. **Maintain consistency** (naming, structure, organization)
-
-## **Hex ID System Architecture**
-- **Single source of truth**: All hex IDs defined once in `const.py` (lines 276-350)
-- **Shared definitions**: WH69, WS90, WH90 use same hex ID mappings
-- **Device type detection**: Add new device type strings to `sensor_mapper.py`
-- **Battery mapping**: Add device-specific battery keys (e.g., `"wh90batt"`)
-
-## **Minimal, Surgical Changes**
-- **Prefer single-line additions** over large modifications
-- **Test compatibility** with existing devices
-- **Validate against architecture** before implementing
-
-## **Error Handling Patterns**
-- **Defensive programming**: Always check parameter types
-- **Graceful degradation**: Log errors but continue operation  
-- **Type safety**: Handle both expected and unexpected parameter formats
-
----
-
-# 🧪 **Testing & Validation Requirements**
-
-## **Before Any Code Changes**
-1. **Run full test suite**: `PYTHONPATH="$PWD" python -m pytest tests/ -v`
-2. **Check coverage**: Maintain >89% coverage
-3. **Validate architecture**: Ensure changes follow existing patterns
-
-## **Device Addition Checklist**
-- [ ] Device type string added to `sensor_mapper.py`
-- [ ] Uses existing hex ID system (no new hex definitions)
-- [ ] Battery mapping added if needed
-- [ ] Maintains naming consistency
-- [ ] All tests pass
-- [ ] No regressions in existing devices
-
-## **Service Changes**
-- [ ] Handle both string and list parameters
-- [ ] Defensive type checking implemented
-- [ ] Service tests updated and passing
-- [ ] Error scenarios covered
-
----
-
-# 🏆 **Success Patterns**
-
-## **Recent Successful Fixes**
-
-### **WH90 Support (v1.4.8)**
-- **Approach**: Added device type string matching
-- **Code Change**: Single line addition to existing `elif` condition
-- **Files Modified**: `sensor_mapper.py` (1 line changed)
-- **Architecture**: Reused entire existing hex ID system
-- **Result**: WH90 creates all expected entities without affecting WH69/WS90
-
-### **Service Robustness (v1.4.9)**  
-- **Approach**: Defensive parameter type checking
-- **Code Changes**: Added type validation before device registry calls
-- **Files Modified**: `__init__.py` service functions
-- **Architecture**: Backward compatible parameter handling
-- **Result**: Services work with both string and list device_id formats
-
-## **Implementation Philosophy**
-
-**"Extend existing patterns rather than creating new ones"**
-
-This integration has a proven, stable architecture. New device support should:
-- ✅ Follow established patterns
-- ✅ Reuse existing systems  
-- ✅ Maintain backward compatibility
-- ✅ Require minimal code changes
-- ✅ Pass all existing tests
-
-**When in doubt, study how WH69/WS90 work and follow that exact pattern.**
