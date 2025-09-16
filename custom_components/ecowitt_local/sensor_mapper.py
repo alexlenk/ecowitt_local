@@ -245,6 +245,28 @@ class SensorMapper:
                 "0x13",  # Rain total
                 "wh90batt",  # Battery level
             ])
+        elif sensor_type.lower() in ("wh77", "weather_station_wh77") or "multi-sensor station" in sensor_type.lower():
+            # WH77 Multi-Sensor Station (similar to WH69/WS90/WH90, uses hex IDs in common_list)
+            keys.extend([
+                "0x02",  # Temperature
+                "0x03",  # Temperature (alternate)
+                "0x07",  # Humidity
+                "0x0B",  # Wind speed
+                "0x0C",  # Wind speed (alternate)
+                "0x19",  # Wind gust
+                "0x0A",  # Wind direction
+                "0x6D",  # Wind direction (alternate)
+                "0x15",  # Solar radiation
+                "0x17",  # UV index
+                "0x0D",  # Rain event
+                "0x0E",  # Rain rate
+                "0x7C",  # Rain daily
+                "0x10",  # Rain weekly
+                "0x11",  # Rain monthly
+                "0x12",  # Rain yearly
+                "0x13",  # Rain total
+                "wh77batt",  # Battery level
+            ])
         elif sensor_type.lower() in ("wh25", "indoor_station"):
             # Indoor temperature/humidity/pressure station
             keys.extend([
