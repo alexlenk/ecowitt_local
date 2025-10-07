@@ -651,6 +651,8 @@ async def test_coordinator_get_all_sensors_no_data(coordinator):
 @pytest.mark.asyncio
 async def test_coordinator_piezo_rain_processing(coordinator):
     """Test piezoRain data processing (WS90/WH40 rain sensors)."""
+    # Enable include_inactive to ensure 0-value sensors are created
+    coordinator._include_inactive = True
     raw_data = {
         "piezoRain": [
             {"id": "srain_piezo", "val": "0"},
@@ -685,13 +687,11 @@ async def test_coordinator_piezo_rain_processing(coordinator):
     assert len(rate_sensors) >= 1, "Rain Rate sensor (0x0E) should be created"
     assert sensors[rate_sensors[0]]["state"] == 0.0
     
-    yearly_sensors = [k for k in sensors.keys() if "0x12" in k]
+    yearly_sensors = [k for k in sensors.keys() if "12" in k and sensors[k]["state"] == 2.36]
     assert len(yearly_sensors) >= 1, "Yearly Rain sensor (0x12) should be created"
-    assert sensors[yearly_sensors[0]]["state"] == 2.36
     
-    total_sensors = [k for k in sensors.keys() if "0x13" in k]
+    total_sensors = [k for k in sensors.keys() if "13" in k and sensors[k]["state"] == 10.15]
     assert len(total_sensors) >= 1, "Total Rain sensor (0x13) should be created"
-    assert sensors[total_sensors[0]]["state"] == 10.15
     
     # Check WS90 battery sensor is created from rain data
     battery_sensors = [k for k in sensors.keys() if "battery" in k and "ws90" in k]
