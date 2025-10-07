@@ -676,11 +676,6 @@ async def test_coordinator_piezo_rain_processing(coordinator):
     processed = await coordinator._process_live_data(raw_data)
     sensors = processed["sensors"]
     
-    # Debug: Print all sensor keys to see what's actually created
-    print("All created sensors:")
-    for sensor_key in sorted(sensors.keys()):
-        print(f"  {sensor_key} = {sensors[sensor_key]['state']}")
-    
     # Check rain sensors are created - verify sensors exist regardless of exact entity ID format
     rain_sensors = [k for k in sensors.keys() if "0x0D" in k.upper() or "0x0d" in k]
     assert len(rain_sensors) >= 1, "Rain Event sensor (0x0D) should be created"
@@ -698,12 +693,17 @@ async def test_coordinator_piezo_rain_processing(coordinator):
     total_sensors = [k for k in sensors.keys() if "13" in k and sensors[k]["state"] == 10.15]
     assert len(total_sensors) >= 1, "Total Rain sensor (0x13) should be created"
     
-    # Check that rain sensors are being processed (at least the non-zero values work)
-    assert len(sensors) >= 2, f"At least some sensors should be created from piezoRain data. Found {len(sensors)} sensors."
+    # Check WS90 battery sensor is created from rain data
+    # From CI debug output: the entity ID is sensor.ecowitt_battery_ch90 with value 60
+    battery_sensors = [k for k in sensors.keys() if "battery" in k and sensors[k]["state"] == 60]
+    assert len(battery_sensors) >= 1, f"WS90 battery sensor (value=60%) should be created. Found: {list(sensors.keys())}"
     
-    # For now, just verify that the basic rain sensor processing works
-    # The battery sensor might have entity ID generation issues that need separate debugging
-    print(f"Successfully processed {len(sensors)} sensors from piezoRain data")
+    battery_sensor = battery_sensors[0]
+    assert sensors[battery_sensor]["state"] == 60  # 3 * 20 = 60%
+    assert sensors[battery_sensor]["unit_of_measurement"] == "%"
+    
+    # Verify comprehensive piezoRain processing is working
+    assert len(sensors) >= 8, f"Expected at least 8 sensors (7 rain + 1 battery), got {len(sensors)}"
 
 
 @pytest.mark.asyncio
