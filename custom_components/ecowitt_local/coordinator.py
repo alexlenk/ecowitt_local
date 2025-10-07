@@ -215,6 +215,42 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     all_sensor_items.append({"id": "baromrelin", "val": rel_val})
                     _LOGGER.debug("Added relative pressure: baromrelin = %s", rel_val)
         
+        # Extract ch_aisle data (WH31 temperature/humidity sensors)
+        ch_aisle = raw_data.get("ch_aisle", [])
+        if ch_aisle:
+            _LOGGER.debug("Found ch_aisle data with %d items", len(ch_aisle))
+            # Process WH31 sensor data structure
+            for item in ch_aisle:
+                _LOGGER.debug("ch_aisle item: %s", item)
+                # Convert ch_aisle format to standard format
+                if isinstance(item, dict):
+                    channel = item.get("channel")
+                    temp = item.get("temp")
+                    humidity = item.get("humidity")
+                    battery = item.get("battery")
+                    
+                    if channel:
+                        # Create temperature sensor if temp data exists
+                        if temp and temp != "None":
+                            temp_key = f"temp{channel}f"
+                            all_sensor_items.append({"id": temp_key, "val": temp})
+                            _LOGGER.debug("Added WH31 temperature sensor: %s = %s°C", temp_key, temp)
+                        
+                        # Create humidity sensor if humidity data exists
+                        if humidity and humidity != "None":
+                            humidity_val = humidity.replace("%", "")
+                            humidity_key = f"humidity{channel}"
+                            all_sensor_items.append({"id": humidity_key, "val": humidity_val})
+                            _LOGGER.debug("Added WH31 humidity sensor: %s = %s%%", humidity_key, humidity_val)
+                        
+                        # Create battery sensor if battery data exists
+                        if battery and battery != "None":
+                            battery_key = f"batt{channel}"
+                            # Convert battery level (0-5 scale to percentage)
+                            battery_pct = str(int(battery) * 20) if battery.isdigit() else battery
+                            all_sensor_items.append({"id": battery_key, "val": battery_pct})
+                            _LOGGER.debug("Added WH31 battery sensor: %s = %s%%", battery_key, battery_pct)
+        
         _LOGGER.debug("Total sensor items to process: %d", len(all_sensor_items))
         
         for item in all_sensor_items:
