@@ -462,8 +462,10 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             # Try to convert string to number
             str_value = str(value).strip()
             
-            # Handle special cases
-            if str_value.lower() in ("--", "null", "none", "n/a"):
+            # Handle special cases and invalid sensor readings
+            if (str_value.lower() in ("--", "null", "none", "n/a") or 
+                str_value.startswith("--") or 
+                str_value.replace("-", "").replace(".", "").strip() == ""):
                 return None
             
             # Handle values with embedded units (e.g., "29.40 inHg", "46.4 F", "89%")

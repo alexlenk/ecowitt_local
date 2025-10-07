@@ -432,6 +432,12 @@ async def test_coordinator_convert_sensor_value_special_cases(coordinator):
     assert coordinator._convert_sensor_value("none", None) is None
     assert coordinator._convert_sensor_value("n/a", None) is None
     
+    # Invalid pressure sensor readings (Issue #14)
+    assert coordinator._convert_sensor_value("----.-", None) is None
+    assert coordinator._convert_sensor_value("----.--", None) is None
+    assert coordinator._convert_sensor_value("------", None) is None
+    assert coordinator._convert_sensor_value("-- --", None) is None
+    
     # Non-numeric string
     assert coordinator._convert_sensor_value("invalid", None) == "invalid"
 
