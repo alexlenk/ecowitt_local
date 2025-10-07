@@ -474,6 +474,10 @@ BATTERY_SENSORS: Final = {
         "name": "WH90 Weather Station Battery",
         "sensor_key": "0x02"
     },
+    "wh77batt": {
+        "name": "WH77 Multi-Sensor Station Battery",
+        "sensor_key": "0x02"
+    },
 }
 
 # Add dynamically generated battery sensors
