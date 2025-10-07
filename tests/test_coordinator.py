@@ -239,6 +239,101 @@ async def test_coordinator_empty_common_list_handling(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_ch_aisle_processing(coordinator):
+    """Test coordinator processing WH31 ch_aisle data."""
+    mock_live_data = {
+        "common_list": [],
+        "ch_aisle": [
+            {
+                "channel": "1",
+                "name": "Bedroom",
+                "battery": "4",
+                "temp": "20.6",
+                "unit": "C",
+                "humidity": "65"
+            },
+            {
+                "channel": "2", 
+                "name": "Living Room",
+                "battery": "0",
+                "temp": "22.1",
+                "unit": "C",
+                "humidity": "None"  # Test None handling
+            }
+        ]
+    }
+    
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_version = AsyncMock(return_value={"stationtype": "GW1100A", "version": "1.7.3"})
+    
+    result = await coordinator._async_update_data()
+    
+    assert result is not None
+    assert "sensors" in result
+    sensors = result["sensors"]
+    
+    # Check that WH31 sensors were created
+    temp1_found = False
+    humidity1_found = False
+    batt1_found = False
+    temp2_found = False
+    batt2_found = False
+    
+    for sensor_id, sensor_data in sensors.items():
+        sensor_key = sensor_data.get("sensor_key", "")
+        if sensor_key == "temp1f":
+            temp1_found = True
+            assert sensor_data["state"] == "20.6"
+        elif sensor_key == "humidity1":
+            humidity1_found = True 
+            assert sensor_data["state"] == "65"
+        elif sensor_key == "batt1":
+            batt1_found = True
+            assert sensor_data["state"] == "80"  # 4 * 20 = 80%
+        elif sensor_key == "temp2f":
+            temp2_found = True
+            assert sensor_data["state"] == "22.1"
+        elif sensor_key == "batt2":
+            batt2_found = True
+            assert sensor_data["state"] == "0"  # 0 * 20 = 0%
+    
+    # Verify sensors were created
+    assert temp1_found, "temp1f sensor not found"
+    assert humidity1_found, "humidity1 sensor not found"
+    assert batt1_found, "batt1 sensor not found"
+    assert temp2_found, "temp2f sensor not found"
+    assert batt2_found, "batt2 sensor not found"
+    
+    # humidity2 should NOT be found because value was "None"
+    humidity2_found = any(
+        sensor_data.get("sensor_key") == "humidity2" 
+        for sensor_data in sensors.values()
+    )
+    assert not humidity2_found, "humidity2 sensor should not be created when value is 'None'"
+
+
+@pytest.mark.asyncio  
+async def test_coordinator_ch_aisle_empty_handling(coordinator):
+    """Test coordinator handling empty ch_aisle data."""
+    mock_live_data = {
+        "common_list": [],
+        "ch_aisle": []
+    }
+    
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_version = AsyncMock(return_value={"stationtype": "GW1100A", "version": "1.7.3"})
+    
+    # Should handle gracefully
+    result = await coordinator._async_update_data()
+    
+    assert result is not None
+    assert isinstance(result, dict)
+    assert "sensors" in result
+
+
+@pytest.mark.asyncio
 async def test_coordinator_setup_success(coordinator):
     """Test successful coordinator setup."""
     coordinator.api.test_connection = AsyncMock()
