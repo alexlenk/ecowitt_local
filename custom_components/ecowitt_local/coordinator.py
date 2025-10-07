@@ -215,6 +215,29 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     all_sensor_items.append({"id": "baromrelin", "val": rel_val})
                     _LOGGER.debug("Added relative pressure: baromrelin = %s", rel_val)
         
+        # Extract piezoRain data (rain sensor readings from WS90/WH40)
+        piezo_rain = raw_data.get("piezoRain", [])
+        if piezo_rain:
+            _LOGGER.debug("Found piezoRain data with %d items", len(piezo_rain))
+            # Process rain sensor data structure
+            for item in piezo_rain:
+                _LOGGER.debug("piezoRain item: %s", item)
+                # Add rain sensor readings to main sensor list
+                if isinstance(item, dict) and "id" in item and "val" in item:
+                    sensor_id = item["id"]
+                    sensor_val = item["val"]
+                    all_sensor_items.append({"id": sensor_id, "val": sensor_val})
+                    _LOGGER.debug("Added rain sensor: %s = %s", sensor_id, sensor_val)
+                    
+                    # Add battery sensor if present in the item
+                    if "battery" in item and item["battery"]:
+                        # For WS90, battery is associated with the last rain item
+                        if sensor_id == "0x13":  # Total rain - usually the last item with battery info
+                            battery_key = "ws90batt"
+                            battery_val = str(int(item["battery"]) * 20) if item["battery"].isdigit() else item["battery"]
+                            all_sensor_items.append({"id": battery_key, "val": battery_val})
+                            _LOGGER.debug("Added WS90 battery sensor: %s = %s%%", battery_key, battery_val)
+        
         # Extract ch_aisle data (WH31 temperature/humidity sensors)
         ch_aisle = raw_data.get("ch_aisle", [])
         if ch_aisle:

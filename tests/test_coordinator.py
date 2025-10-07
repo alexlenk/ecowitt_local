@@ -649,6 +649,52 @@ async def test_coordinator_get_all_sensors_no_data(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_piezo_rain_processing(coordinator):
+    """Test piezoRain data processing (WS90/WH40 rain sensors)."""
+    raw_data = {
+        "piezoRain": [
+            {"id": "srain_piezo", "val": "0"},
+            {"id": "0x0D", "val": "0.00 in"},
+            {"id": "0x0E", "val": "0.00 in/Hr"},
+            {"id": "0x7C", "val": "0.00 in"},
+            {"id": "0x10", "val": "0.00 in"},
+            {"id": "0x11", "val": "0.00 in"},
+            {"id": "0x12", "val": "2.36 in"},
+            {
+                "id": "0x13", 
+                "val": "10.15 in",
+                "battery": "3",
+                "voltage": "2.62",
+                "ws90cap_volt": "5.3",
+                "ws90_ver": "153"
+            }
+        ]
+    }
+    
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+    
+    # Check rain sensors are created
+    assert "sensor.ecowitt_rain_0x_ch0d" in sensors  # Rain Event
+    assert sensors["sensor.ecowitt_rain_0x_ch0d"]["state"] == 0.0
+    assert sensors["sensor.ecowitt_rain_0x_ch0d"]["unit_of_measurement"] == "mm"
+    
+    assert "sensor.ecowitt_rain_0x_ch0e" in sensors  # Rain Rate
+    assert sensors["sensor.ecowitt_rain_0x_ch0e"]["state"] == 0.0
+    
+    assert "sensor.ecowitt_rain_0x_ch12" in sensors  # Yearly Rain
+    assert sensors["sensor.ecowitt_rain_0x_ch12"]["state"] == 2.36
+    
+    assert "sensor.ecowitt_rain_0x_ch13" in sensors  # Total Rain
+    assert sensors["sensor.ecowitt_rain_0x_ch13"]["state"] == 10.15
+    
+    # Check WS90 battery sensor is created from rain data
+    assert "sensor.ecowitt_battery_ws90" in sensors
+    assert sensors["sensor.ecowitt_battery_ws90"]["state"] == 60  # 3 * 20 = 60%
+    assert sensors["sensor.ecowitt_battery_ws90"]["unit_of_measurement"] == "%"
+
+
+@pytest.mark.asyncio
 async def test_coordinator_gateway_info_property(coordinator):
     """Test gateway info property access."""
     test_info = {"model": "GW1100A", "version": "1.7.3"}

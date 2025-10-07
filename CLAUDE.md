@@ -263,6 +263,39 @@ Common failure patterns and their meanings:
 - User issue reports for real-world functionality
 - Actual commit history showing what worked (WH90 fix)
 
+## Issue Management Protocol
+
+**CRITICAL**: When fixing GitHub issues, follow this exact protocol:
+
+### After Implementing a Fix:
+1. **Create release** with the fix
+2. **Comment on the issue** explaining the fix and requesting user testing
+3. **DO NOT close the issue** - leave it open for user confirmation
+4. **Wait for user feedback** confirming the fix works
+5. **Only close issues** after users confirm the fix resolved their problem
+
+### Comment Template:
+```markdown
+## 🎯 Fix Available - Please Test
+
+Hi! I've just released **vX.X.X** which should fix [describe the issue].
+
+### What was fixed:
+- [Detailed explanation of the changes]
+
+### Please test:
+1. **Update to vX.X.X** (available now)
+2. **Test the specific functionality** that was failing
+3. **Report back** if the issue persists after this update
+
+### Expected behavior:
+- [What should work now]
+
+Let me know how it works for you. 🚀
+```
+
+**Never close issues prematurely** - user confirmation is required for all fixes.
+
 ## Before Any Device Support Changes
 
 1. **Understand the architecture**: Read the Anti-Patterns section
