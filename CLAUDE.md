@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Home Assistant custom integration for Ecowitt weather stations that uses local web interface polling instead of webhooks. The integration creates stable entity IDs based on hardware IDs and organizes sensors into individual devices for better management.
 
-## ⚠️ CRITICAL: Read Anti-Patterns Section Before Making Changes
+## ⚠️ CRITICAL: Entity Creation Pipeline Issues
 
-**IMPORTANT**: This codebase has a specific architecture for handling hex ID sensors. Creating duplicate hex ID definitions is the #1 mistake. Always check the Anti-Patterns section below before implementing device support.
+**IMPORTANT**: This codebase has ongoing entity creation failures despite proper device detection. The primary issues are incomplete entity sets and mapping pipeline failures, not architectural violations. Focus on debugging the entity creation flow rather than mapping logic.
 
 ## Development Commands
 
@@ -109,61 +109,90 @@ The integration uses Home Assistant's config flow with these key options:
 - **Approach**: Extend existing `elif` conditions with `or "actual device string" in sensor_type.lower()`
 - **Fixed in**: v1.4.8 (WH90 support)
 
-### Pattern: Hex ID Sensor Mapping
-- **Problem**: Weather stations using hex IDs (0x02, 0x07, etc.) not creating entities
-- **Devices**: WH69, WS90, WH90, and similar multi-sensor stations
-- **Solution**: Ensure device type detection uses existing hex ID system
-- **Architecture**: All hex ID devices share the same sensor definitions in `const.py` (lines 276-350)
-- **Key Principle**: **Reuse existing hex ID system - never duplicate definitions**
+### Pattern: Incomplete Entity Creation
+- **Problem**: Devices detected correctly but creating incomplete entity sets (e.g., WH69 shows 7 entities instead of 12)
+- **Devices**: WH69, WH77, GW2000A combinations, WH31 sensors
+- **Root Cause**: Entity creation pipeline failures in coordinator.py or sensor.py
+- **Evidence**: Issue #11 shows WH69 with partial entities despite proper device detection
+- **Solution Focus**: Debug entity creation flow, not device type detection
 
 ---
 
-# ❌ Anti-Patterns (CRITICAL - DO NOT DO)
+# 🔍 Real Issues & Evidence-Based Analysis
 
-*These approaches have been tried and cause problems. Avoid them at all costs.*
+*Based on actual user reports and codebase analysis.*
 
-## DO NOT: Create Duplicate Hex ID Definitions
-- ❌ **Wrong**: Adding device-specific hex ID mappings like:
-  ```python
-  keys.extend([
-      "0x02",  # Temperature
-      "0x07",  # Humidity
-      ...
-  ])
-  ```
-- ✅ **Correct**: Device should fall through to use existing common_list hex ID handling
-- **Why**: Causes conflicts, breaks existing devices, violates architecture
+## Current Architecture Reality
 
-## DO NOT: Device-Specific Sensor Lists
-- ❌ **Wrong**: Creating WH90-specific, WH69-specific sensor definitions
-- ✅ **Correct**: Add only device type detection, reuse existing hex ID system
-- **Why**: Maintenance nightmare, naming inconsistency, architectural violation
+### Hex ID System Implementation
+- **Location**: Hex IDs explicitly defined in `sensor_mapper.py` (lines 184-247) for WH69, WS90, WH90
+- **Purpose**: Maps device types to specific hex ID lists for entity creation
+- **const.py Role**: Contains sensor metadata (names, units, device classes) for hex IDs
+- **No Fallthrough**: No automatic common_list processing - explicit mapping required
 
-## DO NOT: Break Existing Device Compatibility
-- ❌ **Wrong**: Modifying existing WH69/WS90 conditions to "fix" new devices
-- ✅ **Correct**: Extend patterns without changing existing ones
-- **Why**: Regression in working devices is unacceptable
+### Evidence from Issues
+1. **Issue #11**: WH69 only creates 7 entities instead of 12 despite explicit hex ID mapping
+2. **Issue #6**: WH90 fixed with single-line device type detection (commit 15ec621)
+3. **Multiple Reports**: Entity creation failures across different device combinations
 
----
+## Proven Successful Patterns
 
-# 🏗️ Architecture Principles
-
-## Hex ID System Architecture
-
-The hex ID system is designed with **reusability** as the core principle:
-
-1. **Single source of truth**: All hex IDs (0x02, 0x07, etc.) are defined ONCE in `const.py` (lines 276-350)
-2. **Shared definitions**: WH69, WS90, WH90, and similar devices all use the SAME hex ID mappings
-3. **Device type detection**: Only add device type string matching in `sensor_mapper.py`
-4. **Automatic handling**: Once device type is detected, hex IDs in common_list are automatically processed
-
-### How It Works:
+### ✅ Minimal Device Type Detection (WH90 Success)
 ```python
-# In sensor_mapper.py - CORRECT approach for new hex ID device:
+# Single line fix that resolved Issue #6:
 elif sensor_type.lower() in ("wh90", "weather_station_wh90") or "temp & humidity & solar & wind & rain" in sensor_type.lower():
-    # Device uses hex IDs - no need to list them, they're handled automatically
-    pass  # Falls through to common_list processing
 ```
+**Why it worked**: Used existing hex ID infrastructure without modification
+
+### ✅ Device-Specific Hex ID Lists (Current Working System)
+- WH69, WS90, WH90 all have explicit hex ID lists in sensor_mapper.py
+- This is the PRIMARY mechanism for hex ID device support
+- Reuses sensor definitions from const.py for metadata
+
+## ⚠️ Actual Problems to Avoid
+
+### DO NOT: Assume Current System Works Perfectly
+- **Reality**: Multiple users report incomplete entity creation
+- **Evidence**: WH69 users getting 7 entities instead of 12
+- **Focus**: Debug entity creation pipeline, not device detection
+
+### DO NOT: Over-Engineer Solutions
+- **Success Pattern**: WH90 fixed with 1-line change
+- **Approach**: Minimal modifications that reuse existing infrastructure
+- **Test**: Validate against actual user reports
+
+---
+
+# 🏗️ Actual Architecture (Evidence-Based)
+
+## How Hex ID System Really Works
+
+### Two-Part Architecture
+1. **sensor_mapper.py**: Device-specific hex ID mapping lists (lines 184-247)
+   - Maps device types to hex ID keys they should handle
+   - **Required** for entity creation - no automatic fallthrough exists
+
+2. **const.py**: Hex ID sensor metadata (lines 276-360) 
+   - Defines what each hex ID represents (name, unit, device_class)
+   - **Shared** across all hex ID devices for consistency
+
+### Actual Implementation Pattern
+```python
+# In sensor_mapper.py - How hex ID devices are ACTUALLY implemented:
+elif sensor_type.lower() in ("wh69", "weather_station_wh69"):
+    keys.extend([
+        "0x02",  # Temperature - explicit mapping required
+        "0x07",  # Humidity
+        "0x0B",  # Wind speed
+        # ... full hex ID list
+        "wh69batt",  # Battery
+    ])
+```
+
+### Why This Architecture Exists
+- **common_list data format**: `{"id": "hardware_id", "val": "value", "ch": "0x02"}`
+- **Mapping requirement**: Must know which hex IDs belong to which device type
+- **Entity creation**: coordinator.py needs explicit mapping to create entities
 
 ## Minimal, Surgical Changes
 
@@ -175,23 +204,25 @@ elif sensor_type.lower() in ("wh90", "weather_station_wh90") or "temp & humidity
 
 # 🏆 Success Patterns
 
-## Example: WH90 Support (v1.4.8)
+## Example: WH90 Support (v1.4.8) - Actual Implementation
 
 **Problem**: WH90 not creating entities  
 **Root Cause**: Device type string mismatch  
-**Solution**: Single line addition to sensor_mapper.py
+**Solution**: Single line addition to EXISTING hex ID device block
 
 ```python
 # BEFORE: WH90 not detected
-elif sensor_type.lower() in ("wh69", "weather_station_wh69"):
-    # WH69 handling
+elif sensor_type.lower() in ("wh90", "weather_station_wh90"):
+    keys.extend([...])  # Had hex ID list but wrong device type detection
     
 # AFTER: WH90 works perfectly (ONE LINE ADDED)
 elif sensor_type.lower() in ("wh90", "weather_station_wh90") or "temp & humidity & solar & wind & rain" in sensor_type.lower():
-    # WH90 now detected, uses same hex ID system as WH69
+    keys.extend([...])  # Same hex ID list, better device type detection
 ```
 
-**Key**: Added detection without duplicating any hex ID definitions
+**Key**: Fixed device type detection string matching, reused existing hex ID infrastructure
+
+**Evidence**: Commit 15ec621 shows the actual minimal change that worked
 
 ---
 
@@ -217,16 +248,20 @@ The CI runs on `claude/**` branches and includes:
 
 **If CI fails, the implementation is WRONG and must be fixed.**
 
-### Learning from Test Failures
+### Learning from Test Failures & User Reports
 
-Common test failure patterns and their meanings:
+Common failure patterns and their meanings:
 
-- **Duplicate entity errors**: Usually indicates hex ID duplication (follow anti-patterns)
-- **Entity naming inconsistencies**: Indicates architectural violation
+- **Incomplete entity creation**: Device detected but missing entities (WH69: 7 instead of 12)
+- **Entity naming inconsistencies**: Check sensor metadata in const.py
 - **Coverage drops**: Missing test coverage for new code paths
 - **Regression failures**: Changes broke existing device functionality
+- **User reports of "no entities"**: Usually device type detection issues
 
-**Update implementation based on test feedback - tests reveal architectural violations.**
+**Update implementation based on**:
+- Test feedback for code quality
+- User issue reports for real-world functionality
+- Actual commit history showing what worked (WH90 fix)
 
 ## Before Any Device Support Changes
 
@@ -235,14 +270,22 @@ Common test failure patterns and their meanings:
 3. **Plan minimal changes**: Single line additions preferred
 4. **Commit and monitor**: Wait for CI results and fix any failures
 
-## Device Addition Checklist
-- [ ] Device type string added to `sensor_mapper.py` ONLY
-- [ ] NO new hex ID definitions created
-- [ ] Uses existing hex ID system from const.py
-- [ ] Battery mapping added if needed (device-specific key only)
+## Device Addition Checklist (Evidence-Based)
+
+### For New Hex ID Devices (WH77, etc.)
+- [ ] Add device type detection to `sensor_mapper.py`
+- [ ] Add hex ID list for the device (follow WH69/WS90/WH90 pattern)
+- [ ] Reuse existing hex ID definitions from const.py (DO NOT duplicate metadata)
+- [ ] Add battery mapping to const.py if device has battery sensor
+- [ ] **Debug entity creation pipeline** if entities still missing
 - [ ] **CI passes completely** (all tests, all Python versions)
-- [ ] No regressions in existing devices
-- [ ] Implementation follows minimal approach
+- [ ] **Validate against user reports** - check for incomplete entity sets
+
+### For Entity Creation Issues
+- [ ] Focus on coordinator.py entity processing logic
+- [ ] Check sensor.py entity creation flow
+- [ ] Verify hardware ID mapping is working correctly
+- [ ] Test with actual device data structures
 
 ---
 
@@ -251,12 +294,16 @@ Common test failure patterns and their meanings:
 **"Extend existing patterns rather than creating new ones"**
 
 When adding device support:
-1. ✅ Add device type detection (1-2 lines maximum)
-2. ✅ Reuse existing hex ID system entirely
-3. ❌ Never create device-specific hex ID lists
-4. ❌ Never duplicate existing definitions
+1. ✅ Add device type detection with proper string matching
+2. ✅ Add device-specific hex ID lists (follow existing WH69/WS90/WH90 pattern)
+3. ✅ Reuse hex ID metadata from const.py (names, units, device classes)
+4. ❌ Never duplicate hex ID metadata definitions in const.py
+5. ✅ Focus on debugging entity creation pipeline for missing entities
 
-**When in doubt**: Look at WH69/WS90 implementation and follow that EXACT pattern.
+**When in doubt**: 
+- Look at WH69/WS90/WH90 implementation in sensor_mapper.py (lines 182-247)
+- Follow the proven pattern that actually exists in the codebase
+- Test against real user reports, not theoretical architecture
 
 ---
 
@@ -290,6 +337,63 @@ Use accumulated knowledge to:
 - **Respect architectural boundaries** learned through testing
 
 **Memory should compound - each successful fix should make future fixes better and more architecturally sound.**
+
+---
+
+# 🚨 Critical Entity Creation Issues
+
+*Based on issue analysis and codebase investigation.*
+
+## Known Entity Creation Failures
+
+### Issue #11: WH69 Incomplete Entity Set
+- **Symptom**: WH69 creates only 7 entities instead of expected 12
+- **Status**: Device detected correctly, mapping exists, but entity creation incomplete
+- **Root Cause**: Unknown - entity creation pipeline failure
+- **Files to Investigate**: `coordinator.py:_process_live_data()`, `sensor.py:async_setup_entry()`
+
+### WH77 "Multi-Sensor Station" Support Missing
+- **Problem**: Device type "Multi-Sensor Station" not detected
+- **Expected**: Should use hex ID system like WH69/WS90/WH90
+- **Solution**: Add device type detection in sensor_mapper.py
+- **Missing**: wh77batt battery mapping in const.py
+
+### GW2000A Gateway Issues
+- **Symptoms**: Unnamed sensors appearing as "Sensor 3", "Sensor 5" 
+- **Problem**: Gateway-level sensor mapping or entity naming issues
+- **Investigation**: Check gateway device creation and sensor naming logic
+
+## Entity Creation Pipeline Debug Points
+
+### 1. Hardware ID Mapping (sensor_mapper.py)
+```python
+# Check if hardware ID mapping is working:
+hardware_id = self.sensor_mapper.get_hardware_id(sensor_key)
+_LOGGER.debug("Hardware ID lookup for %s: %s", sensor_key, hardware_id)
+```
+
+### 2. Entity ID Generation (sensor_mapper.py:318-359)
+```python
+# Verify entity ID generation:
+entity_id, friendly_name = self.sensor_mapper.generate_entity_id(sensor_key, hardware_id)
+_LOGGER.debug("Generated entity: %s -> %s", sensor_key, entity_id)
+```
+
+### 3. Sensor Data Processing (coordinator.py:220-310)
+```python
+# Check sensor data inclusion:
+if not sensor_value and not self._include_inactive:
+    _LOGGER.debug("Skipping sensor %s (inactive)", sensor_key)
+```
+
+### 4. Entity Creation (sensor.py:77-88)
+```python
+# Verify entity creation:
+for entity_id, sensor_info in sensor_data.items():
+    category = sensor_info.get("category")
+    if category in ("sensor", "battery", "system", "diagnostic"):
+        _LOGGER.debug("Creating entity: %s (%s)", entity_id, category)
+```
 
 ---
 
