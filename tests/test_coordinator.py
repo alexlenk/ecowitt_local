@@ -698,11 +698,8 @@ async def test_coordinator_piezo_rain_processing(coordinator):
     assert len(battery_sensors) >= 1, f"WS90 battery sensor should be created. Found: {list(sensors.keys())}"
     
     battery_sensor = battery_sensors[0]
-    # Check that the battery sensor was created - debug the actual value
+    # The battery should be a valid value (either raw 3 or converted 60)
     actual_value = sensors[battery_sensor]["state"]
-    print(f"Battery sensor {battery_sensor} has value: {actual_value} (type: {type(actual_value)})")
-    
-    # The battery should be a valid percentage (either 60 from conversion or raw 3)
     assert actual_value in [3, "3", 60, "60"], f"Battery value should be 3 or 60, got {actual_value}"
     assert sensors[battery_sensor]["unit_of_measurement"] == "%"
     
