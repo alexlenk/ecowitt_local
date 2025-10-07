@@ -39,6 +39,8 @@ GATEWAY_SENSORS: Final = {
     "humidityin",   # Indoor humidity
     "baromabsin",   # Absolute pressure
     "baromrelin",   # Relative pressure
+    "3",            # Feels like temperature (gateway sensor)
+    "5",            # Vapor Pressure Deficit (gateway sensor)
 }
 
 
@@ -92,6 +94,16 @@ SENSOR_TYPES: Final = {
         "name": "Outdoor Temperature",
         "unit": "°F",
         "device_class": "temperature"
+    },
+    "3": {
+        "name": "Feels Like Temperature",
+        "unit": "°C",
+        "device_class": "temperature"
+    },
+    "5": {
+        "name": "Vapor Pressure Deficit",
+        "unit": "kPa",
+        "device_class": "pressure"
     },
 
     # Humidity sensors
