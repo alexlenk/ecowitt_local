@@ -284,19 +284,19 @@ async def test_coordinator_ch_aisle_processing(coordinator):
         sensor_key = sensor_data.get("sensor_key", "")
         if sensor_key == "temp1f":
             temp1_found = True
-            assert sensor_data["state"] == "20.6"
+            assert sensor_data["state"] == 20.6  # Converted to float
         elif sensor_key == "humidity1":
             humidity1_found = True 
-            assert sensor_data["state"] == "65"
+            assert sensor_data["state"] == 65  # Converted to int
         elif sensor_key == "batt1":
             batt1_found = True
-            assert sensor_data["state"] == "80"  # 4 * 20 = 80%
+            assert sensor_data["state"] == "80"  # Battery stays as string
         elif sensor_key == "temp2f":
             temp2_found = True
-            assert sensor_data["state"] == "22.1"
+            assert sensor_data["state"] == 22.1  # Converted to float
         elif sensor_key == "batt2":
             batt2_found = True
-            assert sensor_data["state"] == "0"  # 0 * 20 = 0%
+            assert sensor_data["state"] == "0"  # Battery stays as string
     
     # Verify sensors were created
     assert temp1_found, "temp1f sensor not found"
