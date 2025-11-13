@@ -462,3 +462,140 @@ if isinstance(device_id, list):
 device = device_registry.async_get(device_id) if device_id else None
 ```
 - **Fixed in**: v1.4.9
+---
+
+# 🚀 Release Process
+
+## Overview
+
+This project uses automated GitHub Actions for releases. Claude Code bots work on `claude/**` branches, and the release process is handled via automation.
+
+## Release Workflow
+
+### 1. Development on Claude Branches
+- All Claude Code work happens on branches matching `claude/**` pattern
+- CI runs automatically on `claude/**` branches
+- All tests must pass before merging
+
+### 2. Automated Release Process
+
+**When ready to release:**
+
+1. **Create Release PR** (Automated via GitHub Actions)
+   - Bot creates changes on `claude/release-*` branch
+   - Updates `manifest.json` version
+   - Updates `CHANGELOG.md` with release notes
+   - Pushes to remote
+   - GitHub Actions automatically creates PR to main
+
+2. **PR Review and Merge** (Automated)
+   - CI tests run on PR
+   - Once tests pass, GitHub Actions auto-merges PR
+   - Main branch updated with release
+
+3. **Tag and Release** (Automated)
+   - GitHub Actions creates git tag (e.g., `v1.5.5`)
+   - Creates GitHub Release with CHANGELOG content
+   - HACS automatically detects new release
+
+## Version Numbering
+
+Follow Semantic Versioning (SemVer):
+- **Major** (1.x.x): Breaking changes
+- **Minor** (x.1.x): New features, backward compatible
+- **Patch** (x.x.1): Bug fixes, backward compatible
+
+## CHANGELOG Format
+
+Use [Keep a Changelog](https://keepachangelog.com/) format:
+
+```markdown
+## [1.5.5] - 2025-11-13
+
+### Fixed
+- Description of fix
+
+### Added
+- Description of new feature
+
+### Changed
+- Description of change
+
+### Deprecated
+- Description of deprecation
+```
+
+## Manual Release Process (Fallback)
+
+If GitHub Actions are unavailable:
+
+```bash
+# 1. Update version in manifest.json
+# Edit: custom_components/ecowitt_local/manifest.json
+"version": "1.5.5"
+
+# 2. Update CHANGELOG.md with release notes
+
+# 3. Commit and push to claude branch
+git add custom_components/ecowitt_local/manifest.json CHANGELOG.md
+git commit -m "Release v1.5.5 - <description>"
+git push origin claude/release-v1.5.5
+
+# 4. Wait for CI to pass
+
+# 5. Merge to main (requires permissions)
+git checkout main
+git merge claude/release-v1.5.5 --no-ff
+git push origin main
+
+# 6. Create and push tag
+git tag -a v1.5.5 -m "Release v1.5.5"
+git push origin v1.5.5
+
+# 7. Create GitHub Release
+gh release create v1.5.5 \
+  --title "v1.5.5 - <title>" \
+  --notes-file CHANGELOG.md \
+  --latest
+```
+
+## Release Checklist
+
+- [ ] All CI tests passing
+- [ ] Version bumped in `manifest.json`
+- [ ] CHANGELOG.md updated with release notes
+- [ ] Breaking changes documented if any
+- [ ] GitHub Release created with tag
+- [ ] HACS validation passing
+
+## HACS Integration
+
+HACS automatically detects new releases from GitHub releases. Ensure:
+- Git tags follow `vX.Y.Z` format
+- GitHub Release is created (not just a tag)
+- `hacs.json` is valid
+- Version in `manifest.json` matches tag
+
+## Home Assistant Compatibility
+
+When Home Assistant introduces breaking changes:
+- Document in CHANGELOG under `### Fixed` or `### Changed`
+- Update `homeassistant` minimum version in `hacs.json` if needed
+- Test against latest HA version before release
+
+## Common Release Issues
+
+### services.yaml Validation Errors
+- Run `hassfest` validation in CI before release
+- Home Assistant breaking changes may require service definition updates
+- Example: HA 2025.11 removed device filters from target selectors
+
+### CI Failures
+- All tests must pass before merging to main
+- Fix test failures on claude branch before creating release PR
+- Revert problematic changes if needed
+
+### Version Conflicts
+- Always increment version number
+- Never reuse version numbers
+- Check existing tags: `git tag -l`

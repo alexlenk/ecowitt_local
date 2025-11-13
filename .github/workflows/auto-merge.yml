@@ -1,0 +1,51 @@
+name: Auto Merge Release PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+  check_suite:
+    types: [completed]
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    # Only auto-merge PRs from claude branches with release label
+    if: |
+      github.event.pull_request.head.ref != null &&
+      startsWith(github.event.pull_request.head.ref, 'claude/') &&
+      contains(github.event.pull_request.labels.*.name, 'release')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Wait for all checks to complete
+        uses: lewagon/wait-on-check-action@v1.3.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          check-regexp: '(CI|validate|HACS Action).*'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+          allowed-conclusions: success
+
+      - name: Auto-merge PR
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+
+          # Merge the PR
+          gh pr merge "$PR_NUMBER" \
+            --merge \
+            --delete-branch \
+            --subject "Merge release PR #${PR_NUMBER}" \
+            --body "Automatically merged by GitHub Actions after all checks passed."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

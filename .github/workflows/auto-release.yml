@@ -1,0 +1,92 @@
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from manifest
+        id: version
+        run: |
+          VERSION=$(jq -r '.version' custom_components/ecowitt_local/manifest.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if tag already exists
+        id: check-tag
+        run: |
+          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract release notes from CHANGELOG
+        id: release-notes
+        if: steps.check-tag.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          if [ -f CHANGELOG.md ]; then
+            # Extract the section for this version
+            awk "/## \[$VERSION\]/,/## \[/" CHANGELOG.md | head -n -1 > /tmp/release_notes.md
+
+            # If no specific version section found, use generic message
+            if [ ! -s /tmp/release_notes.md ]; then
+              echo "Release v$VERSION" > /tmp/release_notes.md
+            fi
+          else
+            echo "Release v$VERSION" > /tmp/release_notes.md
+          fi
+
+          # Set output for release notes
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          cat /tmp/release_notes.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create and push tag
+        if: steps.check-tag.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
+
+      - name: Create GitHub Release
+        if: steps.check-tag.outputs.exists == 'false'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          body: ${{ steps.release-notes.outputs.notes }}
+          draft: false
+          prerelease: false
+          makeLatest: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify release created
+        if: steps.check-tag.outputs.exists == 'false'
+        run: |
+          echo "✅ Release ${{ steps.version.outputs.tag }} created successfully!"
+          echo "📦 HACS will automatically detect this release"
+
+      - name: Skip release (tag exists)
+        if: steps.check-tag.outputs.exists == 'true'
+        run: |
+          echo "⏭️ Tag ${{ steps.version.outputs.tag }} already exists, skipping release creation"

@@ -1,0 +1,105 @@
+name: Auto PR for Claude Branches
+
+on:
+  push:
+    branches:
+      - 'claude/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-pr:
+    runs-on: ubuntu-latest
+    # Only create PR if all checks pass
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Wait for CI checks
+        uses: lewagon/wait-on-check-action@v1.3.1
+        with:
+          ref: ${{ github.sha }}
+          check-regexp: '(CI|validate|HACS Action).*'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+          allowed-conclusions: success
+
+      - name: Check if PR already exists
+        id: check-pr
+        run: |
+          PR_EXISTS=$(gh pr list --head "${{ github.ref_name }}" --base main --json number --jq length)
+          echo "exists=$PR_EXISTS" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from manifest
+        id: version
+        if: steps.check-pr.outputs.exists == '0'
+        run: |
+          VERSION=$(jq -r '.version' custom_components/ecowitt_local/manifest.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if CHANGELOG exists
+        id: changelog
+        if: steps.check-pr.outputs.exists == '0'
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            # Extract latest version section from CHANGELOG
+            VERSION="${{ steps.version.outputs.version }}"
+            awk "/## \[$VERSION\]/,/## \[/" CHANGELOG.md | head -n -1 > /tmp/release_notes.md
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Release v${{ steps.version.outputs.version }}" > /tmp/release_notes.md
+          fi
+
+      - name: Create Pull Request
+        if: steps.check-pr.outputs.exists == '0'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Create PR body
+          cat > /tmp/pr_body.md << 'EOF'
+          ## 🤖 Automated Release PR
+
+          This PR was automatically created by GitHub Actions after all CI checks passed on the claude branch.
+
+          EOF
+
+          # Add release notes if CHANGELOG exists
+          if [ -f /tmp/release_notes.md ]; then
+            cat /tmp/release_notes.md >> /tmp/pr_body.md
+          fi
+
+          # Add footer
+          cat >> /tmp/pr_body.md << 'EOF'
+
+          ---
+
+          ### ✅ Pre-merge Checklist
+          - [x] All CI tests passing
+          - [x] Version bumped in manifest.json
+          - [x] CHANGELOG.md updated (if exists)
+
+          ### 🚀 Post-merge Actions
+          After merging, GitHub Actions will automatically:
+          - Create git tag `v$VERSION`
+          - Create GitHub Release
+          - HACS will detect the new release
+          EOF
+
+          # Create the PR
+          gh pr create \
+            --base main \
+            --head "${{ github.ref_name }}" \
+            --title "Release v${VERSION}" \
+            --body-file /tmp/pr_body.md \
+            --label "release"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
