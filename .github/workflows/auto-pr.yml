@@ -1,7 +1,9 @@
 name: Auto PR for Claude Branches
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI", "Validate with hassfest", "HACS Action"]
+    types: [completed]
     branches:
       - 'claude/**'
 
@@ -12,29 +14,25 @@ permissions:
 jobs:
   auto-pr:
     runs-on: ubuntu-latest
-    # Only create PR if all checks pass
-    if: github.event_name == 'push'
+    # Only run if all required workflows succeeded
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      startsWith(github.event.workflow_run.head_branch, 'claude/')
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.workflow_run.head_branch }}
           fetch-depth: 0
-
-      - name: Wait for CI checks
-        uses: lewagon/wait-on-check-action@v1.3.1
-        with:
-          ref: ${{ github.sha }}
-          check-regexp: '(test \(3\.(11|12)\)|validate|HACS Action)'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 10
-          allowed-conclusions: success
 
       - name: Check if PR already exists
         id: check-pr
         run: |
-          PR_EXISTS=$(gh pr list --head "${{ github.ref_name }}" --base main --json number --jq length)
+          BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
+          PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq length)
           echo "exists=$PR_EXISTS" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -110,7 +108,7 @@ jobs:
           # Create the PR
           gh pr create \
             --base main \
-            --head "${{ github.ref_name }}" \
+            --head "${{ steps.check-pr.outputs.branch }}" \
             --title "Release v${VERSION}" \
             --body-file /tmp/pr_body.md \
             --label "release"
