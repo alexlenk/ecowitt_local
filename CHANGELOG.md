@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.8] - 2025-11-13
+
+### Documentation
+- **HACS Integration**: Added comprehensive documentation about HACS tag requirements
+  - Detailed explanation of how HACS detects releases via git tags
+  - Tag format requirements (vX.Y.Z) with examples
+  - Verification steps for validating HACS integration
+  - Complete workflow descriptions for all three automation workflows
+
+### Changed
+- **Release Documentation**: Enhanced CLAUDE.md with explicit HACS tagging process
+  - Documents that auto-release.yml creates annotated git tags automatically
+  - Clarifies that tags are CRITICAL for HACS to detect new versions
+  - Added verification commands for post-release validation
+
 ## [1.5.7] - 2025-11-13
 
 ### Fixed

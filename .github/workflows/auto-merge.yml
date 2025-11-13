@@ -18,11 +18,11 @@ permissions:
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    # Only auto-merge PRs from claude branches with release label
+    # Only auto-merge PRs from claude branches with release label or release title
     if: |
       github.event.pull_request.head.ref != null &&
       startsWith(github.event.pull_request.head.ref, 'claude/') &&
-      contains(github.event.pull_request.labels.*.name, 'release')
+      (contains(github.event.pull_request.labels.*.name, 'release') || startsWith(github.event.pull_request.title, 'Release v'))
 
     steps:
       - name: Checkout code
