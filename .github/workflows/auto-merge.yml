@@ -32,7 +32,7 @@ jobs:
         uses: lewagon/wait-on-check-action@v1.3.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-          check-regexp: '(CI|validate|HACS Action).*'
+          check-regexp: '(test \(3\.(11|12)\)|validate|HACS Action)'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10
           allowed-conclusions: success

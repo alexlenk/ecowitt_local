@@ -25,7 +25,7 @@ jobs:
         uses: lewagon/wait-on-check-action@v1.3.1
         with:
           ref: ${{ github.sha }}
-          check-regexp: '(CI|validate|HACS Action).*'
+          check-regexp: '(test \(3\.(11|12)\)|validate|HACS Action)'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10
           allowed-conclusions: success
@@ -45,9 +45,22 @@ jobs:
           VERSION=$(jq -r '.version' custom_components/ecowitt_local/manifest.json)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+          # Check if version changed compared to main
+          git fetch origin main
+          MAIN_VERSION=$(git show origin/main:custom_components/ecowitt_local/manifest.json | jq -r '.version')
+          echo "main_version=$MAIN_VERSION" >> $GITHUB_OUTPUT
+
+          if [ "$VERSION" == "$MAIN_VERSION" ]; then
+            echo "version_changed=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Version $VERSION is the same as main branch - skipping PR creation"
+          else
+            echo "version_changed=true" >> $GITHUB_OUTPUT
+            echo "✅ Version changed from $MAIN_VERSION to $VERSION"
+          fi
+
       - name: Check if CHANGELOG exists
         id: changelog
-        if: steps.check-pr.outputs.exists == '0'
+        if: steps.check-pr.outputs.exists == '0' && steps.version.outputs.version_changed == 'true'
         run: |
           if [ -f CHANGELOG.md ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
@@ -60,7 +73,7 @@ jobs:
           fi
 
       - name: Create Pull Request
-        if: steps.check-pr.outputs.exists == '0'
+        if: steps.check-pr.outputs.exists == '0' && steps.version.outputs.version_changed == 'true'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
 
