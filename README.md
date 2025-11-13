@@ -429,6 +429,16 @@ mypy custom_components/ecowitt_local/
 flake8 custom_components/ecowitt_local/
 ```
 
+### Automated Releases
+
+This project uses automated GitHub Actions workflows for releases:
+
+- **Auto-PR**: When you push to a `claude/**` branch with a version bump, a PR is automatically created
+- **Auto-Merge**: Once all CI checks pass, the PR is automatically merged
+- **Auto-Release**: After merge to main, a GitHub release is created automatically with CHANGELOG notes
+
+For details, see [`.github/workflows/README.md`](.github/workflows/README.md) and [`CLAUDE.md`](CLAUDE.md#-release-process).
+
 ## 📜 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

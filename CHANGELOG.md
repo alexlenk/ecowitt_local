@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.6] - 2025-11-13
+
+### Added
+- **Automated Release Process**: Complete GitHub Actions automation for releases
+  - Auto-PR creation when pushing to `claude/**` branches with version bumps
+  - Auto-merge after all CI checks pass
+  - Auto-release creation with git tags and GitHub releases
+  - Version change detection to prevent unnecessary release PRs
+- **Release Documentation**: Comprehensive documentation in CLAUDE.md and .github/workflows/README.md
+- **README Update**: Added Automated Releases section in Contributing guide
+
+### Technical Details
+- Three new GitHub Actions workflows: auto-pr.yml, auto-merge.yml, auto-release.yml
+- Smart version detection compares branch version with main to trigger releases
+- CHANGELOG-based release notes extraction
+- Proper check name matching for CI validation
+
 ## [1.5.5] - 2025-11-13
 
 ### Fixed
@@ -32,6 +49,7 @@ See [GitHub Releases](https://github.com/alexlenk/ecowitt_local/releases) for ea
 
 ## Version History
 
+- **1.5.6** - Automated release process
 - **1.5.5** - Home Assistant 2025.11 compatibility fix
 - **1.5.4** - Test improvements
 - **1.5.3** - Bug fixes
