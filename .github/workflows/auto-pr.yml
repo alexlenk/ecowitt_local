@@ -2,7 +2,7 @@ name: Auto PR for Claude Branches
 
 on:
   workflow_run:
-    workflows: ["CI", "Validate with hassfest", "HACS Action"]
+    workflows: ["CI"]  # Only trigger on CI completion (longest running workflow)
     types: [completed]
     branches:
       - 'claude/**'
@@ -105,12 +105,17 @@ jobs:
           - HACS will detect the new release
           EOF
 
-          # Create the PR
-          gh pr create \
+          # Create the PR (with error handling for race conditions)
+          if gh pr create \
             --base main \
             --head "${{ steps.check-pr.outputs.branch }}" \
             --title "Release v${VERSION}" \
             --body-file /tmp/pr_body.md \
-            --label "release"
+            --label "release"; then
+            echo "✅ PR created successfully"
+          else
+            echo "⚠️ PR creation failed - may already exist"
+            exit 0  # Exit successfully to avoid failing the workflow
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
