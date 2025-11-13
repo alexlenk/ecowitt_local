@@ -3,11 +3,13 @@ refresh_mapping:
   description: Force refresh of sensor hardware ID mapping from the gateway
   target:
     device:
-      integration: ecowitt_local
+      filter:
+        integration: ecowitt_local
 
 update_data:
   name: Update Live Data
   description: Force immediate update of live sensor data from the gateway
   target:
     device:
-      integration: ecowitt_local
+      filter:
+        integration: ecowitt_local
