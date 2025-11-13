@@ -105,14 +105,20 @@ jobs:
           - HACS will detect the new release
           EOF
 
-          # Create the PR (with error handling for race conditions)
+          # Create the PR (try with label first, fallback to no label)
           if gh pr create \
             --base main \
             --head "${{ steps.check-pr.outputs.branch }}" \
             --title "Release v${VERSION}" \
             --body-file /tmp/pr_body.md \
-            --label "release"; then
-            echo "✅ PR created successfully"
+            --label "release" 2>/dev/null; then
+            echo "✅ PR created successfully with release label"
+          elif gh pr create \
+            --base main \
+            --head "${{ steps.check-pr.outputs.branch }}" \
+            --title "Release v${VERSION}" \
+            --body-file /tmp/pr_body.md; then
+            echo "✅ PR created successfully (without label)"
           else
             echo "⚠️ PR creation failed - may already exist"
             exit 0  # Exit successfully to avoid failing the workflow
