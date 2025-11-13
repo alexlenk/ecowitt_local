@@ -493,10 +493,46 @@ This project uses automated GitHub Actions for releases. Claude Code bots work o
    - Once tests pass, GitHub Actions auto-merges PR
    - Main branch updated with release
 
-3. **Tag and Release** (Automated)
-   - GitHub Actions creates git tag (e.g., `v1.5.5`)
+3. **Tag and Release** (Automated via `auto-release.yml`)
+   - Triggers automatically when code merges to `main` branch
+   - GitHub Actions creates annotated git tag (e.g., `v1.5.5`)
+   - Pushes tag to GitHub: `git push origin v1.5.5`
    - Creates GitHub Release with CHANGELOG content
-   - HACS automatically detects new release
+   - **CRITICAL**: Tag creation is REQUIRED for HACS integration
+   - HACS automatically detects new release from git tags
+
+## GitHub Actions Workflows
+
+The release automation consists of three workflows:
+
+### 1. `auto-pr.yml` - Automatic PR Creation
+- **Trigger**: When CI completes on `claude/**` branches
+- **Actions**:
+  - Checks if version changed compared to main
+  - Extracts CHANGELOG notes for the version
+  - Creates PR to main branch with `release` label
+  - Skips if version unchanged or PR already exists
+
+### 2. `auto-merge.yml` - Automatic PR Merging
+- **Trigger**: When PR is opened/updated on main branch
+- **Conditions**: Only runs for `claude/**` branches with `release` label
+- **Actions**:
+  - Waits for all CI checks to pass
+  - Automatically merges PR
+  - Deletes source branch
+- **Note**: Currently configured but can be manual
+
+### 3. `auto-release.yml` - Git Tag & GitHub Release Creation
+- **Trigger**: Push to `main` branch (after merge)
+- **Actions**:
+  1. Extracts version from `manifest.json`
+  2. Checks if tag already exists (prevents duplicates)
+  3. Creates annotated git tag: `git tag -a "v$VERSION"`
+  4. Pushes tag to GitHub: `git push origin "v$VERSION"`
+  5. Creates GitHub Release with CHANGELOG content
+  6. **Result**: HACS detects new version and notifies users
+
+**CRITICAL**: The tag creation in step 3 is what makes HACS work. Without the tag, HACS cannot detect the release.
 
 ## Version Numbering
 
@@ -570,11 +606,51 @@ gh release create v1.5.5 \
 
 ## HACS Integration
 
-HACS automatically detects new releases from GitHub releases. Ensure:
-- Git tags follow `vX.Y.Z` format
-- GitHub Release is created (not just a tag)
-- `hacs.json` is valid
-- Version in `manifest.json` matches tag
+**CRITICAL**: HACS (Home Assistant Community Store) detects new versions via **git tags** on GitHub.
+
+### How HACS Release Detection Works
+
+1. **Git Tag Required**: HACS monitors GitHub repository for new tags matching `vX.Y.Z` format
+   - Example: `v1.5.7` at https://github.com/alexlenk/ecowitt_local/tree/refs/tags/v1.5.7
+   - Tags are created automatically by `auto-release.yml` workflow
+   - Without tags, HACS cannot detect new releases
+
+2. **Tag Format**: Must follow semantic versioning with `v` prefix
+   - ✅ Correct: `v1.5.7`, `v2.0.0`, `v1.4.8`
+   - ❌ Incorrect: `1.5.7`, `version-1.5.7`, `release-1.5.7`
+
+3. **Automated Tagging**: The `auto-release.yml` workflow handles this automatically:
+   ```yaml
+   # Creates annotated tag
+   git tag -a "v$VERSION" -m "Release v$VERSION"
+   # Pushes to GitHub
+   git push origin "v$VERSION"
+   ```
+
+4. **GitHub Release**: Created alongside the tag with CHANGELOG content
+   - Provides human-readable release notes
+   - Links to the git tag
+   - HACS users see these notes when updating
+
+### Verification
+
+After a release, verify HACS integration:
+```bash
+# Check tags exist
+git tag -l | grep v1.5.7
+
+# View tag details
+git show v1.5.7 --no-patch
+
+# Verify tag is pushed to GitHub
+# Visit: https://github.com/alexlenk/ecowitt_local/tags
+```
+
+### Requirements for HACS
+- Git tags follow `vX.Y.Z` format (automated by workflow)
+- GitHub Release created (not just a tag) - automated by workflow
+- `hacs.json` is valid - validated by HACS Action in CI
+- Version in `manifest.json` matches tag - enforced by automation
 
 ## Home Assistant Compatibility
 
