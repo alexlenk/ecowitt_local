@@ -689,7 +689,7 @@ async def test_coordinator_piezo_rain_processing(coordinator):
     
     yearly_sensors = [k for k in sensors.keys() if "12" in k and sensors[k]["state"] == 2.36]
     assert len(yearly_sensors) >= 1, "Yearly Rain sensor (0x12) should be created"
-    
+
     total_sensors = [k for k in sensors.keys() if "13" in k and sensors[k]["state"] == 10.15]
     assert len(total_sensors) >= 1, "Total Rain sensor (0x13) should be created"
     
