@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.7] - 2025-11-13
+
+### Fixed
+- **CHANGELOG Extraction**: Fixed auto-release workflow to properly extract release notes from CHANGELOG.md
+  - Improved awk pattern matching for version sections
+  - GitHub releases now include full CHANGELOG content instead of generic message
+
+### Changed
+- **Testing**: Full automation test with end-to-end workflow validation
+
 ## [1.5.6] - 2025-11-13
 
 ### Added
@@ -49,6 +59,7 @@ See [GitHub Releases](https://github.com/alexlenk/ecowitt_local/releases) for ea
 
 ## Version History
 
+- **1.5.7** - CHANGELOG extraction fix and automation testing
 - **1.5.6** - Automated release process
 - **1.5.5** - Home Assistant 2025.11 compatibility fix
 - **1.5.4** - Test improvements

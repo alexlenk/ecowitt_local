@@ -43,9 +43,14 @@ jobs:
 
           if [ -f CHANGELOG.md ]; then
             # Extract the section for this version
-            awk "/## \[$VERSION\]/,/## \[/" CHANGELOG.md | head -n -1 > /tmp/release_notes.md
+            # Get content between version header and next version header (or end)
+            awk "/## \[$VERSION\]/,/^## \[/ {
+              if (/^## \[$VERSION\]/) next;
+              if (/^## \[/) exit;
+              print
+            }" CHANGELOG.md | sed '/^$/d' > /tmp/release_notes.md
 
-            # If no specific version section found, use generic message
+            # If no specific version section found or empty, use generic message
             if [ ! -s /tmp/release_notes.md ]; then
               echo "Release v$VERSION" > /tmp/release_notes.md
             fi
