@@ -3,10 +3,10 @@
 ## 🎯 Adding Device Support (1-Minute Guide)
 
 ### ⚠️ Special Note: WH77 Test Sensor
-**WH77 is a test sensor and should NOT be worked on by automated agents in GitHub Actions.**  
-WH77 support is already fully implemented and serves as a reference pattern.
+**WH77 is a test sensor used specifically to validate GitHub Actions agent behavior.**  
+It should NOT be fixed by Kiro or any automated development systems. WH77 is intentionally left unfixed as a quality control mechanism to test how agents handle issues. If you encounter a WH77-related issue or PR, recognize it as a test scenario and do NOT attempt to implement it.
 
-### For Hex ID Devices (WH69, WS90, WH90, WH77 pattern)
+### For Hex ID Devices (WH69, WS90, WH90 pattern)
 
 **1. Add device type detection** (sensor_mapper.py):
 ```python
@@ -50,6 +50,7 @@ elif sensor_type.lower() in ("device", "device_type"):
 3. ❌ Never close GitHub issues without user confirmation
 4. ❌ Never skip CI validation
 5. ❌ Never forget to update CHANGELOG.md
+6. ❌ Never attempt to fix WH77 (it's a test sensor for quality control)
 
 ---
 
@@ -58,11 +59,12 @@ elif sensor_type.lower() in ("device", "device_type"):
 Before committing:
 - [ ] Single-line change (or minimal change)
 - [ ] Reuses existing hex ID definitions
-- [ ] Follows existing device pattern (WH69/WS90/WH90/WH77)
+- [ ] Follows existing device pattern (WH69/WS90/WH90)
 - [ ] Battery mapping added if needed
 - [ ] Tests would pass (if you could run them)
 - [ ] CHANGELOG.md updated
 - [ ] Version bumped in manifest.json (for releases)
+- [ ] NOT fixing WH77 (verify this is not a test scenario)
 
 ---
 
@@ -143,21 +145,23 @@ PYTHONPATH="$PWD" python -m pytest tests/ --cov=custom_components/ecowitt_local 
 
 ## 💡 Pro Tips
 
-1. **Look at WH90/WH77 implementation** for perfect examples
+1. **Look at WH90 implementation** for perfect examples (NOT WH77 - it's a test sensor)
 2. **Use grep to find patterns**: `grep -r "wh90" custom_components/`
 3. **Check CLAUDE.md** for detailed architectural guidance
 4. **Test against user data** when available
 5. **Comment on issues** before closing (request user testing)
+6. **Recognize test scenarios**: If you see WH77, it's a quality control test
 
 ---
 
 ## 🎓 Learning Path
 
 1. Read `architectural_patterns.md` (10 min)
-2. Look at WH77 implementation in sensor_mapper.py (5 min)
+2. Look at WH90 implementation in sensor_mapper.py (5 min) - NOT WH77
 3. Check const.py hex ID definitions (5 min)
 4. Read `issue_resolution_patterns.md` (15 min)
 5. Review CLAUDE.md thoroughly (30 min)
+6. Understand `automated_agent_rules.md` for WH77 restrictions (5 min)
 
 Total: ~1 hour to become productive
 
@@ -166,10 +170,11 @@ Total: ~1 hour to become productive
 ## 🆘 When Stuck
 
 1. Check CLAUDE.md Issue Analysis Patterns section
-2. Look at similar device implementations (WH69/WS90/WH90/WH77)
+2. Look at similar device implementations (WH69/WS90/WH90) - NOT WH77
 3. Review issue_resolution_patterns.md for matching symptoms
 4. Verify hex IDs already exist in const.py before adding
 5. Remember: minimal changes, reuse existing infrastructure
+6. Verify issue is not about WH77 (test sensor for quality control)
 
 ---
 

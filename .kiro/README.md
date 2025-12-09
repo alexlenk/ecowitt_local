@@ -67,10 +67,10 @@ These files serve as quick-reference guides for:
 
 ### 🤖 automated_agent_rules.md
 **Rules for automated agents and bots**
-- WH77 test sensor restrictions (NO automated work)
+- WH77 test sensor restrictions (intentionally unfixed quality control mechanism)
 - Allowed and prohibited automated work
 - Issue handling protocol
-- Safety guards and escalation process
+- Safety guards and quality control checkpoints
 
 **When to use**: Before any automated agent starts work on this repository.
 
@@ -97,7 +97,7 @@ These Kiro steering files **complement** the main CLAUDE.md file:
 ### Adding WH88 Support
 1. Check `quick_reference.md` for the 1-minute guide
 2. Reference `architectural_patterns.md` for hex ID system details
-3. Follow WH77 example in sensor_mapper.py
+3. Follow WH90 example in sensor_mapper.py (NOT WH77 - it's a test sensor)
 4. Use `development_guidelines.md` for testing commands
 
 ### Debugging Entity Creation Issue
@@ -109,6 +109,11 @@ These Kiro steering files **complement** the main CLAUDE.md file:
 1. Follow `development_guidelines.md` release process section
 2. Verify HACS tag requirements
 3. Use issue management protocol for commenting on fixed issues
+
+### Working as an Automated Agent
+1. **FIRST**: Read `automated_agent_rules.md` to understand WH77 restrictions
+2. Check if issue involves WH77 → If yes, recognize as test scenario and STOP
+3. For legitimate issues: Follow documented patterns and protocols
 
 ## Maintenance
 
@@ -124,7 +129,8 @@ These files should be updated when:
 
 **Created**: December 9, 2025  
 **Purpose**: Consolidate architectural knowledge from CLAUDE.md and codebase analysis  
-**Initial Content**: Based on v1.5.8 codebase and successful WH77/WH90 implementations  
+**Initial Content**: Based on v1.5.8 codebase and successful WH90 implementations  
+**Note on WH77**: WH77 is a test sensor for quality control, intentionally unfixed to validate agent behavior  
 
 ## Contributing
 

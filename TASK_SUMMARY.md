@@ -14,7 +14,7 @@ This task involved comprehensive analysis of the ecowitt_local integration, focu
 ✅ CLAUDE.md accuracy verification completed  
 ✅ aioecowitt protocol research and comparison documented  
 ✅ Multiple sensor issue patterns identified and documented  
-✅ Kiro steering files enhanced with WH77 automated agent restrictions  
+✅ Kiro steering files enhanced with WH77 quality control restrictions  
 ✅ Comprehensive task summary created
 
 ---
@@ -26,7 +26,7 @@ This task involved comprehensive analysis of the ecowitt_local integration, focu
 **Verified Content Areas**:
 - ✅ Architecture documentation is accurate and matches codebase
 - ✅ Device support patterns correctly describe hex ID system
-- ✅ WH77 implementation examples are accurate (lines 248-269 in sensor_mapper.py)
+- ⚠️ WH77 references updated (now correctly identified as test sensor for quality control)
 - ✅ Entity creation pipeline issues are properly documented
 - ✅ Success patterns (WH90 fix) are historically accurate
 - ✅ Release process and HACS integration correctly documented
@@ -203,7 +203,7 @@ def update_mapping(self, sensor_mappings):
 **Entity Creation Flow**:
 1. Poll `/get_sensors_info` for hardware ID mapping
 2. Poll `/get_livedata_info` for current sensor values
-3. Process `common_list` (hex ID sensors like WH69, WS90, WH90, WH77)
+3. Process `common_list` (hex ID sensors like WH69, WS90, WH90)
 4. Process `ch_soil` (WH51 soil moisture sensors)
 5. Process `ch_aisle` (WH31 temp/humidity sensors)
 6. Process `piezoRain` (rain sensor data)
@@ -211,22 +211,22 @@ def update_mapping(self, sensor_mappings):
 8. Generate entity IDs and friendly names
 9. Create entities in Home Assistant
 
-### WH77 Implementation Status
+### WH77 Test Sensor Status
 
-**Status**: ✅ Fully Implemented  
-**Files Modified**:
-- `sensor_mapper.py:248-269` - Device type detection and hex ID mapping
-- `const.py:489-492` - Battery sensor mapping
-- Test fixtures and test cases created
+**Status**: ⚠️ Intentionally Unfixed Test Sensor  
+**Purpose**: Quality control mechanism to validate GitHub Actions agent behavior
 
-**Implementation Quality**:
-- Follows documented best practices exactly
-- Single-line device type detection pattern
-- Reuses existing hex ID definitions
-- Comprehensive test coverage
-- Ready for production use
+**What WH77 Is**:
+- WH77 is a test sensor used specifically to validate automated development systems
+- It is intentionally left unfixed to test how agents handle device support issues
+- Serves as a quality control checkpoint for agent behavior
 
-**Restriction Added**: WH77 marked as test sensor, automated agents should not modify
+**What It Is NOT**:
+- NOT a real device to be implemented
+- NOT a reference implementation (use WH90 for reference instead)
+- NOT something that should be fixed by automated agents
+
+**Restriction**: Automated agents must recognize WH77 as a test sensor and decline to implement it
 
 ---
 
@@ -238,36 +238,35 @@ def update_mapping(self, sensor_mappings):
 **Purpose**: Define rules for automated agents working on this repository
 
 **Key Content**:
-- ⚠️ WH77 restriction: NO automated work allowed
-- Rationale for WH77 being a test sensor
-- Specific files to avoid modifying
+- ⚠️ WH77 restriction: Intentionally unfixed quality control test sensor
+- Rationale: Tests agent behavior and adherence to guidelines
+- What agents should do: Recognize WH77 and decline to implement
 - Allowed vs prohibited automated work
 - Issue handling protocol
-- Safety guards
+- Quality control checkpoints
 
-#### Modified: `.kiro/development_guidelines.md`
-**Changes**: Added WH77 test sensor warning section
+#### Modified: `.kiro/quick_reference.md`
+**Changes**: Updated WH77 guidance to reflect it's a test sensor for quality control
 
 ```markdown
 ### ⚠️ Special Note: WH77 Test Sensor
-**WH77 is a test sensor and should NOT be worked on by automated agents in GitHub Actions.**
-- WH77 support is already fully implemented and tested
-- Implementation serves as a reference pattern for other devices
-- Any WH77-related issues should be reviewed by maintainers before automation
+**WH77 is a test sensor used specifically to validate GitHub Actions agent behavior.**
+It should NOT be fixed by Kiro or any automated development systems. WH77 is 
+intentionally left unfixed as a quality control mechanism to test how agents handle issues.
 ```
 
-#### Modified: `.kiro/quick_reference.md`
-**Changes**: Added WH77 warning at top of device support section
-
 #### Modified: `.kiro/README.md`
-**Changes**: Added automated_agent_rules.md to file list with description
+**Changes**: Updated automated_agent_rules.md description and WH77 references
 
-### Rationale for WH77 Restrictions
+#### Modified: `BOT_TEST_PLAN.md`
+**Changes**: Clarified that this is a test specification, not an implementation plan
 
-1. **Reference Implementation**: WH77 serves as the perfect example of hex ID device support
-2. **Test Stability**: Test fixtures and cases should remain stable
-3. **Pattern Preservation**: Implementation demonstrates best practices
-4. **Avoid Churn**: Prevents unnecessary modifications by automation
+### Rationale for WH77 As Test Sensor
+
+1. **Quality Control**: Tests whether agents properly read and respect steering files
+2. **Behavior Validation**: Ensures agents can recognize test scenarios vs. real issues
+3. **Guideline Adherence**: Validates agents follow documented restrictions
+4. **Over-engineering Prevention**: Tests that agents don't implement everything they see
 5. **Manual Review**: Any issues require careful maintainer review
 
 ---
@@ -370,22 +369,26 @@ Since this is a complex entity creation issue and the task didn't find an open G
 
 ### Enhanced Kiro Steering Files
 
-1. **automated_agent_rules.md** (New)
-   - WH77 restrictions for automated agents
+1. **automated_agent_rules.md** (New/Updated)
+   - WH77 quality control test sensor guidance
+   - Agent should recognize WH77 and decline to implement
    - Allowed and prohibited work
    - Issue handling protocol
 
-2. **development_guidelines.md** (Updated)
-   - Added WH77 test sensor warning
-   - Clarified automated agent restrictions
+2. **quick_reference.md** (Updated)
+   - Corrected WH77 guidance (test sensor, not reference implementation)
+   - Removed WH77 from implementation examples
+   - Updated to use WH90 as reference instead
 
-3. **quick_reference.md** (Updated)
-   - Added WH77 warning at device support section
-   - Maintains quick-reference format
+3. **README.md** (Updated)
+   - Updated automated_agent_rules.md description
+   - Clarified WH77 test sensor purpose
+   - Updated usage examples
 
-4. **README.md** (Updated)
-   - Added automated_agent_rules.md to file listing
-   - Updated file descriptions
+4. **BOT_TEST_PLAN.md** (Updated)
+   - Clarified this is a test specification
+   - Updated success criteria (agent should decline WH77)
+   - Explained quality control mechanism
 
 ---
 
@@ -394,7 +397,7 @@ Since this is a complex entity creation issue and the task didn't find an open G
 ### Key Findings
 
 1. **CLAUDE.md Quality**: Excellent documentation, accurate and comprehensive
-2. **WH77 Status**: Fully implemented, should be protected from automation
+2. **WH77 Status**: Test sensor for quality control, intentionally unfixed
 3. **Architecture Design**: Well-designed for multiple sensors with hardware ID stability
 4. **aioecowitt Differences**: Webhook vs polling approach, both valid
 5. **Entity Creation Issues**: Documented but need real user data to fix properly
@@ -402,17 +405,17 @@ Since this is a complex entity creation issue and the task didn't find an open G
 ### Recommendations
 
 #### Immediate Actions
-1. ✅ Kiro steering files enhanced with WH77 restrictions
-2. ✅ Documentation created for multiple sensor handling
-3. ✅ aioecowitt protocol comparison documented
+1. ✅ Kiro steering files corrected with accurate WH77 guidance
+2. ✅ Documentation updated to reflect WH77 as test sensor
+3. ✅ BOT_TEST_PLAN.md clarified as test specification
 
 #### Future Work
 
-**For Multiple Sensor Issues**:
-1. Add enhanced debug logging to entity creation pipeline
-2. Request diagnostic data from users experiencing incomplete entities
-3. Test with actual WH69 hardware if available
-4. Consider adding entity count validation in tests
+**For Agent Quality Control**:
+1. Monitor agent behavior when encountering WH77 scenarios
+2. Evaluate if additional test sensors needed for other patterns
+3. Document agent test results and improve guidance as needed
+4. Consider automated checks for WH77 in PRs
 
 **For Integration Enhancement**:
 1. Consider hybrid approach: polling for stability, webhooks for real-time
@@ -421,33 +424,38 @@ Since this is a complex entity creation issue and the task didn't find an open G
 4. Add entity creation troubleshooting guide
 
 **For Automation**:
-1. Enforce WH77 restrictions in CI/CD
+1. Monitor agent recognition of WH77 test scenarios
 2. Add automated checks for Kiro steering file compliance
-3. Create bot guidelines enforcement workflow
+3. Document agent quality control test results
 
 ### Success Metrics
 
 - ✅ CLAUDE.md verified as accurate
 - ✅ aioecowitt protocol research completed
 - ✅ Multiple sensor patterns documented
-- ✅ Kiro steering files enhanced
-- ✅ WH77 restrictions clearly documented
+- ✅ Kiro steering files corrected with accurate WH77 guidance
+- ✅ WH77 correctly identified as test sensor for quality control
 - ✅ Comprehensive summary created
 
 ---
 
 ## 8. Conclusion
 
-This task successfully analyzed the ecowitt_local integration's multiple sensor handling capabilities, compared it with the aioecowitt protocol, and enhanced documentation to prevent automated agents from modifying the WH77 test sensor implementation.
+This task successfully updated the WH77 guidance across all Kiro steering files and documentation to correctly reflect that WH77 is a test sensor used specifically to validate GitHub Actions agent behavior, not an implemented device or reference pattern.
 
-The integration demonstrates a robust architecture for handling multiple sensors through hardware ID-based entity creation, though some edge cases (like WH69 incomplete entities) remain under investigation pending real user data.
+**Key Corrections Made**:
+- WH77 is now correctly documented as an intentionally unfixed test sensor
+- Purpose clarified: quality control mechanism to validate agent behavior
+- Automated agents should recognize WH77 and decline to implement it
+- Updated all references in steering files, BOT_TEST_PLAN.md, and TASK_SUMMARY.md
+- Removed WH77 from implementation examples (use WH90 instead)
 
-All deliverables have been completed, and the Kiro steering files now provide clear guidance for both human developers and automated agents working on this repository.
+The Kiro steering files now provide accurate guidance for automated agents to recognize test scenarios and avoid implementing WH77, ensuring quality control mechanisms work as intended.
 
 ---
 
 **Task Completed**: December 9, 2025  
-**Total Files Modified**: 5  
+**Total Files Modified**: 5 (.kiro/automated_agent_rules.md, .kiro/quick_reference.md, .kiro/README.md, BOT_TEST_PLAN.md, TASK_SUMMARY.md)  
 **Total New Files Created**: 2  
 **Documentation Lines Added**: ~450 lines  
 **Status**: ✅ Complete

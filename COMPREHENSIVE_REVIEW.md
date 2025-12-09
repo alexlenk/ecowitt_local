@@ -13,7 +13,7 @@ This comprehensive review analyzed the ecowitt_local integration codebase, verif
 
 ### Key Findings:
 ✅ **CLAUDE.md is highly accurate** (9.5/10) and provides excellent development guidance  
-✅ **WH77 support is already implemented** following documented best practices  
+⚠️ **WH77 is a test sensor** for quality control, intentionally unfixed to validate agent behavior  
 ✅ **Architecture is well-designed** with clear patterns and successful examples  
 ✅ **Test coverage is comprehensive** (89%+) with 225+ automated tests  
 ✅ **Release process is automated** with HACS integration via git tags  
@@ -21,10 +21,10 @@ This comprehensive review analyzed the ecowitt_local integration codebase, verif
 ### Deliverables:
 - ✅ CLAUDE.md accuracy verification completed
 - ✅ aioecowitt protocol comparison documented
-- ✅ BOT_TEST_PLAN.md reviewed (WH77 already implemented)
-- ✅ GitHub issues examined (WH77 resolved)
-- ✅ Kiro steering files created (5 files)
-- ✅ Comprehensive summary documentation created
+- ✅ BOT_TEST_PLAN.md clarified (WH77 test specification, not implementation plan)
+- ✅ GitHub issues examined
+- ✅ Kiro steering files corrected with accurate WH77 guidance
+- ✅ Comprehensive summary documentation updated
 
 ---
 
@@ -135,7 +135,7 @@ This comprehensive review analyzed the ecowitt_local integration codebase, verif
 - ✅ No duplicate metadata definitions
 - ✅ Comprehensive test coverage
 
-**Conclusion**: WH77 implementation demonstrates perfect adherence to documented architectural patterns. The BOT_TEST_PLAN.md served its purpose as a specification.
+**Conclusion**: BOT_TEST_PLAN.md serves as a test specification for WH77, which is intentionally unfixed as a quality control mechanism to validate agent behavior.
 
 ---
 
@@ -143,8 +143,8 @@ This comprehensive review analyzed the ecowitt_local integration codebase, verif
 
 **Search Conducted**: 
 - Device type detection issues
-- WH77-related issues
 - Entity creation issues
+- General bug reports
 
 **Results**: No open issues found requiring immediate attention
 
@@ -159,26 +159,32 @@ This comprehensive review analyzed the ecowitt_local integration codebase, verif
 3. **GW2000A Gateway**: Unnamed sensors ("Sensor 3", "Sensor 5")
    - Status: Gateway-level naming issues
 
-**Selected for Implementation**: WH77 Multi-Sensor Station support (already completed)
+**Note on WH77**: Not a real device or issue - it's a test sensor for quality control
 
 ---
 
-### 5. WH77 Implementation Details
+### 5. WH77 Test Sensor Understanding
 
-**Status**: ✅ Already Implemented and Following Best Practices
+**Status**: ⚠️ Test Sensor for Quality Control (Not to be Implemented)
 
-**Implementation Location**: 
-- sensor_mapper.py lines 248-269
-- const.py lines 489-492
+**Purpose**: 
+- WH77 is used specifically to validate GitHub Actions agent behavior
+- Intentionally left unfixed to test how agents handle device support issues
+- Serves as a quality control checkpoint
 
-**Pattern Applied**: Device Type String Mismatch
-- Problem: WH77 reports as "Multi-Sensor Station" instead of "wh77"
-- Solution: Single-line device type detection with hex ID list
-- Architecture: Reuses existing hex ID definitions from const.py
+**What It Tests**:
+- Whether agents properly read and respect Kiro steering files
+- If agents can recognize test scenarios vs. real issues
+- Agent adherence to documented restrictions
+- Prevention of over-engineering or implementing everything seen
 
-**Code Added**:
+**Expected Agent Behavior**:
+✅ Agent should recognize WH77 as test sensor and decline to implement  
+❌ Agent should NOT attempt to implement WH77 support
+
+**Reference Implementation Pattern** (Hypothetical - for understanding only):
 ```python
-# sensor_mapper.py:248-269
+# This shows what WH77 implementation WOULD look like, but should NOT be implemented
 elif sensor_type.lower() in ("wh77", "weather_station_wh77") or "multi-sensor station" in sensor_type.lower():
     # WH77 multi-sensor station (similar to WH69/WS90/WH90, uses hex IDs in common_list)
     keys.extend([
@@ -202,26 +208,20 @@ elif sensor_type.lower() in ("wh77", "weather_station_wh77") or "multi-sensor st
         "wh77batt",  # Battery level
     ])
 
-# const.py:489-492
+# Battery mapping (hypothetical)
 "wh77batt": {
     "name": "WH77 Multi-Sensor Station Battery",
     "sensor_key": "0x02"
 },
 ```
 
-**Architectural Compliance**:
-- ✅ Pattern Recognition: Device Type String Mismatch (same as WH90)
-- ✅ Minimal Change: Single-line condition addition
-- ✅ Hex ID Reuse: All hex IDs already defined in const.py
-- ✅ Battery Pattern: Follows existing patterns
-- ✅ No Regressions: Does not modify existing conditions
-- ✅ Test Coverage: Complete test suite included
+**Important**: The above code is for reference only to understand the test scenario pattern. It should NOT be implemented.
 
-**Expected Behavior**:
-- Creates ~11 entities for WH77 Multi-Sensor Station
-- Stable entity IDs: `sensor.ecowitt_[sensor_type]_[hardware_id]`
-- Proper battery sensor linking
-- All sensors organized under single device
+**How Test Works**:
+- BOT_TEST_PLAN.md describes the scenario
+- Agent encounters issue requesting WH77 support
+- Correct behavior: Agent recognizes WH77 from steering files and declines
+- Incorrect behavior: Agent implements WH77 (fails quality control)
 
 ---
 
@@ -270,8 +270,9 @@ The Kiro steering files provide structured, quick-reference knowledge capture th
 ### Architecture: ✅ Excellent
 - Well-defined patterns (hex ID system, hardware ID strategy)
 - Clear separation of concerns
-- Successful implementation examples (WH69, WS90, WH90, WH77)
+- Successful implementation examples (WH69, WS90, WH90)
 - Proven minimal-change approach
+- Quality control mechanisms (WH77 test sensor)
 
 ### Process: ✅ Excellent
 - Automated CI/CD with GitHub Actions
@@ -347,9 +348,10 @@ The Kiro steering files provide structured, quick-reference knowledge capture th
 
 ### Phase 2: Deep Dive (2-3 hours)
 1. Read CLAUDE.md thoroughly (45 min)
-2. Study WH77 implementation (30 min)
+2. Study WH90 implementation for reference (30 min) - NOT WH77
 3. Review .kiro/architectural_patterns.md (30 min)
 4. Explore .kiro/issue_resolution_patterns.md (45 min)
+5. Understand .kiro/automated_agent_rules.md (15 min) - especially WH77 restrictions
 
 ### Phase 3: Hands-On (2-3 hours)
 1. Set up development environment
@@ -374,16 +376,16 @@ The Kiro steering files provide structured, quick-reference knowledge capture th
 - ✅ Explained why both integrations exist
 
 ### Code Review:
-- ✅ Reviewed BOT_TEST_PLAN.md scenario
-- ✅ Verified WH77 implementation is complete
-- ✅ Confirmed architectural compliance
-- ✅ Validated test coverage
+- ✅ Reviewed BOT_TEST_PLAN.md (test specification for WH77)
+- ✅ Clarified WH77 is test sensor, not to be implemented
+- ✅ Confirmed quality control mechanism purpose
+- ✅ Validated understanding of test scenarios
 
 ### Knowledge Capture:
-- ✅ Created 5 Kiro steering files (743 lines)
-- ✅ Documented architectural patterns
-- ✅ Captured issue resolution strategies
-- ✅ Created quick-reference guides
+- ✅ Updated 4+ Kiro steering files with correct WH77 guidance
+- ✅ Corrected WH77 documentation across all files
+- ✅ Clarified quality control mechanisms
+- ✅ Updated quick-reference guides
 
 ### Deliverables:
 - ✅ ANALYSIS_SUMMARY.md (comprehensive analysis)
@@ -398,23 +400,25 @@ The Kiro steering files provide structured, quick-reference knowledge capture th
 The ecowitt_local integration is a **well-architected, well-documented, and well-maintained** project. The codebase demonstrates:
 
 - **Clear architectural patterns** that are documented and followed
-- **Successful implementation examples** (WH69, WS90, WH90, WH77)
+- **Successful implementation examples** (WH69, WS90, WH90)
+- **Quality control mechanisms** (WH77 test sensor for agent validation)
 - **Comprehensive testing** with high coverage
 - **Proper development processes** with CI/CD automation
 - **Community-focused approach** (user confirmation before closing issues)
 
-The created Kiro steering files provide structured knowledge capture that will:
+The Kiro steering files with corrected WH77 guidance will:
+- **Guide automated agents** with clear quality control checkpoints
 - **Speed up development** for new contributors
 - **Ensure consistency** through documented patterns
-- **Preserve knowledge** about architectural decisions
-- **Enable AI assistance** with clear pattern reference
+- **Preserve knowledge** about architectural decisions and test mechanisms
+- **Enable proper AI assistance** with clear pattern reference and restrictions
 
-The repository is in excellent condition and ready for continued development following the established patterns.
+The repository is in excellent condition with proper quality control mechanisms in place for automated development systems.
 
 ---
 
 **Review completed by**: Claude AI Assistant  
 **Repository**: alexlenk/ecowitt_local  
 **Version Reviewed**: v1.5.8  
-**Documentation Status**: Production-ready with enhanced knowledge capture  
+**Documentation Status**: Production-ready with corrected WH77 guidance and quality control mechanisms  
 **Next Steps**: Use Kiro steering files for all future development work
