@@ -12,6 +12,8 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # Only run if this is a merged PR or manual workflow dispatch
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.head_commit.message != '')
 
     steps:
       - name: Checkout code
@@ -22,17 +24,43 @@ jobs:
       - name: Extract version from manifest
         id: version
         run: |
-          VERSION=$(jq -r '.version' custom_components/ecowitt_local/manifest.json)
+          # Check if manifest.json exists
+          if [ ! -f custom_components/ecowitt_local/manifest.json ]; then
+            echo "❌ Error: manifest.json not found"
+            exit 1
+          fi
+          
+          # Extract version with error handling
+          VERSION=$(jq -r '.version // empty' custom_components/ecowitt_local/manifest.json)
+          
+          if [ -z "$VERSION" ]; then
+            echo "❌ Error: Could not extract version from manifest.json"
+            exit 1
+          fi
+          
+          # Validate version format (X.Y.Z)
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "⚠️ Warning: Version '$VERSION' may not follow semantic versioning (X.Y.Z)"
+          fi
+          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+          echo "✅ Extracted version: $VERSION"
 
       - name: Check if tag already exists
         id: check-tag
         run: |
-          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+          TAG="v${{ steps.version.outputs.version }}"
+          
+          # Fetch all tags from remote
+          git fetch --tags
+          
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
+            echo "⏭️ Tag $TAG already exists, will skip release creation"
           else
             echo "exists=false" >> $GITHUB_OUTPUT
+            echo "✅ Tag $TAG does not exist, will create new release"
           fi
 
       - name: Extract release notes from CHANGELOG
@@ -40,58 +68,107 @@ jobs:
         if: steps.check-tag.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-
+          NOTES_FILE="/tmp/release_notes.md"
+          
           if [ -f CHANGELOG.md ]; then
+            echo "📄 Found CHANGELOG.md, extracting notes for version $VERSION"
+            
             # Extract the section for this version
             # Get content between version header and next version header (or end)
             awk "/## \[$VERSION\]/,/^## \[/ {
               if (/^## \[$VERSION\]/) next;
               if (/^## \[/) exit;
               print
-            }" CHANGELOG.md | sed '/^$/d' > /tmp/release_notes.md
-
+            }" CHANGELOG.md > "$NOTES_FILE"
+            
+            # Remove leading/trailing empty lines
+            sed -i '/./,$!d' "$NOTES_FILE"
+            sed -i -e :a -e '/^\s*$/d;N;ba' "$NOTES_FILE"
+            
             # If no specific version section found or empty, use generic message
-            if [ ! -s /tmp/release_notes.md ]; then
-              echo "Release v$VERSION" > /tmp/release_notes.md
+            if [ ! -s "$NOTES_FILE" ]; then
+              echo "⚠️ Version section not found in CHANGELOG.md, using generic release description"
+              echo "# Release v$VERSION" > "$NOTES_FILE"
+              echo "" >> "$NOTES_FILE"
+              echo "This release includes updates and improvements to the Ecowitt Local integration." >> "$NOTES_FILE"
+              echo "" >> "$NOTES_FILE"
+              echo "For detailed changes, see the [CHANGELOG](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)." >> "$NOTES_FILE"
+            else
+              echo "✅ Extracted release notes from CHANGELOG.md"
             fi
           else
-            echo "Release v$VERSION" > /tmp/release_notes.md
+            echo "⚠️ CHANGELOG.md not found, generating basic release description"
+            echo "# Release v$VERSION" > "$NOTES_FILE"
+            echo "" >> "$NOTES_FILE"
+            echo "This release includes updates and improvements to the Ecowitt Local integration." >> "$NOTES_FILE"
           fi
-
-          # Set output for release notes
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          cat /tmp/release_notes.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          
+          # Set output for release notes using delimiter
+          {
+            echo "notes<<RELEASE_NOTES_EOF"
+            cat "$NOTES_FILE"
+            echo "RELEASE_NOTES_EOF"
+          } >> $GITHUB_OUTPUT
 
       - name: Create and push tag
         if: steps.check-tag.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
+          TAG="v$VERSION"
+          
+          echo "🏷️ Creating annotated tag: $TAG"
+          
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git tag -a "v$VERSION" -m "Release v$VERSION"
-          git push origin "v$VERSION"
+          
+          git tag -a "$TAG" -m "Release v$VERSION"
+          
+          # Push tag with error handling
+          if git push origin "$TAG"; then
+            echo "✅ Successfully pushed tag $TAG"
+          else
+            echo "❌ Error: Failed to push tag $TAG"
+            exit 1
+          fi
 
       - name: Create GitHub Release
         if: steps.check-tag.outputs.exists == 'false'
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ steps.version.outputs.tag }}
-          name: ${{ steps.version.outputs.tag }}
-          body: ${{ steps.release-notes.outputs.notes }}
-          draft: false
-          prerelease: false
-          makeLatest: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          echo "📦 Creating GitHub release for $TAG"
+          
+          # Save release notes to file for gh release create
+          cat > /tmp/release_body.md << 'RELEASE_NOTES_EOF'
+          ${{ steps.release-notes.outputs.notes }}
+          RELEASE_NOTES_EOF
+          
+          # Create release using GitHub CLI with error handling
+          if gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file /tmp/release_body.md \
+            --latest; then
+            echo "✅ Successfully created GitHub release $TAG"
+          else
+            echo "❌ Error: Failed to create GitHub release"
+            # Clean up the tag if release creation failed
+            git push --delete origin "$TAG" || true
+            git tag -d "$TAG" || true
+            exit 1
+          fi
 
       - name: Notify release created
         if: steps.check-tag.outputs.exists == 'false'
         run: |
           echo "✅ Release ${{ steps.version.outputs.tag }} created successfully!"
           echo "📦 HACS will automatically detect this release"
+          echo "🔗 View release at: https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }}"
 
       - name: Skip release (tag exists)
         if: steps.check-tag.outputs.exists == 'true'
         run: |
           echo "⏭️ Tag ${{ steps.version.outputs.tag }} already exists, skipping release creation"
+          echo "🔗 Existing release: https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }}"
