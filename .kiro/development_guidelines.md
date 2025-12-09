@@ -93,6 +93,12 @@ Three automated workflows:
 
 ## Adding Device Support
 
+### ⚠️ Special Note: WH77 Test Sensor
+**WH77 is a test sensor and should NOT be worked on by automated agents in GitHub Actions.**
+- WH77 support is already fully implemented and tested
+- Implementation serves as a reference pattern for other devices
+- Any WH77-related issues should be reviewed by maintainers before automation
+
 ### Checklist for Hex ID Devices
 - [ ] Add device type detection to `sensor_mapper.py` (single line if possible)
 - [ ] Add hex ID list for the device (follow WH69/WS90/WH90 pattern)

@@ -2,6 +2,10 @@
 
 ## 🎯 Adding Device Support (1-Minute Guide)
 
+### ⚠️ Special Note: WH77 Test Sensor
+**WH77 is a test sensor and should NOT be worked on by automated agents in GitHub Actions.**  
+WH77 support is already fully implemented and serves as a reference pattern.
+
 ### For Hex ID Devices (WH69, WS90, WH90, WH77 pattern)
 
 **1. Add device type detection** (sensor_mapper.py):

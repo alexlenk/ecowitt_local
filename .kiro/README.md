@@ -65,6 +65,17 @@ These files serve as quick-reference guides for:
 
 ---
 
+### 🤖 automated_agent_rules.md
+**Rules for automated agents and bots**
+- WH77 test sensor restrictions (NO automated work)
+- Allowed and prohibited automated work
+- Issue handling protocol
+- Safety guards and escalation process
+
+**When to use**: Before any automated agent starts work on this repository.
+
+---
+
 ## Relationship to CLAUDE.md
 
 These Kiro steering files **complement** the main CLAUDE.md file:
