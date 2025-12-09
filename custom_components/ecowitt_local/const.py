@@ -166,42 +166,50 @@ SENSOR_TYPES: Final = {
     "rainratein": {
         "name": "Rain Rate",
         "unit": "in/hr",
-        "device_class": "precipitation_intensity"
+        "device_class": "precipitation_intensity",
+        "state_class": "measurement"
     },
     "eventrainin": {
         "name": "Event Rain",
         "unit": "in",
-        "device_class": "precipitation"
+        "device_class": "precipitation",
+        "state_class": "total"
     },
     "hourlyrainin": {
         "name": "Hourly Rain",
         "unit": "in",
-        "device_class": "precipitation"
+        "device_class": "precipitation",
+        "state_class": "total_increasing"
     },
     "dailyrainin": {
         "name": "Daily Rain",
         "unit": "in",
-        "device_class": "precipitation"
+        "device_class": "precipitation",
+        "state_class": "total_increasing"
     },
     "weeklyrainin": {
         "name": "Weekly Rain",
         "unit": "in",
-        "device_class": "precipitation"
+        "device_class": "precipitation",
+        "state_class": "total_increasing"
     },
     "monthlyrainin": {
         "name": "Monthly Rain",
         "unit": "in",
-        "device_class": "precipitation"
+        "device_class": "precipitation",
+        "state_class": "total_increasing"
     },
     "yearlyrainin": {
         "name": "Yearly Rain",
         "unit": "in",
-        "device_class": "precipitation"
+        "device_class": "precipitation",
+        "state_class": "total_increasing"
     },
     "totalrainin": {
         "name": "Total Rain",
         "unit": "in",
-        "device_class": "precipitation"
+        "device_class": "precipitation",
+        "state_class": "total_increasing"
     },
 
     # Solar and UV sensors
@@ -338,37 +346,44 @@ SENSOR_TYPES: Final = {
     "0x0D": {
         "name": "Rain Event",
         "unit": "mm",
-        "device_class": "precipitation"
+        "device_class": "precipitation",
+        "state_class": "total"
     },
     "0x0E": {
         "name": "Rain Rate", 
         "unit": "mm/Hr",
-        "device_class": "precipitation_intensity"
+        "device_class": "precipitation_intensity",
+        "state_class": "measurement"
     },
     "0x7C": {
         "name": "Daily Rain",
         "unit": "mm",
-        "device_class": "precipitation"
+        "device_class": "precipitation",
+        "state_class": "total_increasing"
     },
     "0x10": {
         "name": "Weekly Rain",
         "unit": "mm", 
-        "device_class": "precipitation"
+        "device_class": "precipitation",
+        "state_class": "total_increasing"
     },
     "0x11": {
         "name": "Monthly Rain",
         "unit": "mm",
-        "device_class": "precipitation"
+        "device_class": "precipitation",
+        "state_class": "total_increasing"
     },
     "0x12": {
         "name": "Yearly Rain",
         "unit": "mm",
-        "device_class": "precipitation"
+        "device_class": "precipitation",
+        "state_class": "total_increasing"
     },
     "0x13": {
         "name": "Total Rain",
         "unit": "mm",
-        "device_class": "precipitation"
+        "device_class": "precipitation",
+        "state_class": "total_increasing"
     },
 }
 
