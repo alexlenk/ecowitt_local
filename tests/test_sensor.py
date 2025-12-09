@@ -130,7 +130,7 @@ async def test_sensor_unique_id_with_hardware_id(mock_coordinator):
         "sensor_key": "soilmoisture1",
         "hardware_id": "D8174",
         "category": "sensor",
-        "name": "Soil Moisture",
+        "name": "Soil Moisture CH1",
         "state": 50
     }
     
@@ -357,7 +357,7 @@ async def test_device_info_with_hardware_id(mock_coordinator):
         "sensor_key": "soilmoisture1",
         "hardware_id": "D8174",
         "category": "sensor",
-        "name": "Soil Moisture",
+        "name": "Soil Moisture CH1",
         "state": 50
     }
     
@@ -390,7 +390,7 @@ async def test_device_info_invalid_hardware_id(mock_coordinator):
         "sensor_key": "soilmoisture1",
         "hardware_id": "FFFFFFFE",  # Invalid hardware ID
         "category": "sensor",
-        "name": "Soil Moisture",
+        "name": "Soil Moisture CH1",
         "state": 50
     }
     
@@ -414,7 +414,7 @@ async def test_device_info_no_sensor_info(mock_coordinator):
         "sensor_key": "soilmoisture1",
         "hardware_id": "D8174",
         "category": "sensor",
-        "name": "Soil Moisture", 
+        "name": "Soil Moisture CH1", 
         "state": 50
     }
     
@@ -494,7 +494,7 @@ async def test_extra_state_attributes_hardware(mock_coordinator):
         "sensor_key": "soilmoisture1",
         "hardware_id": "D8174",
         "category": "sensor",
-        "name": "Soil Moisture",
+        "name": "Soil Moisture CH1",
         "state": 50,
         "attributes": {
             "channel": "1",
@@ -530,7 +530,7 @@ async def test_extra_state_attributes_invalid_values(mock_coordinator):
         "sensor_key": "soilmoisture1",
         "hardware_id": "D8174",
         "category": "sensor", 
-        "name": "Soil Moisture",
+        "name": "Soil Moisture CH1",
         "state": 50,
         "attributes": {
             "battery": "invalid",
@@ -673,7 +673,7 @@ async def test_available_hardware_sensor_none_state(mock_coordinator):
         "sensor_key": "soilmoisture1",
         "hardware_id": "D8174",
         "category": "sensor",
-        "name": "Soil Moisture",
+        "name": "Soil Moisture CH1",
         "state": None
     }
     
@@ -697,7 +697,7 @@ async def test_available_hardware_sensor_none_state_include_inactive(mock_coordi
         "sensor_key": "soilmoisture1",
         "hardware_id": "D8174",
         "category": "sensor",
-        "name": "Soil Moisture",
+        "name": "Soil Moisture CH1",
         "state": None
     }
     

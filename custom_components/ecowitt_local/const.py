@@ -382,7 +382,7 @@ SENSOR_TYPES.update(_generate_channel_sensors(
     {"unit": "%", "device_class": "humidity"}, 8
 ))
 SENSOR_TYPES.update(_generate_channel_sensors(
-    "soilmoisture", "Soil Moisture",
+    "soilmoisture", "Soil Moisture CH{ch}",
     {"unit": "%", "device_class": "moisture"}, 16
 ))
 SENSOR_TYPES.update(_generate_channel_sensors(
@@ -494,7 +494,7 @@ BATTERY_SENSORS: Final = {
 
 # Add dynamically generated battery sensors
 BATTERY_SENSORS.update(_generate_battery_sensors(
-    "soilbatt", "Battery", "soilmoisture{ch}", 16
+    "soilbatt", "Soil Moisture CH{ch} Battery", "soilmoisture{ch}", 16
 ))
 BATTERY_SENSORS.update(_generate_battery_sensors(
     "batt", "Temperature/Humidity CH{ch} Battery", "temp{ch}f", 8
