@@ -279,6 +279,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         for item in all_sensor_items:
             sensor_key = item.get("id") or ""
             sensor_value = item.get("val") or ""
+            item_unit = item.get("unit")  # Check for separate unit field (e.g., {"id": "0x02", "val": "43.7", "unit": "F"})
             
             if not sensor_key:
                 continue
@@ -287,6 +288,31 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             if not sensor_value and not self._include_inactive:
                 _LOGGER.debug("Skipping sensor %s with empty value (include_inactive=%s)", sensor_key, self._include_inactive)
                 continue
+            
+            # Extract unit from either the separate "unit" field OR embedded in the value
+            embedded_unit = None
+            numeric_value = sensor_value
+            
+            # First, check for separate "unit" field in the item (temperature sensors use this)
+            if item_unit:
+                # Normalize unit to standard Home Assistant format
+                embedded_unit = self._normalize_unit(item_unit)
+                _LOGGER.debug("Found unit field in item: '%s' -> normalized='%s'", item_unit, embedded_unit)
+            # Otherwise, try to extract unit from value string (e.g., "2.24 mph")
+            elif sensor_value and isinstance(sensor_value, str):
+                import re
+                match = re.match(r'^([-+]?\d*\.?\d+)\s*([a-zA-Z%°/]+.*)$', sensor_value.strip())
+                if match:
+                    numeric_value = match.group(1)
+                    embedded_unit = match.group(2).strip()
+                    if embedded_unit:
+                        # Normalize unit to standard Home Assistant format
+                        unit_normalized = self._normalize_unit(embedded_unit)
+                        
+                        _LOGGER.debug("Extracted unit from value: '%s' -> numeric='%s', unit='%s' (normalized='%s')", 
+                                     sensor_value, numeric_value, embedded_unit, unit_normalized)
+                        embedded_unit = unit_normalized  # Use normalized unit
+                        sensor_value = numeric_value  # Use just the numeric part
                 
             # Get hardware ID for this sensor (only for non-gateway sensors)
             hardware_id = None
@@ -320,6 +346,10 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 category = "sensor"
                 device_class = sensor_info.get("device_class") or ""
                 unit = sensor_info.get("unit") or ""
+            
+            # Override unit with detected unit from data if available
+            if embedded_unit:
+                unit = embedded_unit
             
             # Get additional sensor information
             sensor_details: Dict[str, Any] = {}
@@ -471,6 +501,47 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             
             added_hardware_ids.add(hardware_id)
             _LOGGER.debug("Added diagnostic sensors for hardware_id: %s (channel: %s, signal: %s)", hardware_id, channel, signal)
+
+    def _normalize_unit(self, unit: str) -> str:
+        """Normalize unit string to Home Assistant standard format."""
+        if not unit:
+            return unit
+        
+        unit_upper = unit.upper()
+        
+        # Temperature
+        if unit_upper == "F":
+            return "°F"
+        elif unit_upper == "C":
+            return "°C"
+        # Irradiance - normalize W/m2 to W/m²
+        elif unit_upper == "W/M2":
+            return "W/m²"
+        # Precipitation intensity - normalize in/Hr to in/h
+        elif unit_upper == "IN/HR":
+            return "in/h"
+        elif unit_upper == "MM/HR":
+            return "mm/h"
+        # Pressure
+        elif unit_upper == "INHG":
+            return "inHg"
+        elif unit_upper == "HPA":
+            return "hPa"
+        # Speed
+        elif unit_upper == "MPH":
+            return "mph"
+        elif unit_upper == "KM/H" or unit_upper == "KPH":
+            return "km/h"
+        elif unit_upper == "M/S":
+            return "m/s"
+        # Length/precipitation
+        elif unit_upper == "IN":
+            return "in"
+        elif unit_upper == "MM":
+            return "mm"
+        
+        # Return original if no normalization needed
+        return unit
 
     def _convert_sensor_value(self, value: Any, unit: Optional[str]) -> Any:
         """Convert sensor value to appropriate type."""
@@ -642,8 +713,40 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         sensors_dict = self.data.get("sensors", {})
         sensor_data = sensors_dict.get(entity_id)
         if sensor_data is None:
+            # Try to find by iterating and matching by sensor_key for hex ID sensors
+            # This handles entity_id mismatches during transition periods
+            for eid, sdata in sensors_dict.items():
+                if isinstance(sdata, dict):
+                    # Extract the sensor_key from the stored entity_id
+                    if sdata.get("sensor_key") and entity_id:
+                        # Check if the sensor_key matches between stored and requested
+                        stored_key = sdata.get("sensor_key", "")
+                        # Also check by hardware_id match
+                        stored_hw_id = sdata.get("hardware_id", "")
+                        if stored_hw_id and stored_hw_id.lower() in entity_id.lower():
+                            if stored_key.startswith("0x"):
+                                _LOGGER.debug("Found sensor by hardware_id match: %s -> %s", entity_id, eid)
+                                return dict(sdata)
             return None
         return dict(sensor_data) if isinstance(sensor_data, dict) else None
+
+    def get_sensor_data_by_key(self, sensor_key: str, hardware_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """Get sensor data by sensor key and optional hardware ID.
+        
+        This is a fallback method for finding sensor data when entity_id lookup fails,
+        which can happen with hex ID sensors during entity_id format transitions.
+        """
+        if not self.data:
+            return None
+        sensors_dict = self.data.get("sensors", {})
+        
+        for eid, sdata in sensors_dict.items():
+            if isinstance(sdata, dict):
+                if sdata.get("sensor_key") == sensor_key:
+                    # If hardware_id specified, must match; otherwise any match works
+                    if hardware_id is None or sdata.get("hardware_id") == hardware_id:
+                        return dict(sdata)
+        return None
 
     def get_all_sensors(self) -> Dict[str, Any]:
         """Get all sensor data."""

@@ -382,6 +382,31 @@ class SensorMapper:
 
     def _extract_sensor_type_from_key(self, key: str) -> str:
         """Extract sensor type name from live data key."""
+        # Handle hex ID sensors (0x02, 0x07, etc.) - map to human-readable names
+        if key.startswith("0x"):
+            # Map hex IDs to human-readable sensor type names
+            hex_to_name = {
+                "0x02": "outdoor_temp",
+                "0x03": "dewpoint",
+                "0x07": "outdoor_humidity",
+                "0x0B": "wind_speed",
+                "0x0C": "wind_gust",
+                "0x19": "max_daily_gust",
+                "0x0A": "wind_direction",
+                "0x6D": "wind_direction_avg",
+                "0x15": "solar_radiation",
+                "0x17": "uv_index",
+                "0x0D": "rain_event",
+                "0x0E": "rain_rate",
+                "0x7C": "daily_rain",
+                "0x10": "weekly_rain",
+                "0x11": "monthly_rain",
+                "0x12": "yearly_rain",
+                "0x13": "total_rain",
+            }
+            # Return mapped name or fallback to hex format if unknown
+            return hex_to_name.get(key, key.lower().replace("0x", "hex"))
+        
         # Remove channel numbers and common suffixes
         clean_key = re.sub(r'\d+$', '', key)
         clean_key = re.sub(r'(in|f|ch\d*)$', '', clean_key)
@@ -421,6 +446,8 @@ class SensorMapper:
             return "rain_battery"
         elif "wh68" in battery_key:
             return "weather_station_battery"
+        elif "ws90" in battery_key:
+            return "ws90_weather_station_battery"
         elif battery_key.startswith("batt"):
             return "temperature_humidity_battery"
         else:

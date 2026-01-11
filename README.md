@@ -416,8 +416,8 @@ Contributions are welcome! Please:
 git clone https://github.com/alexlenk/ecowitt_local.git
 cd ecowitt_local
 
-# Install development dependencies  
-pip install -r requirements-dev.txt
+# Install development dependencies
+pip install -r requirements_test.txt
 
 # Run tests
 pytest tests/ -v
