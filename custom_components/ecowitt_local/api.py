@@ -33,15 +33,15 @@ class DataError(EcowittLocalAPIError):
 
 class EcowittLocalAPI:
     """Client for Ecowitt local web interface.
-    
+
     This class handles authentication and data retrieval from
     Ecowitt weather station local web interface.
-    
+
     Args:
         host: IP address or hostname of Ecowitt device
         password: Optional password for authentication
         session: Optional aiohttp session
-        
+
     Raises:
         AuthenticationError: Invalid credentials
         ConnectionError: Cannot reach device
@@ -61,7 +61,7 @@ class EcowittLocalAPI:
         self._close_session = False
         self._authenticated = False
         self._base_url = f"http://{self._host}"
-        
+
         if self._session is None:
             self._session = ClientSession(
                 timeout=ClientTimeout(total=DEFAULT_TIMEOUT),
@@ -84,10 +84,10 @@ class EcowittLocalAPI:
 
     async def authenticate(self) -> bool:
         """Authenticate with the Ecowitt gateway.
-        
+
         Returns:
             True if authentication successful
-            
+
         Raises:
             AuthenticationError: Invalid credentials
             ConnectionError: Cannot reach device
@@ -100,12 +100,12 @@ class EcowittLocalAPI:
         try:
             # Encode password in base64 as required by Ecowitt API
             encoded_password = base64.b64encode(self._password.encode()).decode()
-            
+
             data = {"pwd": encoded_password}
-            
+
             if not self._session:
                 raise ConnectionError("Session not initialized")
-                
+
             async with self._session.post(
                 urljoin(self._base_url, "/set_login_info"),
                 data=data,
@@ -118,7 +118,7 @@ class EcowittLocalAPI:
                     raise AuthenticationError("Invalid password")
                 else:
                     raise ConnectionError(f"Authentication failed: HTTP {response.status}")
-                    
+
         except asyncio.TimeoutError as err:
             raise ConnectionError("Timeout during authentication") from err
         except ClientError as err:
@@ -126,31 +126,31 @@ class EcowittLocalAPI:
 
     async def _make_request(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make authenticated request to API endpoint.
-        
+
         Args:
             endpoint: API endpoint path
             params: Optional query parameters
-            
+
         Returns:
             JSON response data
-            
+
         Raises:
             AuthenticationError: Not authenticated or auth expired
             ConnectionError: Network error
             DataError: Invalid response data
         """
         url = urljoin(self._base_url, endpoint)
-        
+
         if not self._session:
             raise ConnectionError("Session not initialized")
-        
+
         try:
             async with self._session.get(url, params=params) as response:
                 if response.status in (401, 403):
                     # Try to re-authenticate once
                     if not await self.authenticate():
                         raise AuthenticationError("Re-authentication failed")
-                    
+
                     # Retry the request
                     if not self._session:
                         raise ConnectionError("Session not initialized")
@@ -158,14 +158,14 @@ class EcowittLocalAPI:
                         if retry_response.status in (401, 403):
                             raise AuthenticationError("Authentication expired")
                         response = retry_response
-                
+
                 if response.status != 200:
                     raise ConnectionError(f"HTTP {response.status}: {await response.text()}")
-                
+
                 try:
                     # Check content type first
                     content_type = response.headers.get('content-type', '').lower()
-                    
+
                     if 'application/json' in content_type:
                         # Standard JSON response
                         response_data: Dict[str, Any] = await response.json()
@@ -187,13 +187,13 @@ class EcowittLocalAPI:
                         # Unknown content type, try JSON parsing anyway
                         response_data = await response.json()
                         return response_data
-                        
+
                 except DataError:
                     # Re-raise DataError as-is
                     raise
                 except Exception as err:
                     raise DataError(f"Invalid JSON response: {response.status}, message='{err}'") from err
-                    
+
         except asyncio.TimeoutError as err:
             raise ConnectionError("Request timeout") from err
         except ClientError as err:
@@ -201,10 +201,10 @@ class EcowittLocalAPI:
 
     async def get_live_data(self) -> Dict[str, Any]:
         """Get live sensor data from the gateway.
-        
+
         Returns:
             Live sensor data including all current readings
-            
+
         Raises:
             AuthenticationError: Not authenticated
             ConnectionError: Network error
@@ -212,23 +212,23 @@ class EcowittLocalAPI:
         """
         if not self._authenticated and self._password:
             await self.authenticate()
-            
+
         data = await self._make_request("/get_livedata_info")
-        
+
         if "common_list" not in data:
             raise DataError("Invalid live data response: missing common_list")
-            
+
         return data
 
     async def get_sensor_mapping(self, page: int = 1) -> List[Dict[str, Any]]:
         """Get sensor hardware ID mapping from the gateway.
-        
+
         Args:
             page: Page number (1 or 2) for sensor mapping
-            
+
         Returns:
             List of sensor mapping information with hardware IDs
-            
+
         Raises:
             AuthenticationError: Not authenticated
             ConnectionError: Network error
@@ -236,9 +236,9 @@ class EcowittLocalAPI:
         """
         if not self._authenticated and self._password:
             await self.authenticate()
-            
+
         data = await self._make_request("/get_sensors_info", {"page": page})
-        
+
         # Handle different response formats
         if isinstance(data, list):
             # Direct array response
@@ -248,23 +248,23 @@ class EcowittLocalAPI:
             sensor_list = data["sensor"]
         else:
             raise DataError("Invalid sensor mapping response: expected array or sensor object")
-            
+
         # Filter out sensors with FFFFFFFF IDs (not connected)
         active_sensors = [
-            sensor for sensor in sensor_list 
-            if sensor.get("id") != "FFFFFFFF"
+            sensor for sensor in sensor_list
+            if sensor.get("id").upper() not in ("FFFFFFFE", "FFFFFFFF", "00000000")
         ]
-        
+
         return active_sensors
 
     async def get_all_sensor_mappings(self) -> List[Dict[str, Any]]:
         """Get all sensor mappings from both pages.
-        
+
         Returns:
             Complete list of sensor mappings from both pages
         """
         mappings = []
-        
+
         # Get mappings from both pages
         for page in [1, 2]:
             try:
@@ -274,15 +274,15 @@ class EcowittLocalAPI:
                 # Page might not exist or be empty
                 _LOGGER.debug("No sensor mappings found on page %d", page)
                 continue
-                
+
         return mappings
 
     async def get_version(self) -> Dict[str, Any]:
         """Get gateway version information.
-        
+
         Returns:
             Version information including firmware version
-            
+
         Raises:
             AuthenticationError: Not authenticated
             ConnectionError: Network error
@@ -290,15 +290,15 @@ class EcowittLocalAPI:
         """
         if not self._authenticated and self._password:
             await self.authenticate()
-            
+
         return await self._make_request("/get_version")
 
     async def get_units(self) -> Dict[str, Any]:
         """Get unit settings from the gateway.
-        
+
         Returns:
             Unit configuration settings
-            
+
         Raises:
             AuthenticationError: Not authenticated
             ConnectionError: Network error
@@ -306,15 +306,15 @@ class EcowittLocalAPI:
         """
         if not self._authenticated and self._password:
             await self.authenticate()
-            
+
         return await self._make_request("/get_units_info")
 
     async def test_connection(self) -> bool:
         """Test connection to the gateway.
-        
+
         Returns:
             True if connection successful
-            
+
         Raises:
             ConnectionError: Cannot reach device
         """
