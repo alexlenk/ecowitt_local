@@ -681,7 +681,8 @@ async def test_coordinator_piezo_rain_processing(coordinator):
     assert len(rain_sensors) >= 1, "Rain Event sensor (0x0D) should be created"
     rain_event_sensor = rain_sensors[0]
     assert sensors[rain_event_sensor]["state"] == 0.0
-    assert sensors[rain_event_sensor]["unit_of_measurement"] == "mm"
+    # When embedded units are present in data (e.g., "0.00 in"), they are preserved
+    assert sensors[rain_event_sensor]["unit_of_measurement"] == "in"
     
     rate_sensors = [k for k in sensors.keys() if "0x0E" in k.upper() or "0x0e" in k]
     assert len(rate_sensors) >= 1, "Rain Rate sensor (0x0E) should be created"
@@ -705,6 +706,65 @@ async def test_coordinator_piezo_rain_processing(coordinator):
     
     # Verify comprehensive piezoRain processing is working
     assert len(sensors) >= 8, f"Expected at least 8 sensors (7 rain + 1 battery), got {len(sensors)}"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_piezo_rain_processing_metric(coordinator):
+    """Test piezoRain data processing with metric units (mm)."""
+    # Enable include_inactive to ensure 0-value sensors are created
+    coordinator._include_inactive = True
+    raw_data = {
+        "piezoRain": [
+            {"id": "srain_piezo", "val": "0"},
+            {"id": "0x0D", "val": "0.00 mm"},
+            {"id": "0x0E", "val": "0.00 mm/Hr"},
+            {"id": "0x7C", "val": "0.00 mm"},
+            {"id": "0x10", "val": "0.00 mm"},
+            {"id": "0x11", "val": "0.00 mm"},
+            {"id": "0x12", "val": "59.94 mm"},
+            {
+                "id": "0x13", 
+                "val": "257.81 mm",
+                "battery": "3",
+                "voltage": "2.62",
+                "ws90cap_volt": "5.3",
+                "ws90_ver": "153"
+            }
+        ]
+    }
+    
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+    
+    # Check rain sensors are created with mm units
+    rain_sensors = [k for k in sensors.keys() if "0x0D" in k.upper() or "0x0d" in k]
+    assert len(rain_sensors) >= 1, "Rain Event sensor (0x0D) should be created"
+    rain_event_sensor = rain_sensors[0]
+    assert sensors[rain_event_sensor]["state"] == 0.0
+    assert sensors[rain_event_sensor]["unit_of_measurement"] == "mm"
+    
+    rate_sensors = [k for k in sensors.keys() if "0x0E" in k.upper() or "0x0e" in k]
+    assert len(rate_sensors) >= 1, "Rain Rate sensor (0x0E) should be created"
+    assert sensors[rate_sensors[0]]["state"] == 0.0
+    # Unit is normalized: mm/Hr -> mm/h
+    assert sensors[rate_sensors[0]]["unit_of_measurement"] == "mm/h"
+    
+    yearly_sensors = [k for k in sensors.keys() if "12" in k and sensors[k]["state"] == 59.94]
+    assert len(yearly_sensors) >= 1, "Yearly Rain sensor (0x12) should be created"
+    assert sensors[yearly_sensors[0]]["unit_of_measurement"] == "mm"
+
+    total_sensors = [k for k in sensors.keys() if "13" in k and sensors[k]["state"] == 257.81]
+    assert len(total_sensors) >= 1, "Total Rain sensor (0x13) should be created"
+    assert sensors[total_sensors[0]]["unit_of_measurement"] == "mm"
+    
+    # Check WS90 battery sensor is created
+    battery_sensors = [k for k in sensors.keys() if "battery" in k]
+    assert len(battery_sensors) >= 1, "WS90 battery sensor should be created"
+    
+    battery_sensor = battery_sensors[0]
+    actual_value = sensors[battery_sensor]["state"]
+    assert actual_value in [3, "3", 60, "60"], f"Battery value should be 3 or 60, got {actual_value}"
+    assert sensors[battery_sensor]["unit_of_measurement"] == "%"
 
 
 @pytest.mark.asyncio

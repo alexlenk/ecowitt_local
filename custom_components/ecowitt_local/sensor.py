@@ -168,6 +168,10 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         sensor_info = self.coordinator.get_sensor_data(self.entity_id)
+        
+        # Fallback: lookup by sensor_key and hardware_id for hex ID sensors
+        if sensor_info is None and self._sensor_key:
+            sensor_info = self.coordinator.get_sensor_data_by_key(self._sensor_key, self._hardware_id)
         if sensor_info:
             self._update_attributes(sensor_info)
         self.async_write_ha_state()
