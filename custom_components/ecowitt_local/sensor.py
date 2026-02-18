@@ -139,24 +139,28 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
                 _LOGGER.debug("Unknown device class: %s", device_class_str)
                 self._attr_device_class = None
         
-        # Set state class for numeric sensors
-        if isinstance(self._attr_native_value, (int, float)) and self._attr_native_value is not None:
+        # Set state class — read from sensor_info (SENSOR_TYPES) first, fall back to device_class logic
+        state_class_str = sensor_info.get("state_class")
+        if state_class_str:
+            try:
+                self._attr_state_class = SensorStateClass(state_class_str)
+            except ValueError:
+                _LOGGER.debug("Unknown state class: %s", state_class_str)
+                self._attr_state_class = None
+        elif isinstance(self._attr_native_value, (int, float)) and self._attr_native_value is not None:
             if self._category == "battery":
                 self._attr_state_class = SensorStateClass.MEASUREMENT
             elif device_class_str in (
                 "temperature",
-                "humidity", 
+                "humidity",
                 "pressure",
                 "wind_speed",
-                "precipitation",
                 "precipitation_intensity",
                 "irradiance",
                 "pm25",
                 "moisture",
             ):
                 self._attr_state_class = SensorStateClass.MEASUREMENT
-            elif "total" in self._sensor_key or "yearly" in self._sensor_key:
-                self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         
         # Set battery sensor specific attributes (now diagnostic category)
         if device_class_str == "battery":
