@@ -10,6 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 
 from .api import EcowittLocalAPI
 from .const import DOMAIN, SERVICE_REFRESH_MAPPING, SERVICE_UPDATE_DATA, GATEWAY_SENSORS
@@ -242,10 +243,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         
         # Get device registry to handle device migration
         device_registry = dr.async_get(hass)
-        entity_registry = hass.helpers.entity_registry.async_get(hass)
-        
+        entity_registry = er.async_get(hass)
+
         # Find all entities belonging to this config entry
-        entities = hass.helpers.entity_registry.async_entries_for_config_entry(
+        entities = er.async_entries_for_config_entry(
             entity_registry, config_entry.entry_id
         )
         
@@ -343,7 +344,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     _LOGGER.info("Migration v1.3 completed: moved %d gateway sensors back to gateway device", gateway_reassigned_count)
         
         # Update config entry version
-        config_entry.minor_version = 3
+        hass.config_entries.async_update_entry(config_entry, minor_version=3)
         
         _LOGGER.info("Migration to v1.3 completed successfully")
     

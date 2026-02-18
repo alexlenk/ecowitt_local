@@ -277,13 +277,12 @@ async def test_migration_function_exists(hass: HomeAssistant):
         domain=DOMAIN,
         data={"host": "192.168.1.100", "password": ""},
         version=1,
+        minor_version=3,
         entry_id="test_entry",
         unique_id="test_unique",
     )
-    
-    # Set minor_version to 2 (current version)
-    entry.minor_version = 2
-    
+    entry.add_to_hass(hass)
+
     # Test migration function - should return True for current version
     result = await async_migrate_entry(hass, entry)
     assert result is True
@@ -319,10 +318,10 @@ async def test_migration_from_v1_0(hass: HomeAssistant, mock_ecowitt_api):
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.100", CONF_PASSWORD: ""},
         version=1,
+        minor_version=0,
         entry_id="test_entry",
         unique_id="test_unique",
     )
-    entry.minor_version = 0  # Version 1.0
     entry.add_to_hass(hass)
     
     # Setup the integration first to have data for migration
@@ -382,8 +381,8 @@ async def test_reload_entry_failure(hass: HomeAssistant, setup_integration, mock
         result = await hass.config_entries.async_reload(config_entry.entry_id)
     
     assert result is False
-    # Entry should still be loaded since unload failed
-    assert config_entry.state == ConfigEntryState.LOADED
+    # In HA 2026.x, a failed unload leaves the entry in FAILED_UNLOAD state
+    assert config_entry.state == ConfigEntryState.FAILED_UNLOAD
 
 
 async def test_invalid_hardware_id_filtering(hass: HomeAssistant, mock_config_entry, mock_ecowitt_api):
@@ -545,13 +544,13 @@ async def test_migration_with_missing_coordinator(hass: HomeAssistant):
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.100", CONF_PASSWORD: ""},
         version=1,
+        minor_version=0,
         entry_id="test_entry",
         unique_id="test_unique",
     )
-    entry.minor_version = 0  # Version 1.0
-    
-    # Don't setup the integration - coordinator won't be in hass.data
-    
+    # Add to hass so async_update_entry can find the entry (coordinator won't be set up)
+    entry.add_to_hass(hass)
+
     # Test migration function - should still work even without coordinator
     result = await async_migrate_entry(hass, entry)
     assert result is True
@@ -576,10 +575,10 @@ async def test_migration_gateway_sensor_reassignment(hass: HomeAssistant, mock_e
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.100", CONF_PASSWORD: ""},
         version=1,
+        minor_version=2,
         entry_id="test_entry",
         unique_id="test_unique",
     )
-    entry.minor_version = 2  # Version 1.2, needs migration to 1.3
     entry.add_to_hass(hass)
     
     # Setup the integration first

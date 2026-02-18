@@ -104,6 +104,28 @@ async def test_options_flow(hass: HomeAssistant, mock_config_entry) -> None:
     assert result["data"]["include_inactive"] is True
 
 
+async def test_options_flow_no_config_entry_setter_error(
+    hass: HomeAssistant, mock_config_entry
+) -> None:
+    """Test that OptionsFlowHandler does not set config_entry in __init__.
+
+    Regression test for HA 2025.12+ where config_entry is a read-only property
+    on OptionsFlow and setting it explicitly raises AttributeError.
+    See issues #50, #42, #31.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    # This must not raise AttributeError: property 'config_entry' has no setter
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Verify config_entry is accessible via the HA-managed property
+    from custom_components.ecowitt_local.config_flow import OptionsFlowHandler
+    handler = OptionsFlowHandler()
+    assert not hasattr(handler, '__dict__') or 'config_entry' not in handler.__dict__
+
+
 async def test_complete_flow(hass: HomeAssistant, mock_ecowitt_api) -> None:
     """Test complete configuration flow."""
     result = await hass.config_entries.flow.async_init(
