@@ -41,10 +41,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Ecowitt Local binary sensor entities."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    
-    # Wait for initial data
-    await coordinator.async_config_entry_first_refresh()
-    
+
     # Create binary sensor entities for sensor online/offline status
     entities = []
     

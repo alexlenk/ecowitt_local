@@ -73,7 +73,6 @@ async def test_async_setup_entry(mock_coordinator, mock_config_entry):
     }
     
     # Mock coordinator methods
-    mock_coordinator.async_config_entry_first_refresh = AsyncMock()
     mock_coordinator.get_all_sensors.return_value = {
         "sensor.test_soil_d8174": {
             "hardware_id": "D8174",
@@ -98,9 +97,6 @@ async def test_async_setup_entry(mock_coordinator, mock_config_entry):
     async_add_entities = AsyncMock()
     
     await async_setup_entry(hass, mock_config_entry, async_add_entities)
-    
-    # Verify coordinator was refreshed
-    mock_coordinator.async_config_entry_first_refresh.assert_called_once()
     
     # Verify entities were added (2 hardware sensors + 1 gateway)
     async_add_entities.assert_called_once()

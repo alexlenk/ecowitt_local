@@ -33,14 +33,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except Exception as err:
         _LOGGER.error("Failed to setup coordinator: %s", err)
         raise ConfigEntryNotReady(f"Failed to setup coordinator: {err}") from err
-    
+
+    # Fetch initial data here — ConfigEntryNotReady must be raised before
+    # async_forward_entry_setups, not inside a forwarded platform.
+    await coordinator.async_config_entry_first_refresh()
+
     # Store coordinator
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    
+
     # Setup device registry entries FIRST so devices exist when entities are created
     await _async_setup_device_registry(hass, entry, coordinator)
-    
+
     # Setup platforms (entities will now find their proper devices)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     

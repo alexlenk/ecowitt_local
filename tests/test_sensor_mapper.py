@@ -181,6 +181,85 @@ def test_invalid_sensor_data(sensor_mapper: SensorMapper):
     assert stats["total_sensors"] >= 0
 
 
+def test_wh80_sensor_mapping():
+    """Test WH80/WS80 wind/solar station sensor mapping (issue #23)."""
+    mapper = SensorMapper()
+
+    ws80_sensors = [
+        {
+            "id": "A1B2C3",
+            "img": "wh80",
+            "name": "Temp & Humidity & Solar & Wind",
+            "batt": "0",
+            "signal": "4",
+        }
+    ]
+
+    mapper.update_mapping(ws80_sensors)
+
+    # Wind hex IDs must be mapped (these were broken before the fix)
+    assert mapper.get_hardware_id("0x0A") == "A1B2C3"  # Wind Direction
+    assert mapper.get_hardware_id("0x0B") == "A1B2C3"  # Wind Speed
+    assert mapper.get_hardware_id("0x0C") == "A1B2C3"  # Wind Gust
+    assert mapper.get_hardware_id("0x6D") == "A1B2C3"  # Wind Direction Avg
+
+    # Other WS80 sensors
+    assert mapper.get_hardware_id("0x02") == "A1B2C3"  # Temperature
+    assert mapper.get_hardware_id("0x07") == "A1B2C3"  # Humidity
+    assert mapper.get_hardware_id("0x15") == "A1B2C3"  # Solar Radiation
+    assert mapper.get_hardware_id("0x17") == "A1B2C3"  # UV Index
+    assert mapper.get_hardware_id("wh80batt") == "A1B2C3"  # Battery
+
+    # WS80 must NOT map rain hex IDs
+    assert mapper.get_hardware_id("0x0D") != "A1B2C3"  # No rain event
+    assert mapper.get_hardware_id("0x0E") != "A1B2C3"  # No rain rate
+
+    sensor_info = mapper.get_sensor_info("A1B2C3")
+    assert sensor_info is not None
+    assert sensor_info["sensor_type"] == "WH80"
+
+
+def test_wh80_name_string_detection():
+    """Test that WS80 is detected by its name string (issue #23 fallback)."""
+    mapper = SensorMapper()
+
+    # Some gateways may report with a slightly different img field
+    ws80_sensors = [
+        {
+            "id": "DEADBE",
+            "img": "ws80",
+            "name": "Temp & Humidity & Solar & Wind",
+            "batt": "0",
+            "signal": "4",
+        }
+    ]
+
+    mapper.update_mapping(ws80_sensors)
+    assert mapper.get_hardware_id("0x0B") == "DEADBE"
+    assert mapper.get_hardware_id("0x0A") == "DEADBE"
+
+
+def test_wh90_still_maps_rain_after_wh80_addition():
+    """Ensure WH90 (which includes rain) is not broken by the WH80 elif addition."""
+    mapper = SensorMapper()
+
+    wh90_sensors = [
+        {
+            "id": "FF1234",
+            "img": "wh90",
+            "name": "Temp & Humidity & Solar & Wind & Rain",
+            "batt": "0",
+            "signal": "4",
+        }
+    ]
+
+    mapper.update_mapping(wh90_sensors)
+    assert mapper.get_hardware_id("0x0D") == "FF1234"  # Rain Event
+    assert mapper.get_hardware_id("0x0E") == "FF1234"  # Rain Rate
+    assert mapper.get_hardware_id("0x0B") == "FF1234"  # Wind Speed
+    assert mapper.get_hardware_id("wh90batt") == "FF1234"
+
+
 def test_wh69_sensor_mapping():
     """Test WH69 7-in-1 weather station sensor mapping."""
     mapper = SensorMapper()

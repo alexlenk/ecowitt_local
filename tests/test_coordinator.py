@@ -1286,3 +1286,111 @@ async def test_coordinator_gateway_info_fallback_to_stationtype(coordinator):
     # Should fall back to stationtype since firmware extraction failed
     assert gateway_info["model"] == "GW1100A"
     assert gateway_info["firmware_version"] == "V2.4.3"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_ch_temp_processing(coordinator):
+    """Test coordinator processing WH34 ch_temp data (issue #16)."""
+    mock_live_data = {
+        "common_list": [],
+        "ch_temp": [
+            {
+                "channel": "1",
+                "name": "",
+                "temp": "69.3",
+                "unit": "F",
+                "battery": "5",
+                "voltage": "1.52",
+            },
+            {
+                "channel": "3",
+                "name": "Pool",
+                "temp": "21.5",
+                "unit": "C",
+                "battery": "4",
+                "voltage": "1.48",
+            },
+        ],
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_version = AsyncMock(return_value={"stationtype": "GW1200B", "version": "1.4.0"})
+
+    result = await coordinator._async_update_data()
+
+    assert result is not None
+    sensors = result["sensors"]
+
+    tf_ch1_found = batt1_found = tf_ch3_found = batt3_found = False
+
+    for sensor_data in sensors.values():
+        key = sensor_data.get("sensor_key", "")
+        if key == "tf_ch1":
+            tf_ch1_found = True
+            assert sensor_data["state"] == 69.3
+        elif key == "tf_batt1":
+            batt1_found = True
+            assert sensor_data["state"] == "100"  # 5 * 20
+        elif key == "tf_ch3":
+            tf_ch3_found = True
+            assert sensor_data["state"] == 21.5
+        elif key == "tf_batt3":
+            batt3_found = True
+            assert sensor_data["state"] == "80"  # 4 * 20
+
+    assert tf_ch1_found, "tf_ch1 sensor not found in result"
+    assert batt1_found, "tf_batt1 sensor not found in result"
+    assert tf_ch3_found, "tf_ch3 sensor not found in result"
+    assert batt3_found, "tf_batt3 sensor not found in result"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_ch_temp_celsius_gateway(coordinator):
+    """Test that ch_temp uses gateway unit setting (Celsius gateway fix)."""
+    mock_live_data = {
+        "common_list": [],
+        "ch_temp": [
+            {
+                "channel": "1",
+                "temp": "20.5",
+                "unit": "F",  # Firmware may report F even on Celsius gateway
+                "battery": "3",
+            }
+        ],
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_version = AsyncMock(return_value={"stationtype": "GW1200B", "version": "1.4.0"})
+    coordinator.api.get_units_info = AsyncMock(return_value={"unit": "0"})  # Celsius gateway
+
+    # Simulate Celsius gateway unit from get_units_info
+    coordinator._gateway_temp_unit = "°C"
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    tf_ch1 = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "tf_ch1"), None
+    )
+    assert tf_ch1 is not None, "tf_ch1 not created"
+    # Unit should be °C (gateway unit), not °F (firmware field)
+    assert tf_ch1.get("unit_of_measurement") == "°C"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_ch_temp_empty_handling(coordinator):
+    """Test coordinator handles empty or missing ch_temp gracefully."""
+    for ch_temp_val in [[], None]:
+        mock_live_data = {"common_list": []}
+        if ch_temp_val is not None:
+            mock_live_data["ch_temp"] = ch_temp_val
+
+        coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+        coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+        coordinator.api.get_version = AsyncMock(return_value={"stationtype": "GW1200B", "version": "1.4.0"})
+
+        result = await coordinator._async_update_data()
+        assert result is not None
+        assert "sensors" in result

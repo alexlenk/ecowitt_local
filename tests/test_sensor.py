@@ -72,9 +72,6 @@ async def test_async_setup_entry(hass: HomeAssistant, mock_coordinator, mock_con
     # Mock hass data
     hass.data = {DOMAIN: {"test_entry_id": mock_coordinator}}
     
-    # Mock async_config_entry_first_refresh
-    mock_coordinator.async_config_entry_first_refresh = AsyncMock()
-    
     # Mock sensor data - add diagnostic and system categories that are also included
     mock_coordinator.get_all_sensors.return_value = {
         "sensor.test_sensor": {
@@ -118,7 +115,6 @@ async def test_async_setup_entry(hass: HomeAssistant, mock_coordinator, mock_con
     await async_setup_entry(hass, mock_config_entry, mock_add_entities)
     
     # Verify setup
-    mock_coordinator.async_config_entry_first_refresh.assert_called_once()
     assert len(entities_added) == 4  # sensor, battery, diagnostic, system categories
     assert all(isinstance(entity, EcowittLocalSensor) for entity in entities_added)
 

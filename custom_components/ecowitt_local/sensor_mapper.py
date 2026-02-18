@@ -223,6 +223,21 @@ class SensorMapper:
                 "0x13",  # Rain total
                 "ws90batt",  # Battery level
             ])
+        elif sensor_type.lower() in ("wh80", "ws80") or "temp & humidity & solar & wind" in sensor_type.lower() and "rain" not in sensor_type.lower():
+            # WH80/WS80 outdoor sensor array — wind/solar station, no rain (uses hex IDs in common_list)
+            keys.extend([
+                "0x02",   # Temperature
+                "0x03",   # Dewpoint
+                "0x07",   # Humidity
+                "0x0B",   # Wind Speed
+                "0x0C",   # Wind Gust
+                "0x19",   # Max Daily Gust
+                "0x0A",   # Wind Direction
+                "0x6D",   # Wind Direction Avg
+                "0x15",   # Solar Radiation
+                "0x17",   # UV Index
+                "wh80batt",  # Battery
+            ])
         elif sensor_type.lower() in ("wh90", "weather_station_wh90") or "temp & humidity & solar & wind & rain" in sensor_type.lower():
             # WH90 outdoor sensor array (similar to WH69/WS90, uses hex IDs in common_list)
             keys.extend([
