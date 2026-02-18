@@ -49,6 +49,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         self._gateway_info: Dict[str, Any] = {}
         self._last_mapping_update: Optional[datetime] = None
         self._include_inactive = config_entry.data.get(CONF_INCLUDE_INACTIVE, False)
+        self._gateway_temp_unit: str = "°F"  # default; overridden by get_units_info ("0"=°C, "1"=°F)
         
         # Get update intervals
         scan_interval = config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -115,7 +116,16 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         """Update sensor hardware ID mapping."""
         try:
             _LOGGER.debug("Updating sensor mapping")
-            
+
+            # Fetch gateway unit settings (temp: "0"=Celsius, "1"=Fahrenheit)
+            try:
+                units_data = await self.api.get_units()
+                temp_unit_code = units_data.get("temp", "1")
+                self._gateway_temp_unit = "°C" if temp_unit_code == "0" else "°F"
+                _LOGGER.debug("Gateway temperature unit: %s (code=%s)", self._gateway_temp_unit, temp_unit_code)
+            except Exception as err:
+                _LOGGER.warning("Could not fetch gateway unit settings, assuming °F: %s", err)
+
             # Get sensor mappings from both pages
             sensor_mappings = await self.api.get_all_sensor_mappings()
             _LOGGER.debug("Retrieved %d sensor mappings from API", len(sensor_mappings))
@@ -256,8 +266,11 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         # Create temperature sensor if temp data exists
                         if temp and temp != "None":
                             temp_key = f"temp{channel}f"
-                            all_sensor_items.append({"id": temp_key, "val": temp})
-                            _LOGGER.debug("Added WH31 temperature sensor: %s = %s°C", temp_key, temp)
+                            # Pass the actual gateway unit so the coordinator overrides the
+                            # SENSOR_TYPES "°F" default. Ecowitt firmware always reports
+                            # "unit": "F" in ch_aisle even when the gateway is in Celsius mode.
+                            all_sensor_items.append({"id": temp_key, "val": temp, "unit": self._gateway_temp_unit})
+                            _LOGGER.debug("Added WH31 temperature sensor: %s = %s (%s)", temp_key, temp, self._gateway_temp_unit)
                         
                         # Create humidity sensor if humidity data exists
                         if humidity and humidity != "None":

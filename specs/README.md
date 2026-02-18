@@ -8,7 +8,7 @@ Kiro-style specs for open GitHub issues. Each spec has: requirements, design, ta
 |------|----------|-------|----------|--------|
 | [001](001-options-flow-values-not-saved.md) | #50, #31 | Options flow values not saved after edit | HIGH | ✅ Fixed in v1.5.12 |
 | [002](002-rain-sensor-state-class.md) | #32, #45 | Rain entities missing `state_class` | HIGH | ✅ Fixed in v1.5.13 |
-| [003](003-temperature-double-conversion.md) | #19, #13 | Temperature double-conversion for Celsius gateways | HIGH | Open — approach chosen, needs impl |
+| [003](003-temperature-double-conversion.md) | #19, #13 | Temperature double-conversion for Celsius gateways | HIGH | ✅ Fixed in v1.5.14 |
 | [004](004-wind-rain-hex-id-mapping.md) | #22, #23 | Wind/rain sensors unavailable (missing hardware_id mapping) | HIGH | Open — WS80 fix designed; GW1100 needs data |
 | [005](005-wh77-multi-sensor-station.md) | #12 | WH77 Multi-Sensor Station — no entities | MEDIUM | Open — fix is clear, ready to implement |
 | [006](006-wh34-pool-temperature.md) | #16 | WH34 pool temperature — no entities | MEDIUM | Open — needs WH34 sensor_info data |
