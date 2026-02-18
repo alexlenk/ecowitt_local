@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WS80/WH80 wind sensors unavailable**: Wind sensors (wind speed, gust, direction, direction avg) connected via GW3000 + WS80 now receive live updates. The WH80/WS80 device type was missing from the hardware ID mapper, causing all wind hex-ID sensors (0x0A, 0x0B, 0x0C, 0x6D) to return `None` hardware_id and create malformed fallback entity IDs. Fixes issue #23.
 - **WH34 temperature probe — no entities**: WH34 wired temperature sensors now create entities. The coordinator was silently ignoring the `ch_temp` data array that WH34 uses, so despite the device appearing in HA no temperature or battery entities were ever created. The coordinator now processes `ch_temp` the same way as `ch_aisle` (WH31), respecting the gateway's configured unit (°C/°F). Fixes issue #16.
 - **WH34/tf_ch sensor name**: Renamed "Soil Temperature CH{n}" to "Temperature CH{n}" — WH34 is a general-purpose wired temperature probe, not a soil sensor. This is not a breaking change as no WH34 users had working entities before this release.
+- **ConfigEntryNotReady raised in wrong place**: Moved `async_config_entry_first_refresh()` from the sensor/binary_sensor platform setup to `__init__.py` before `async_forward_entry_setups`. HA requires this to be raised before forwarding platforms; the previous placement caused log warnings on every startup.
 
 ## [1.5.14] - 2026-02-18
 
