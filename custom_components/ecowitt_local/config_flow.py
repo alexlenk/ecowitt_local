@@ -173,6 +173,12 @@ class ConfigFlow(config_entries.ConfigFlow):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for Ecowitt Local."""
 
+    def _get_option(self, key: str, default: Any) -> Any:
+        """Read from options first, fall back to data, then default."""
+        return self.config_entry.options.get(
+            key, self.config_entry.data.get(key, default)
+        )
+
     async def async_step_init(
         self, user_input: Optional[Dict[str, Any]] = None
     ) -> FlowResult:
@@ -180,16 +186,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        # Get current values
-        current_scan_interval = self.config_entry.data.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
-        current_mapping_interval = self.config_entry.data.get(
-            CONF_MAPPING_INTERVAL, DEFAULT_MAPPING_INTERVAL
-        )
-        current_include_inactive = self.config_entry.data.get(
-            CONF_INCLUDE_INACTIVE, DEFAULT_INCLUDE_INACTIVE
-        )
+        # Get current values — check .options first, fall back to .data, then defaults
+        current_scan_interval = self._get_option(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        current_mapping_interval = self._get_option(CONF_MAPPING_INTERVAL, DEFAULT_MAPPING_INTERVAL)
+        current_include_inactive = self._get_option(CONF_INCLUDE_INACTIVE, DEFAULT_INCLUDE_INACTIVE)
 
         options_schema = vol.Schema({
             vol.Optional(

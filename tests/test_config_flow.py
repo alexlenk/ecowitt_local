@@ -126,6 +126,46 @@ async def test_options_flow_no_config_entry_setter_error(
     assert not hasattr(handler, '__dict__') or 'config_entry' not in handler.__dict__
 
 
+async def test_options_flow_reads_from_options_not_data(
+    hass: HomeAssistant, mock_config_entry
+) -> None:
+    """Test that options flow shows values from .options, not .data, on second open.
+
+    Regression test for issue #50/#31: after saving options once, the values
+    live in config_entry.options. Reopening the form must show those saved
+    values, not the original .data values.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    # First open: save new values (scan_interval 60->120, include_inactive False->True)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "scan_interval": 120,
+            "mapping_interval": 600,
+            "include_inactive": True,
+        },
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    # Values now live in config_entry.options
+    assert mock_config_entry.options["scan_interval"] == 120
+    assert mock_config_entry.options["include_inactive"] is True
+
+    # Second open: form defaults must come from .options (120), not .data (60)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    schema_keys = {str(k): k for k in result["data_schema"].schema}
+    assert schema_keys["scan_interval"].default() == 120, (
+        "Options form should show scan_interval=120 from .options, not 60 from .data"
+    )
+    assert schema_keys["include_inactive"].default() is True, (
+        "Options form should show include_inactive=True from .options, not False from .data"
+    )
+
+
 async def test_complete_flow(hass: HomeAssistant, mock_ecowitt_api) -> None:
     """Test complete configuration flow."""
     result = await hass.config_entries.flow.async_init(
