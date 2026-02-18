@@ -245,22 +245,62 @@ async def test_sensor_state_class_measurement(mock_coordinator):
 
 @pytest.mark.asyncio
 async def test_sensor_state_class_total_increasing(mock_coordinator):
-    """Test state class assignment for total sensors."""
+    """Test state class assignment for total sensors using state_class from sensor_info."""
     sensor_info = {
-        "sensor_key": "raintotalmm",  # "total" must be in the sensor_key
+        "sensor_key": "totalrainin",
         "category": "sensor",
         "name": "Rain Total",
-        "state": 25.4
-        # No device_class so it reaches the "total" check
+        "state": 25.4,
+        "device_class": "precipitation",
+        "state_class": "total_increasing",  # coordinator now passes this from SENSOR_TYPES
     }
-    
+
     sensor = EcowittLocalSensor(
         coordinator=mock_coordinator,
         entity_id="sensor.test_rain_total",
         sensor_info=sensor_info
     )
-    
+
     assert sensor.state_class == SensorStateClass.TOTAL_INCREASING
+
+
+@pytest.mark.asyncio
+async def test_rain_sensor_state_classes(mock_coordinator):
+    """Test that rain sensors get correct state_class from sensor_info (not device_class heuristic).
+
+    Regression test for issues #32, #45: rain entities were missing state_class
+    because sensor.py set MEASUREMENT for all precipitation device_class sensors,
+    ignoring the state_class defined in SENSOR_TYPES.
+    """
+    rain_cases = [
+        # (sensor_key, state_class_from_coordinator, expected_state_class)
+        ("rainratein",   "measurement",       SensorStateClass.MEASUREMENT),
+        ("eventrainin",  "total",             SensorStateClass.TOTAL),
+        ("hourlyrainin", "total_increasing",  SensorStateClass.TOTAL_INCREASING),
+        ("dailyrainin",  "total_increasing",  SensorStateClass.TOTAL_INCREASING),
+        ("weeklyrainin", "total_increasing",  SensorStateClass.TOTAL_INCREASING),
+        ("monthlyrainin","total_increasing",  SensorStateClass.TOTAL_INCREASING),
+        ("yearlyrainin", "total_increasing",  SensorStateClass.TOTAL_INCREASING),
+        ("totalrainin",  "total_increasing",  SensorStateClass.TOTAL_INCREASING),
+    ]
+
+    for sensor_key, state_class_val, expected in rain_cases:
+        sensor_info = {
+            "sensor_key": sensor_key,
+            "category": "sensor",
+            "name": sensor_key,
+            "state": 1.0,
+            "device_class": "precipitation",
+            "state_class": state_class_val,
+        }
+        sensor = EcowittLocalSensor(
+            coordinator=mock_coordinator,
+            entity_id=f"sensor.test_{sensor_key}",
+            sensor_info=sensor_info,
+        )
+        assert sensor.state_class == expected, (
+            f"{sensor_key}: expected {expected}, got {sensor.state_class}"
+        )
 
 
 @pytest.mark.asyncio

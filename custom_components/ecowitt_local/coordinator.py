@@ -387,6 +387,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 "state": converted_value,
                 "unit_of_measurement": unit,
                 "device_class": device_class,
+                "state_class": sensor_info.get("state_class") or "",
                 "category": category,
                 "sensor_key": sensor_key,
                 "hardware_id": hardware_id,
