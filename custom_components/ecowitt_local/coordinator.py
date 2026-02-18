@@ -287,6 +287,31 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                             all_sensor_items.append({"id": battery_key, "val": battery_pct})
                             _LOGGER.debug("Added WH31 battery sensor: %s = %s%%", battery_key, battery_pct)
         
+        # Extract ch_temp data (WH34 wired temperature sensors)
+        ch_temp = raw_data.get("ch_temp", [])
+        if ch_temp:
+            _LOGGER.debug("Found ch_temp data with %d items", len(ch_temp))
+            for item in ch_temp:
+                _LOGGER.debug("ch_temp item: %s", item)
+                if isinstance(item, dict):
+                    channel = item.get("channel")
+                    temp = item.get("temp")
+                    battery = item.get("battery")
+
+                    if channel:
+                        if temp and temp != "None":
+                            temp_key = f"tf_ch{channel}"
+                            # Same as ch_aisle: Ecowitt firmware reports the raw value; apply
+                            # the actual gateway unit to avoid double-conversion.
+                            all_sensor_items.append({"id": temp_key, "val": temp, "unit": self._gateway_temp_unit})
+                            _LOGGER.debug("Added WH34 temperature sensor: %s = %s (%s)", temp_key, temp, self._gateway_temp_unit)
+
+                        if battery and battery != "None":
+                            battery_key = f"tf_batt{channel}"
+                            battery_pct = str(int(battery) * 20) if battery.isdigit() else battery
+                            all_sensor_items.append({"id": battery_key, "val": battery_pct})
+                            _LOGGER.debug("Added WH34 battery sensor: %s = %s%%", battery_key, battery_pct)
+
         _LOGGER.debug("Total sensor items to process: %d", len(all_sensor_items))
         
         for item in all_sensor_items:

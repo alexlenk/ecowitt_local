@@ -419,13 +419,13 @@ SENSOR_TYPES.update(_generate_channel_sensors(
 
 # Add temperature-only sensors (WH34)
 SENSOR_TYPES.update(_generate_channel_sensors(
-    "tf_ch", "Soil Temperature CH{ch}",
+    "tf_ch", "Temperature CH{ch}",
     {"unit": "°F", "device_class": "temperature"}, 8
 ))
 
-# Add temperature-only sensors Celsius (WH34)  
+# Add temperature-only sensors Celsius (WH34)
 SENSOR_TYPES.update(_generate_channel_sensors(
-    "tf_ch", "Soil Temperature CH{ch}",
+    "tf_ch", "Temperature CH{ch}",
     {"unit": "°C", "device_class": "temperature"}, 8
 ))
 
@@ -489,6 +489,10 @@ BATTERY_SENSORS: Final = {
         "name": "CO2 Combo Sensor Battery",
         "sensor_key": "co2"
     },
+    "wh80batt": {
+        "name": "WH80 Weather Station Battery",
+        "sensor_key": "0x02"
+    },
     "wh69batt": {
         "name": "WH69 Weather Station Battery",
         "sensor_key": "0x02"
@@ -521,7 +525,7 @@ BATTERY_SENSORS.update(_generate_battery_sensors(
     "leakbatt", "Leak Sensor CH{ch} Battery", "leak_ch{ch}", 4
 ))
 BATTERY_SENSORS.update(_generate_battery_sensors(
-    "tf_batt", "Soil Temperature CH{ch} Battery", "tf_ch{ch}", 8
+    "tf_batt", "Temperature CH{ch} Battery", "tf_ch{ch}", 8
 ))
 BATTERY_SENSORS.update(_generate_battery_sensors(
     "leaf_batt", "Leaf Wetness CH{ch} Battery", "leafwetness_ch{ch}", 8
