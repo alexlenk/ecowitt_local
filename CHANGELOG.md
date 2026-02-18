@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.11] - 2026-02-18
+
+### Fixed
+- **HA 2026.x compatibility**: Update deprecated `hass.helpers.entity_registry` API calls to use `homeassistant.helpers.entity_registry` module directly
+- **HA 2026.x compatibility**: Replace direct `config_entry.minor_version` assignment (now read-only) with `hass.config_entries.async_update_entry()`
+- **HA 2026.x compatibility**: Remove `config_entry` parameter from `OptionsFlowHandler.__init__` (base class now provides it automatically)
+
 ## [1.5.10] - 2026-02-18
 
 ### Fixed
