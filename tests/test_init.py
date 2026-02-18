@@ -381,8 +381,8 @@ async def test_reload_entry_failure(hass: HomeAssistant, setup_integration, mock
         result = await hass.config_entries.async_reload(config_entry.entry_id)
     
     assert result is False
-    # In HA 2026.x, a failed unload leaves the entry in FAILED_UNLOAD state
-    assert config_entry.state == ConfigEntryState.FAILED_UNLOAD
+    # State after failed unload varies by HA version: FAILED_UNLOAD (2026.x+) or LOADED (older)
+    assert config_entry.state in (ConfigEntryState.FAILED_UNLOAD, ConfigEntryState.LOADED)
 
 
 async def test_invalid_hardware_id_filtering(hass: HomeAssistant, mock_config_entry, mock_ecowitt_api):
