@@ -334,6 +334,82 @@ async def test_coordinator_ch_aisle_empty_handling(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_ch_aisle_celsius_gateway(coordinator):
+    """Test that ch_aisle temperatures use the gateway unit setting, not the firmware 'F' field.
+
+    Regression test for issues #19, #13: Ecowitt firmware always reports unit='F'
+    in ch_aisle even when the gateway is configured in Celsius mode. The coordinator
+    must use the gateway unit from get_units_info, not the item unit field.
+    """
+    # Simulate a Celsius-configured gateway
+    coordinator._gateway_temp_unit = "°C"
+
+    mock_live_data = {
+        "common_list": [],
+        "ch_aisle": [
+            {"channel": "1", "temp": "22.2", "unit": "F", "humidity": "65", "battery": "4"},
+        ],
+    }
+
+    processed = await coordinator._process_live_data(mock_live_data)
+    sensors = processed["sensors"]
+
+    temp1_data = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "temp1f"), None
+    )
+    assert temp1_data is not None, "temp1f sensor not found"
+    assert temp1_data["unit_of_measurement"] == "°C", (
+        f"Expected °C (Celsius gateway), got {temp1_data['unit_of_measurement']}"
+    )
+    assert temp1_data["state"] == 22.2
+
+
+@pytest.mark.asyncio
+async def test_coordinator_ch_aisle_fahrenheit_gateway(coordinator):
+    """Test that ch_aisle temperatures remain °F for Fahrenheit-configured gateways."""
+    coordinator._gateway_temp_unit = "°F"
+
+    mock_live_data = {
+        "common_list": [],
+        "ch_aisle": [
+            {"channel": "1", "temp": "72.0", "unit": "F", "humidity": "43", "battery": "4"},
+        ],
+    }
+
+    processed = await coordinator._process_live_data(mock_live_data)
+    sensors = processed["sensors"]
+
+    temp1_data = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "temp1f"), None
+    )
+    assert temp1_data is not None, "temp1f sensor not found"
+    assert temp1_data["unit_of_measurement"] == "°F", (
+        f"Expected °F (Fahrenheit gateway), got {temp1_data['unit_of_measurement']}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_coordinator_gateway_temp_unit_from_get_units(coordinator):
+    """Test that _update_sensor_mapping sets _gateway_temp_unit from get_units_info."""
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+
+    # Celsius gateway (temp code "0")
+    coordinator.api.get_units = AsyncMock(return_value={"temp": "0"})
+    await coordinator._update_sensor_mapping()
+    assert coordinator._gateway_temp_unit == "°C"
+
+    # Fahrenheit gateway (temp code "1")
+    coordinator.api.get_units = AsyncMock(return_value={"temp": "1"})
+    await coordinator._update_sensor_mapping()
+    assert coordinator._gateway_temp_unit == "°F"
+
+    # Missing temp key — defaults to °F
+    coordinator.api.get_units = AsyncMock(return_value={})
+    await coordinator._update_sensor_mapping()
+    assert coordinator._gateway_temp_unit == "°F"
+
+
+@pytest.mark.asyncio
 async def test_coordinator_setup_success(coordinator):
     """Test successful coordinator setup."""
     coordinator.api.test_connection = AsyncMock()
