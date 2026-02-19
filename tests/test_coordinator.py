@@ -566,8 +566,11 @@ async def test_coordinator_normalize_unit(coordinator):
     # Irradiance — W/m2 → W/m² (GW3000/WH69 issue #41)
     assert coordinator._normalize_unit("W/m2") == "W/m²"
     assert coordinator._normalize_unit("W/M2") == "W/m²"
+    # Illuminance — Lux/lux → lx (GW2000A issue #44)
+    assert coordinator._normalize_unit("lux") == "lx"
+    assert coordinator._normalize_unit("Lux") == "lx"
+    assert coordinator._normalize_unit("LUX") == "lx"
     # Pass-through for unknown units
-    assert coordinator._normalize_unit("lux") == "lux"
     assert coordinator._normalize_unit("") == ""
 
 
@@ -1220,6 +1223,87 @@ async def test_coordinator_process_wh25_fahrenheit_unit(coordinator):
             break
     else:
         pytest.fail("tempinf entity not found")
+
+
+@pytest.mark.asyncio
+async def test_coordinator_klux_solar_radiation(coordinator):
+    """Test solar radiation reported in Klux is converted to lux with device_class illuminance.
+
+    Some Ecowitt gateways allow the solar radiation unit to be configured as Lux
+    (instead of the default W/m²). When Klux is reported, the coordinator must:
+    - Convert value ×1000 (e.g., 42.5 Klux → 42500 lx)
+    - Override device_class from "irradiance" to "illuminance"
+    Reported in issue #44 (GW2000A + WH80 with metric unit settings).
+    """
+    mock_live_data = {
+        "common_list": [
+            {"id": "0x15", "val": "42.5 Klux"},
+        ]
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    solar_found = False
+    for entity_id, sensor_data in sensors.items():
+        if sensor_data.get("sensor_key") == "0x15":
+            solar_found = True
+            assert sensor_data["state"] == 42500.0, f"Expected 42500.0 lx, got {sensor_data['state']}"
+            assert sensor_data["unit_of_measurement"] == "lx"
+            assert sensor_data["device_class"] == "illuminance"
+            break
+    assert solar_found, "Solar radiation entity (0x15) not found"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_klux_zero_value(coordinator):
+    """Test 0 Klux is correctly converted to 0 lx (night-time condition)."""
+    mock_live_data = {
+        "common_list": [
+            {"id": "0x15", "val": "0.00 Klux"},
+        ]
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    for entity_id, sensor_data in sensors.items():
+        if sensor_data.get("sensor_key") == "0x15":
+            assert sensor_data["state"] == 0.0
+            assert sensor_data["unit_of_measurement"] == "lx"
+            assert sensor_data["device_class"] == "illuminance"
+            return
+    pytest.fail("Solar radiation entity (0x15) not found")
+
+
+@pytest.mark.asyncio
+async def test_coordinator_solar_wm2_unchanged(coordinator):
+    """Regression: W/m² solar radiation must not be affected by the Klux fix."""
+    mock_live_data = {
+        "common_list": [
+            {"id": "0x15", "val": "500.0 W/m2"},
+        ]
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    for entity_id, sensor_data in sensors.items():
+        if sensor_data.get("sensor_key") == "0x15":
+            assert sensor_data["state"] == 500.0
+            assert sensor_data["unit_of_measurement"] == "W/m²"
+            assert sensor_data["device_class"] == "irradiance"
+            return
+    pytest.fail("Solar radiation entity (0x15) not found")
 
 
 @pytest.mark.asyncio

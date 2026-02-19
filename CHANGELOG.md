@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.20] - 2026-02-19
+
+### Fixed
+- **Solar radiation entity unavailable when gateway reports Klux instead of W/m²**: Ecowitt gateways allow solar radiation units to be configured as Lux (instead of the default W/m²). When set to Lux, the gateway reports values like `"42.5 Klux"`. The coordinator passed this unit through unchanged, which caused Home Assistant to reject the entity because `"Klux"` is incompatible with the `irradiance` device class. The coordinator now converts Klux → lx (×1000) and overrides the device class to `illuminance` to match the reported unit. `"Lux"` values (without the kilo prefix) are also normalised to `"lx"`. Fixes issue #44 (GW2000A + WH80 with metric solar unit setting).
+
 ## [1.5.19] - 2026-02-19
 
 ### Fixed
