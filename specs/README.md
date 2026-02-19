@@ -11,6 +11,7 @@ Kiro-style specs for open GitHub issues. Each spec has: requirements, design, ta
 | [003](003-temperature-double-conversion.md) | #19, #13 | Temperature double-conversion for Celsius gateways | HIGH | ✅ Fixed in v1.5.14 |
 | [004](004-wind-rain-hex-id-mapping.md) | #22, #23 | Wind/rain sensors unavailable (missing hardware_id mapping) | HIGH | ⚠️ Partial — WS80/WH80 fixed in v1.5.15; GW1100 still awaiting user data |
 | [006](006-wh34-pool-temperature.md) | #16 | WH34 pool temperature — no entities | MEDIUM | ✅ Fixed in v1.5.15 |
+| [007](007-rain-array-not-processed.md) | #59, #11 | `"rain"` array (tipping-bucket) not processed | HIGH | ✅ Fixed in v1.5.16 |
 
 ## Recommended Implementation Order
 

@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.16] - 2026-02-19
+
+### Fixed
+- **Rain sensors missing for tipping-bucket rain gauges (GW1200, GW2000A with WS69/WH69)**: Some gateways place tipping-bucket rain sensor data in a top-level `"rain"` JSON array instead of `common_list`. The coordinator was not processing this array, so all rain entities (rain rate, event rain, daily/weekly/monthly/yearly/total rain) were never created. The `"rain"` array is now processed alongside `common_list`, `piezoRain`, and other data sections. Fixes issue #59; also resolves the rain-entity-missing portion of issue #11 (WH69 with GW2000A).
+
 ## [1.5.15] - 2026-02-18
 
 ### Fixed

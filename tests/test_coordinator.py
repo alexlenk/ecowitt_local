@@ -844,6 +844,87 @@ async def test_coordinator_piezo_rain_processing_metric(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_rain_array_processing(coordinator):
+    """Test 'rain' array processing (tipping-bucket rain sensor — GW1200/GW2000A with WS69/WH69, issue #59)."""
+    coordinator._include_inactive = True
+    raw_data = {
+        "rain": [
+            {"id": "0x0D", "val": "0.00 in/Hr"},
+            {"id": "0x0E", "val": "0.12 in"},
+            {"id": "0x7C", "val": "0.00 in"},
+            {"id": "0x10", "val": "0.05 in"},
+            {"id": "0x11", "val": "0.25 in"},
+            {"id": "0x12", "val": "1.50 in"},
+            {"id": "0x13", "val": "3.00 in"},
+        ]
+    }
+
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    # 0x0D/0x0E/0x7C have uppercase hex letters → entity IDs use key.lower() (e.g. 0x0d, 0x0e, 0x7c)
+    rain_event = [k for k in sensors if "0x0d" in k]
+    assert len(rain_event) >= 1, "Rain Event (0x0D) should be created from 'rain' array"
+    assert sensors[rain_event[0]]["state"] == 0.0
+
+    rain_rate = [k for k in sensors if "0x0e" in k]
+    assert len(rain_rate) >= 1, "Rain Rate (0x0E) should be created from 'rain' array"
+    assert sensors[rain_rate[0]]["state"] == 0.12
+
+    # 0x10/0x11/0x12/0x13 have only decimal digits → identifier becomes ch10/ch11/ch12/ch13
+    # Match by sensor name fragment instead
+    weekly_rain = [k for k in sensors if "weekly_rain" in k]
+    assert len(weekly_rain) >= 1, "Weekly Rain (0x10) should be created from 'rain' array"
+    assert sensors[weekly_rain[0]]["state"] == 0.05
+
+    total_rain = [k for k in sensors if "total_rain" in k]
+    assert len(total_rain) >= 1, "Total Rain (0x13) should be created from 'rain' array"
+    assert sensors[total_rain[0]]["state"] == 3.0
+    assert sensors[total_rain[0]]["unit_of_measurement"] == "in"
+
+    # All 7 rain items must produce sensors with include_inactive=True
+    assert len(sensors) >= 7, f"Expected at least 7 sensors from 'rain' array, got {len(sensors)}"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_rain_array_empty_handling(coordinator):
+    """Test coordinator handles empty or missing 'rain' array gracefully (issue #59)."""
+    for rain_val in [[], None, {}]:
+        raw_data = {}
+        if rain_val is not None:
+            raw_data["rain"] = rain_val
+        # Must not raise
+        processed = await coordinator._process_live_data(raw_data)
+        assert processed is not None
+
+
+@pytest.mark.asyncio
+async def test_coordinator_rain_array_does_not_affect_piezo_rain(coordinator):
+    """Test that 'rain' array and 'piezoRain' can coexist without interference (issue #59)."""
+    coordinator._include_inactive = True
+    raw_data = {
+        "rain": [
+            {"id": "0x10", "val": "0.05 in"},
+        ],
+        "piezoRain": [
+            {"id": "0x0D", "val": "0.00 in/Hr"},
+            {"id": "0x13", "val": "5.00 in", "battery": "4"},
+        ],
+    }
+
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    # Both arrays must contribute sensors
+    # 0x10 from rain → entity ID contains "weekly_rain"
+    assert any("weekly_rain" in k for k in sensors), "Weekly Rain from 'rain' array missing"
+    # 0x0D from piezoRain → entity ID contains "0x0d"
+    assert any("0x0d" in k for k in sensors), "Rain Rate from 'piezoRain' missing"
+    # WS90 battery from piezoRain still extracted
+    assert any("battery" in k for k in sensors), "WS90 battery from piezoRain should still be present"
+
+
+@pytest.mark.asyncio
 async def test_coordinator_gateway_info_property(coordinator):
     """Test gateway info property access."""
     test_info = {"model": "GW1100A", "version": "1.7.3"}
