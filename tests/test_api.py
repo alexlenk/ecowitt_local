@@ -264,20 +264,28 @@ async def test_context_manager():
 
 
 @pytest.mark.asyncio
-async def test_reauthentication_on_401():
-    """Test automatic re-authentication on 401 error."""
+async def test_get_live_data_with_password_no_auth_call():
+    """Test that get_live_data works with a password set without calling set_login_info.
+
+    Data endpoints require no authentication on Ecowitt gateways. Calling
+    /set_login_info before data requests causes HTTP 500 on real hardware.
+    """
     api = EcowittLocalAPI("192.168.1.100", "test_password")
-    
+
     with aioresponses() as m:
-        # Mock re-authentication and successful request
-        m.post("http://192.168.1.100/set_login_info", status=200)
-        m.get("http://192.168.1.100/get_livedata_info", 
+        m.get("http://192.168.1.100/get_livedata_info",
               payload={"common_list": []})
-        
+
         result = await api.get_live_data()
-        
+
         assert result == {"common_list": []}
-    
+        # /set_login_info must NOT have been called
+        post_calls = [
+            req for req in m.requests
+            if req[0] == "POST"
+        ]
+        assert len(post_calls) == 0
+
     await api.close()
 
 
@@ -420,25 +428,23 @@ async def test_make_request_timeout_error():
 
 
 @pytest.mark.asyncio
-async def test_get_sensor_mapping_with_authentication():
-    """Test get_sensor_mapping that triggers authentication."""
+async def test_get_sensor_mapping_with_password_no_auth_call():
+    """Test get_sensor_mapping works with a password set without calling set_login_info."""
     api = EcowittLocalAPI("192.168.1.100", "test_password")
-    
+
     mock_data = {
         "sensor": [
             {"id": "D8174", "type": "WH51", "channel": "1"},
         ]
     }
-    
+
     with aioresponses() as m:
-        m.post("http://192.168.1.100/set_login_info", status=200)
         m.get("http://192.168.1.100/get_sensors_info?page=1", payload=mock_data)
-        
+
         result = await api.get_sensor_mapping(1)
-        
+
         assert result == mock_data["sensor"]
-        assert api._authenticated is True
-    
+
     await api.close()
 
 
@@ -526,24 +532,22 @@ async def test_get_units():
 
 
 @pytest.mark.asyncio
-async def test_get_units_with_authentication():
-    """Test get_units that triggers authentication."""
+async def test_get_units_with_password_no_auth_call():
+    """Test get_units works with a password set without calling set_login_info."""
     api = EcowittLocalAPI("192.168.1.100", "test_password")
-    
+
     mock_data = {
         "temperature": "C",
         "pressure": "hPa"
     }
-    
+
     with aioresponses() as m:
-        m.post("http://192.168.1.100/set_login_info", status=200)
         m.get("http://192.168.1.100/get_units_info", payload=mock_data)
-        
+
         result = await api.get_units()
-        
+
         assert result == mock_data
-        assert api._authenticated is True
-    
+
     await api.close()
 
 

@@ -206,13 +206,9 @@ class EcowittLocalAPI:
             Live sensor data including all current readings
 
         Raises:
-            AuthenticationError: Not authenticated
             ConnectionError: Network error
             DataError: Invalid response data
         """
-        if not self._authenticated and self._password:
-            await self.authenticate()
-
         data = await self._make_request("/get_livedata_info")
 
         if "common_list" not in data:
@@ -230,13 +226,9 @@ class EcowittLocalAPI:
             List of sensor mapping information with hardware IDs
 
         Raises:
-            AuthenticationError: Not authenticated
             ConnectionError: Network error
             DataError: Invalid response data
         """
-        if not self._authenticated and self._password:
-            await self.authenticate()
-
         data = await self._make_request("/get_sensors_info", {"page": page})
 
         # Handle different response formats
@@ -284,13 +276,9 @@ class EcowittLocalAPI:
             Version information including firmware version
 
         Raises:
-            AuthenticationError: Not authenticated
             ConnectionError: Network error
             DataError: Invalid response data
         """
-        if not self._authenticated and self._password:
-            await self.authenticate()
-
         return await self._make_request("/get_version")
 
     async def get_units(self) -> Dict[str, Any]:
@@ -300,13 +288,9 @@ class EcowittLocalAPI:
             Unit configuration settings
 
         Raises:
-            AuthenticationError: Not authenticated
             ConnectionError: Network error
             DataError: Invalid response data
         """
-        if not self._authenticated and self._password:
-            await self.authenticate()
-
         return await self._make_request("/get_units_info")
 
     async def test_connection(self) -> bool:
