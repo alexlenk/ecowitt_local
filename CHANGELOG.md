@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.18] - 2026-02-19
+
+### Fixed
+- **WH69 sensors unavailable on GW3000 (knots wind speed, W/m² solar radiation)**: WH69 sensors connected via GW3000 report wind speed and gust as `"0.00 knots"` and solar radiation as `"612.67 W/m2"`. The unit normalizer did not recognise `"knots"` as a valid unit string, leaving those sensors unavailable. Added `"knots"` → `"kn"` mapping (the correct HA unit for knots wind speed). The `"W/m2"` → `"W/m²"` mapping was already present and working. Fixes issue #41.
+
 ## [1.5.17] - 2026-02-19
 
 ### Fixed
