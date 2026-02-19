@@ -360,7 +360,17 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                                      sensor_value, numeric_value, embedded_unit, unit_normalized)
                         embedded_unit = unit_normalized  # Use normalized unit
                         sensor_value = numeric_value  # Use just the numeric part
-                
+
+            # Handle kilolux: some gateways report solar radiation in Klux when
+            # configured to use lux units. Convert to lux (×1000) for Home Assistant.
+            if embedded_unit and embedded_unit.upper() == "KLUX":
+                try:
+                    sensor_value = str(float(sensor_value) * 1000)
+                    numeric_value = sensor_value
+                except (ValueError, TypeError):
+                    pass
+                embedded_unit = "lx"
+
             # Get hardware ID for this sensor (only for non-gateway sensors)
             hardware_id = None
             if sensor_key not in GATEWAY_SENSORS:
@@ -397,7 +407,13 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             # Override unit with detected unit from data if available
             if embedded_unit:
                 unit = embedded_unit
-            
+
+            # If the gateway reports illuminance (lx) for a sensor const.py defined
+            # as irradiance, override device_class to match the actual unit.
+            # This happens when the gateway's solar unit is set to "Lux" instead of "W/m²".
+            if unit == "lx" and device_class == "irradiance":
+                device_class = "illuminance"
+
             # Get additional sensor information
             sensor_details: Dict[str, Any] = {}
             if hardware_id:
@@ -589,7 +605,10 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             return "in"
         elif unit_upper == "MM":
             return "mm"
-        
+        # Illuminance — normalize "Lux"/"lux" to HA standard "lx"
+        elif unit_upper == "LUX":
+            return "lx"
+
         # Return original if no normalization needed
         return unit
 

@@ -16,12 +16,13 @@ Kiro-style specs for open GitHub issues. Each spec has: requirements, design, ta
 | [009](009-ws90-gw2000-incomplete-entities.md) | #5, #40, #15 | WS90/GW2000 incomplete or unavailable entities | HIGH | 🟡 Partial — wh25 temperature unit fixed in v1.5.19; hardware_id conflict open |
 | [010](010-wh69-embedded-unit-strings.md) | #41 | WH69 unit strings ("knots", "W/m2") cause unavailable entities | MEDIUM | ✅ Fixed in v1.5.18 |
 | [011](011-ws85-wind-sensors.md) | #20 | WS85 wind sensors missing | MEDIUM | 🔴 Open — awaiting user data |
+| [012](012-klux-solar-radiation-unit.md) | #44 | Solar radiation unavailable — gateway reports Klux instead of W/m² | MEDIUM | ✅ Fixed in v1.5.20 |
 
 ## Recommended Implementation Order
 
-1. **Spec 009 (WS90/GW2000)** — multiple root causes; fix `"89%"` parsing first, then investigate hardware_id mapping conflict
-4. **Spec 011 (WS85)** — awaiting `get_sensors_info` data from user
-5. **Spec 004 (GW1100 part)** — awaiting `get_sensors_info` + `get_livedata_info` JSON from a GW1100 user
+1. **Spec 009 (WS90/GW2000)** — wh25 unit fix in v1.5.19; hardware_id mapping conflict still open (awaiting user feedback)
+2. **Spec 011 (WS85)** — awaiting `get_sensors_info` data from user
+3. **Spec 004 (GW1100 part)** — awaiting `get_sensors_info` + `get_livedata_info` JSON from a GW1100 user
 
 ## Limitations / Notes
 
