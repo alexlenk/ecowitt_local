@@ -163,7 +163,13 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         # Extract common_list data (main sensor readings)
         common_list = raw_data.get("common_list", [])
         all_sensor_items.extend(common_list)
-        
+
+        # Extract rain data (tipping-bucket rain sensor readings — GW1200, GW2000A with WS69/WH69)
+        rain_list = raw_data.get("rain", [])
+        if rain_list:
+            _LOGGER.debug("Found rain data with %d items", len(rain_list))
+            all_sensor_items.extend(rain_list)
+
         # Extract ch_soil data (soil sensor readings)
         ch_soil = raw_data.get("ch_soil", [])
         if ch_soil:
