@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.17] - 2026-02-19
+
+### Fixed
+- **Password authentication fails (GW2000, GW3000)**: Any non-empty gateway password caused the integration to fail with a connection error. The root cause: Ecowitt local data endpoints (`/get_livedata_info`, `/get_sensors_info`, `/get_version`, `/get_units_info`) require no authentication — the gateway exposes them openly regardless of the password setting. The integration was pre-emptively calling `/set_login_info` before every data request, which returns HTTP 500 on real hardware and aborts the request before any data is fetched. Removed the pre-emptive authentication calls; the data endpoints are now called directly. The `authenticate()` method is retained for future use. Fixes issue #43.
+
 ## [1.5.16] - 2026-02-19
 
 ### Fixed
