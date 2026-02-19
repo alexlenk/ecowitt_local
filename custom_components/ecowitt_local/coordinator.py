@@ -579,6 +579,8 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             return "km/h"
         elif unit_upper == "M/S":
             return "m/s"
+        elif unit_upper == "KNOTS" or unit_upper == "KN":
+            return "kn"
         # Length/precipitation
         elif unit_upper == "IN":
             return "in"

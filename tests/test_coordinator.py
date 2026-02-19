@@ -537,6 +537,11 @@ async def test_coordinator_convert_sensor_value_embedded_units(coordinator):
     # Test wind speed with units
     assert coordinator._convert_sensor_value("1.34 mph", None) == 1.34
     assert coordinator._convert_sensor_value("2.1 m/s", None) == 2.1
+    assert coordinator._convert_sensor_value("0.00 knots", None) == 0.0  # GW3000/WH69 issue #41
+    assert coordinator._convert_sensor_value("5.50 knots", None) == 5.50
+
+    # Test solar radiation with embedded unit (GW3000/WH69 issue #41)
+    assert coordinator._convert_sensor_value("612.67 W/m2", None) == 612.67
     
     # Test integers with units
     assert coordinator._convert_sensor_value("25 rpm", None) == 25
@@ -545,6 +550,25 @@ async def test_coordinator_convert_sensor_value_embedded_units(coordinator):
     # Test negative values with units
     assert coordinator._convert_sensor_value("-5.2 C", None) == -5.2
     assert coordinator._convert_sensor_value("-10 F", None) == -10
+
+
+@pytest.mark.asyncio
+async def test_coordinator_normalize_unit(coordinator):
+    """Test _normalize_unit maps all known unit strings to HA standard units."""
+    # Wind speed — knots (GW3000/WH69 issue #41)
+    assert coordinator._normalize_unit("knots") == "kn"
+    assert coordinator._normalize_unit("KNOTS") == "kn"
+    assert coordinator._normalize_unit("kn") == "kn"
+    # Wind speed — existing
+    assert coordinator._normalize_unit("mph") == "mph"
+    assert coordinator._normalize_unit("km/h") == "km/h"
+    assert coordinator._normalize_unit("m/s") == "m/s"
+    # Irradiance — W/m2 → W/m² (GW3000/WH69 issue #41)
+    assert coordinator._normalize_unit("W/m2") == "W/m²"
+    assert coordinator._normalize_unit("W/M2") == "W/m²"
+    # Pass-through for unknown units
+    assert coordinator._normalize_unit("lux") == "lux"
+    assert coordinator._normalize_unit("") == ""
 
 
 @pytest.mark.asyncio
