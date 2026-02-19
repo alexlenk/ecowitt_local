@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.19] - 2026-02-19
+
+### Fixed
+- **Indoor temperature showing ~160°F instead of ~74°F (wh25 unit ignored)**: The `wh25` indoor sensor block includes a `"unit"` field (`"F"` or `"C"`) that was being silently discarded. Without it, the entity fell back to the `SENSOR_TYPES` default unit (`°C`), so a Fahrenheit gateway value like `74.1` was displayed as `74.1°C` (~165°F). The gateway's `"unit"` field is now passed through and used as the entity's native unit. Fixes the temperature reported by @darrendavid in issue #40.
+
 ## [1.5.18] - 2026-02-19
 
 ### Fixed

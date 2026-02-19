@@ -1139,50 +1139,87 @@ async def test_coordinator_battery_no_double_conversion(coordinator):
 
 @pytest.mark.asyncio
 async def test_coordinator_process_wh25_data(coordinator):
-    """Test processing wh25 data structure."""
+    """Test processing wh25 data structure (Celsius gateway)."""
     mock_live_data = {
         "wh25": [
             {
                 "intemp": "22.5",
+                "unit": "C",
                 "inhumi": "45%",
                 "abs": "1013.2 hPa",
                 "rel": "1015.8 hPa"
             }
         ]
     }
-    
+
     coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
     coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
-    
+
     result = await coordinator._async_update_data()
-    
+
     sensors = result["sensors"]
-    
-    # Check for indoor sensors
+
     temp_found = False
     humidity_found = False
     abs_pressure_found = False
     rel_pressure_found = False
-    
+
     for entity_id, sensor_data in sensors.items():
         sensor_key = sensor_data.get("sensor_key")
         if sensor_key == "tempinf":
             temp_found = True
-            assert sensor_data["state"] == 22.5  # Converted to float
+            assert sensor_data["state"] == 22.5
+            assert sensor_data["unit_of_measurement"] == "°C"
         elif sensor_key == "humidityin":
             humidity_found = True
-            assert sensor_data["state"] == 45  # % removed, converted to int
+            assert sensor_data["state"] == 45
         elif sensor_key == "baromabsin":
             abs_pressure_found = True
-            assert sensor_data["state"] == 1013.2  # hPa removed, converted to float
+            assert sensor_data["state"] == 1013.2
         elif sensor_key == "baromrelin":
             rel_pressure_found = True
-            assert sensor_data["state"] == 1015.8  # hPa removed, converted to float
-    
+            assert sensor_data["state"] == 1015.8
+
     assert temp_found
     assert humidity_found
     assert abs_pressure_found
     assert rel_pressure_found
+
+
+@pytest.mark.asyncio
+async def test_coordinator_process_wh25_fahrenheit_unit(coordinator):
+    """Test wh25 indoor temperature uses unit from gateway data, not SENSOR_TYPES default.
+
+    Regression test for the '160°F bug': wh25 sends "intemp": "74.1", "unit": "F".
+    Without the fix, the entity fell back to SENSOR_TYPES default "°C", displaying
+    74.1°C (~165°F) instead of the correct 74.1°F. Reported by @darrendavid.
+    """
+    mock_live_data = {
+        "wh25": [
+            {
+                "intemp": "74.1",
+                "unit": "F",
+                "inhumi": "35%",
+                "abs": "29.38 inHg",
+                "rel": "30.03 inHg"
+            }
+        ]
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+
+    result = await coordinator._async_update_data()
+
+    sensors = result["sensors"]
+
+    for entity_id, sensor_data in sensors.items():
+        if sensor_data.get("sensor_key") == "tempinf":
+            assert sensor_data["state"] == 74.1
+            assert sensor_data["unit_of_measurement"] == "°F"
+            break
+    else:
+        pytest.fail("tempinf entity not found")
 
 
 @pytest.mark.asyncio
