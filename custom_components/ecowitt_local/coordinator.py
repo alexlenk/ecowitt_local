@@ -205,11 +205,14 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             _LOGGER.debug("Found wh25 data: %s", wh25_data[0])
             wh25_item = wh25_data[0]
             if isinstance(wh25_item, dict):
-                # Indoor temperature
+                # Indoor temperature — pass unit from gateway data so HA uses the correct unit
+                # (without this, the entity falls back to SENSOR_TYPES default "°C",
+                # causing Fahrenheit values to be displayed in the wrong scale)
                 if "intemp" in wh25_item:
                     temp_val = wh25_item["intemp"]
-                    all_sensor_items.append({"id": "tempinf", "val": temp_val})
-                    _LOGGER.debug("Added indoor temp: tempinf = %s", temp_val)
+                    temp_unit = wh25_item.get("unit", "F")
+                    all_sensor_items.append({"id": "tempinf", "val": temp_val, "unit": temp_unit})
+                    _LOGGER.debug("Added indoor temp: tempinf = %s (%s)", temp_val, temp_unit)
                 
                 # Indoor humidity  
                 if "inhumi" in wh25_item:

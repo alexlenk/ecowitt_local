@@ -13,7 +13,7 @@ Kiro-style specs for open GitHub issues. Each spec has: requirements, design, ta
 | [006](006-wh34-pool-temperature.md) | #16 | WH34 pool temperature — no entities | MEDIUM | ✅ Fixed in v1.5.15 |
 | [007](007-rain-array-not-processed.md) | #59, #11 | `"rain"` array (tipping-bucket) not processed | HIGH | ✅ Fixed in v1.5.16 |
 | [008](008-password-auth-fails.md) | #43 | Password authentication fails (GW2000/GW3000) | HIGH | ✅ Fixed in v1.5.17 |
-| [009](009-ws90-gw2000-incomplete-entities.md) | #5, #40, #15 | WS90/GW2000 incomplete or unavailable entities | HIGH | 🔴 Open — multiple root causes identified |
+| [009](009-ws90-gw2000-incomplete-entities.md) | #5, #40, #15 | WS90/GW2000 incomplete or unavailable entities | HIGH | 🟡 Partial — wh25 temperature unit fixed in v1.5.19; hardware_id conflict open |
 | [010](010-wh69-embedded-unit-strings.md) | #41 | WH69 unit strings ("knots", "W/m2") cause unavailable entities | MEDIUM | ✅ Fixed in v1.5.18 |
 | [011](011-ws85-wind-sensors.md) | #20 | WS85 wind sensors missing | MEDIUM | 🔴 Open — awaiting user data |
 
