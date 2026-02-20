@@ -362,25 +362,25 @@ SENSOR_TYPES: Final = {
         "state_class": "total_increasing"
     },
     "0x10": {
-        "name": "Weekly Rain",
-        "unit": "mm", 
+        "name": "Hourly Rain",
+        "unit": "mm",
         "device_class": "precipitation",
         "state_class": "total_increasing"
     },
     "0x11": {
-        "name": "Monthly Rain",
+        "name": "Weekly Rain",
         "unit": "mm",
         "device_class": "precipitation",
         "state_class": "total_increasing"
     },
     "0x12": {
-        "name": "Yearly Rain",
+        "name": "Monthly Rain",
         "unit": "mm",
         "device_class": "precipitation",
         "state_class": "total_increasing"
     },
     "0x13": {
-        "name": "Total Rain",
+        "name": "Yearly Rain",
         "unit": "mm",
         "device_class": "precipitation",
         "state_class": "total_increasing"

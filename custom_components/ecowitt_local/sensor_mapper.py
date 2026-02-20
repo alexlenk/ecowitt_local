@@ -195,10 +195,10 @@ class SensorMapper:
                 "0x0D",  # Rain event
                 "0x0E",  # Rain rate
                 "0x7C",  # Rain daily
-                "0x10",  # Rain weekly
-                "0x11",  # Rain monthly
-                "0x12",  # Rain yearly
-                "0x13",  # Rain total
+                "0x10",  # Rain hourly
+                "0x11",  # Rain weekly
+                "0x12",  # Rain monthly
+                "0x13",  # Rain yearly
                 "wh69batt",  # Battery level
             ])
         elif sensor_type.lower() in ("ws90", "weather_station_ws90"):
@@ -217,10 +217,10 @@ class SensorMapper:
                 "0x0D",  # Rain event
                 "0x0E",  # Rain rate
                 "0x7C",  # Rain daily
-                "0x10",  # Rain weekly
-                "0x11",  # Rain monthly
-                "0x12",  # Rain yearly
-                "0x13",  # Rain total
+                "0x10",  # Rain hourly
+                "0x11",  # Rain weekly
+                "0x12",  # Rain monthly
+                "0x13",  # Rain yearly
                 "ws90batt",  # Battery level
             ])
         elif sensor_type.lower() in ("wh80", "ws80") or "temp & humidity & solar & wind" in sensor_type.lower() and "rain" not in sensor_type.lower():
@@ -254,10 +254,10 @@ class SensorMapper:
                 "0x0D",  # Rain event
                 "0x0E",  # Rain rate
                 "0x7C",  # Rain daily
-                "0x10",  # Rain weekly
-                "0x11",  # Rain monthly
-                "0x12",  # Rain yearly
-                "0x13",  # Rain total
+                "0x10",  # Rain hourly
+                "0x11",  # Rain weekly
+                "0x12",  # Rain monthly
+                "0x13",  # Rain yearly
                 "wh90batt",  # Battery level
             ])
         elif sensor_type.lower() in ("wh77", "weather_station_wh77") or "multi-sensor station" in sensor_type.lower():
@@ -276,10 +276,10 @@ class SensorMapper:
                 "0x0D",  # Rain event
                 "0x0E",  # Rain rate
                 "0x7C",  # Rain daily
-                "0x10",  # Rain weekly
-                "0x11",  # Rain monthly
-                "0x12",  # Rain yearly
-                "0x13",  # Rain total
+                "0x10",  # Rain hourly
+                "0x11",  # Rain weekly
+                "0x12",  # Rain monthly
+                "0x13",  # Rain yearly
                 "wh77batt",  # Battery level
             ])
         elif sensor_type.lower() in ("wh25", "indoor_station"):
@@ -414,10 +414,10 @@ class SensorMapper:
                 "0x0D": "rain_event",
                 "0x0E": "rain_rate",
                 "0x7C": "daily_rain",
-                "0x10": "weekly_rain",
-                "0x11": "monthly_rain",
-                "0x12": "yearly_rain",
-                "0x13": "total_rain",
+                "0x10": "hourly_rain",
+                "0x11": "weekly_rain",
+                "0x12": "monthly_rain",
+                "0x13": "yearly_rain",
             }
             # Return mapped name or fallback to hex format if unknown
             return hex_to_name.get(key, key.lower().replace("0x", "hex"))
