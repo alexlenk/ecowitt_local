@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.21] - 2026-02-20
+
+### Fixed
+- **Rain sensor labels wrong for WS90/WH90 (off by one step)**: The hex ID names for piezoRain sensors were shifted: `0x10` was labelled "Weekly Rain" when it is actually "Hourly Rain"; `0x11` was "Monthly" (actually Weekly); `0x12` was "Yearly" (actually Monthly); `0x13` was "Total" (actually Yearly). Corrected all four names and their entity ID slugs (`hourly_rain`, `weekly_rain`, `monthly_rain`, `yearly_rain`). Reported by @nmaster2042 in issue #5. **Note:** entity IDs for these four sensors will change after update (e.g. `sensor.ecowitt_weekly_rain_XXXX` → `sensor.ecowitt_hourly_rain_XXXX`). Please update any automations or dashboard cards that reference them.
+
 ## [1.5.20] - 2026-02-19
 
 ### Fixed

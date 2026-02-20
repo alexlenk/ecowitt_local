@@ -791,11 +791,11 @@ async def test_coordinator_piezo_rain_processing(coordinator):
     assert len(rate_sensors) >= 1, "Rain Rate sensor (0x0E) should be created"
     assert sensors[rate_sensors[0]]["state"] == 0.0
     
-    yearly_sensors = [k for k in sensors.keys() if "12" in k and sensors[k]["state"] == 2.36]
-    assert len(yearly_sensors) >= 1, "Yearly Rain sensor (0x12) should be created"
+    monthly_sensors = [k for k in sensors.keys() if "12" in k and sensors[k]["state"] == 2.36]
+    assert len(monthly_sensors) >= 1, "Monthly Rain sensor (0x12) should be created"
 
-    total_sensors = [k for k in sensors.keys() if "13" in k and sensors[k]["state"] == 10.15]
-    assert len(total_sensors) >= 1, "Total Rain sensor (0x13) should be created"
+    yearly_sensors = [k for k in sensors.keys() if "13" in k and sensors[k]["state"] == 10.15]
+    assert len(yearly_sensors) >= 1, "Yearly Rain sensor (0x13) should be created"
     
     # Check WS90 battery sensor is created from rain data
     battery_sensors = [k for k in sensors.keys() if "battery" in k]
@@ -852,13 +852,13 @@ async def test_coordinator_piezo_rain_processing_metric(coordinator):
     # Unit is normalized: mm/Hr -> mm/h
     assert sensors[rate_sensors[0]]["unit_of_measurement"] == "mm/h"
     
-    yearly_sensors = [k for k in sensors.keys() if "12" in k and sensors[k]["state"] == 59.94]
-    assert len(yearly_sensors) >= 1, "Yearly Rain sensor (0x12) should be created"
-    assert sensors[yearly_sensors[0]]["unit_of_measurement"] == "mm"
+    monthly_sensors = [k for k in sensors.keys() if "12" in k and sensors[k]["state"] == 59.94]
+    assert len(monthly_sensors) >= 1, "Monthly Rain sensor (0x12) should be created"
+    assert sensors[monthly_sensors[0]]["unit_of_measurement"] == "mm"
 
-    total_sensors = [k for k in sensors.keys() if "13" in k and sensors[k]["state"] == 257.81]
-    assert len(total_sensors) >= 1, "Total Rain sensor (0x13) should be created"
-    assert sensors[total_sensors[0]]["unit_of_measurement"] == "mm"
+    yearly_sensors = [k for k in sensors.keys() if "13" in k and sensors[k]["state"] == 257.81]
+    assert len(yearly_sensors) >= 1, "Yearly Rain sensor (0x13) should be created"
+    assert sensors[yearly_sensors[0]]["unit_of_measurement"] == "mm"
     
     # Check WS90 battery sensor is created
     battery_sensors = [k for k in sensors.keys() if "battery" in k]
@@ -898,16 +898,15 @@ async def test_coordinator_rain_array_processing(coordinator):
     assert len(rain_rate) >= 1, "Rain Rate (0x0E) should be created from 'rain' array"
     assert sensors[rain_rate[0]]["state"] == 0.12
 
-    # 0x10/0x11/0x12/0x13 have only decimal digits → identifier becomes ch10/ch11/ch12/ch13
-    # Match by sensor name fragment instead
-    weekly_rain = [k for k in sensors if "weekly_rain" in k]
-    assert len(weekly_rain) >= 1, "Weekly Rain (0x10) should be created from 'rain' array"
-    assert sensors[weekly_rain[0]]["state"] == 0.05
+    # 0x10/0x11/0x12/0x13 are in hex_to_name → entity IDs use the mapped name (hourly_rain etc.)
+    hourly_rain = [k for k in sensors if "hourly_rain" in k]
+    assert len(hourly_rain) >= 1, "Hourly Rain (0x10) should be created from 'rain' array"
+    assert sensors[hourly_rain[0]]["state"] == 0.05
 
-    total_rain = [k for k in sensors if "total_rain" in k]
-    assert len(total_rain) >= 1, "Total Rain (0x13) should be created from 'rain' array"
-    assert sensors[total_rain[0]]["state"] == 3.0
-    assert sensors[total_rain[0]]["unit_of_measurement"] == "in"
+    yearly_rain = [k for k in sensors if "yearly_rain" in k]
+    assert len(yearly_rain) >= 1, "Yearly Rain (0x13) should be created from 'rain' array"
+    assert sensors[yearly_rain[0]]["state"] == 3.0
+    assert sensors[yearly_rain[0]]["unit_of_measurement"] == "in"
 
     # All 7 rain items must produce sensors with include_inactive=True
     assert len(sensors) >= 7, f"Expected at least 7 sensors from 'rain' array, got {len(sensors)}"
@@ -943,8 +942,8 @@ async def test_coordinator_rain_array_does_not_affect_piezo_rain(coordinator):
     sensors = processed["sensors"]
 
     # Both arrays must contribute sensors
-    # 0x10 from rain → entity ID contains "weekly_rain"
-    assert any("weekly_rain" in k for k in sensors), "Weekly Rain from 'rain' array missing"
+    # 0x10 from rain → entity ID contains "hourly_rain"
+    assert any("hourly_rain" in k for k in sensors), "Hourly Rain from 'rain' array missing"
     # 0x0D from piezoRain → entity ID contains "0x0d"
     assert any("0x0d" in k for k in sensors), "Rain Rate from 'piezoRain' missing"
     # WS90 battery from piezoRain still extracted
