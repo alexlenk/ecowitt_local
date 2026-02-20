@@ -142,20 +142,5 @@ jobs:
             echo "⚠️ PR creation failed - may already exist"
             exit 0  # Exit successfully to avoid failing the workflow
           fi
-
-          # CI already passed on this branch — merge immediately.
-          # GitHub prevents GITHUB_TOKEN-created PRs from triggering downstream
-          # pull_request events, so auto-merge.yml can never fire via that route.
-          PR_NUMBER=$(gh pr list --head "$BRANCH" --base main --json number --jq '.[0].number')
-          if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
-            echo "Merging PR #${PR_NUMBER}..."
-            gh pr merge "$PR_NUMBER" \
-              --merge \
-              --delete-branch \
-              --subject "Merge release PR #${PR_NUMBER}: Release v${VERSION}" \
-              --body "Automatically merged after CI passed on ${BRANCH}." \
-            && echo "✅ PR #${PR_NUMBER} merged" \
-            || echo "⚠️ Merge failed (may require manual merge)"
-          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
