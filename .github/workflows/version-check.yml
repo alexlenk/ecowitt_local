@@ -11,7 +11,9 @@ permissions:
 jobs:
   validate-version:
     runs-on: ubuntu-latest
-    
+    # Only enforce version bump for release branches; skip for infra/workflow-only PRs
+    if: startsWith(github.head_ref, 'claude/release-')
+
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v4
