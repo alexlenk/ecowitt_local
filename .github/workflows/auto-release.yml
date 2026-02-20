@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+  workflow_run:
+    # Also trigger when auto-merge completes — GitHub prevents GITHUB_TOKEN-triggered
+    # merges from firing push events, so this is the reliable path for auto-releases.
+    workflows: ["Auto Merge Release PRs"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -12,8 +17,11 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    # Only run if this is a merged PR or manual workflow dispatch
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.event.head_commit.message != '')
+    # Run for: manual dispatch, direct push to main, or successful auto-merge
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.event.head_commit.message != '') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
 
     steps:
       - name: Checkout code
