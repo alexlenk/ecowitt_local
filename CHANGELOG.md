@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.22] - 2026-02-21
+
+### Fixed
+- **WH41 PM2.5 air quality sensor has no entities**: The `ch_pm25` data section returned by Ecowitt gateways (GW3000, GW2000, etc.) was never processed by the coordinator, so WH41 sensors would appear as a device with zero entities. The coordinator now reads `ch_pm25` and creates `pm25_ch{N}` (real-time PM2.5), `pm25_avg_24h_ch{N}` (24-hour average), and `pm25batt{N}` (battery) entities for each channel. Both `"pm25"` (lowercase) and `"PM25"` / `"PM25_24HAQI"` (uppercase) field name variants from different firmware versions are handled. Fixes issue #68.
+- **PM2.5 24h average entity_id collision with real-time entity**: The sensor type extractor was returning `pm25` for both `pm25_ch1` and `pm25_avg_24h_ch1`, causing both entities to share the entity_id `sensor.ecowitt_pm25_*` and overwrite each other. The 24h average now generates a distinct `sensor.ecowitt_pm25_24h_avg_*` entity_id.
+
 ## [1.5.21] - 2026-02-20
 
 ### Fixed

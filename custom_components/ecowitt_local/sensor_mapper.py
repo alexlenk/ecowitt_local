@@ -426,7 +426,7 @@ class SensorMapper:
         clean_key = re.sub(r'\d+$', '', key)
         clean_key = re.sub(r'(in|f|ch\d*)$', '', clean_key)
 
-        # Map common patterns
+        # Map common patterns (more specific patterns must come before generic ones)
         type_mappings = {
             "temp": "temperature",
             "humid": "humidity",
@@ -434,6 +434,7 @@ class SensorMapper:
             "wind": "wind",
             "rain": "rain",
             "soil": "soil_moisture",
+            "pm25_avg_24h": "pm25_24h_avg",  # must precede generic "pm25"
             "pm25": "pm25",
             "leak": "leak",
             "lightning": "lightning",
