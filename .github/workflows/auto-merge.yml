@@ -1,14 +1,8 @@
 name: Auto Merge Release PRs
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    branches:
-      - main
-  check_suite:
-    types: [completed]
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["Auto PR for Claude Branches"]
     types: [completed]
 
 permissions:
@@ -18,34 +12,46 @@ permissions:
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    # Only auto-merge PRs from claude branches with release label or release title
+    # Only run after auto-pr succeeds on a claude/release-* branch
     if: |
-      github.event.pull_request.head.ref != null &&
-      startsWith(github.event.pull_request.head.ref, 'claude/') &&
-      (contains(github.event.pull_request.labels.*.name, 'release') || startsWith(github.event.pull_request.title, 'Release v'))
+      github.event.workflow_run.conclusion == 'success' &&
+      startsWith(github.event.workflow_run.head_branch, 'claude/release-')
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Wait for all checks to complete
-        uses: lewagon/wait-on-check-action@v1.3.1
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          check-regexp: '(test \(3\.(11|12)\)|validate|HACS Action)'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 10
-          allowed-conclusions: success
-
-      - name: Auto-merge PR
+      - name: Find and merge release PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PR_NUMBER="${{ github.event.pull_request.number }}"
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
+          echo "Looking for release PR from branch: $BRANCH"
 
-          # Merge the PR
+          PR_NUMBER=$(gh pr list \
+            --head "$BRANCH" \
+            --base main \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty' \
+            --repo "${{ github.repository }}")
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "⏭️ No open PR found for branch $BRANCH - skipping"
+            exit 0
+          fi
+
+          PR_TITLE=$(gh pr view "$PR_NUMBER" --json title --jq '.title' --repo "${{ github.repository }}")
+          echo "Found PR #$PR_NUMBER: $PR_TITLE"
+
+          if ! echo "$PR_TITLE" | grep -qE "^Release v"; then
+            echo "⏭️ PR #$PR_NUMBER is not a release PR - skipping"
+            exit 0
+          fi
+
+          echo "✅ Merging release PR #$PR_NUMBER"
           gh pr merge "$PR_NUMBER" \
             --merge \
             --delete-branch \
             --subject "Merge release PR #${PR_NUMBER}" \
-            --body "Automatically merged by GitHub Actions after all checks passed."
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            --body "Automatically merged by GitHub Actions after all checks passed." \
+            --repo "${{ github.repository }}"
+
+          echo "✅ PR #$PR_NUMBER merged successfully"
