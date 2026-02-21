@@ -16,17 +16,16 @@ permissions:
 
 jobs:
   claude:
-    # Only trigger for WH77 test issue - restrict to test scenario only
+    # Trigger when @claude is mentioned in any issue or comment
     if: |
-      (contains(github.event.issue.title, 'WH77 Multi-Sensor Station') || 
-       contains(github.event.issue.body, 'WH77 Multi-Sensor Station')) &&
-      (contains(github.event.issue.body, '@claude') || contains(github.event.comment.body, '@claude'))
+      contains(github.event.issue.body, '@claude') ||
+      contains(github.event.comment.body, '@claude')
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
