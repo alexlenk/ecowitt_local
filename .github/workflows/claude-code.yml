@@ -46,5 +46,6 @@ jobs:
             Important constraints:
             - Do NOT implement WH77 support (it is a test sensor only).
             - Do NOT auto-merge the PR — leave it open for review.
+          claude_args: "--model claude-sonnet-4-6"
           custom_instructions: |
             Do not post any comments on GitHub issues. Only create branches and PRs.
