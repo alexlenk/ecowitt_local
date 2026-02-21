@@ -2,11 +2,7 @@ name: Claude Code
 
 on:
   issues:
-    types: [opened, edited]
-  issue_comment:
-    types: [created]
-  pull_request_review_comment:
-    types: [created]
+    types: [opened]
 
 permissions:
   contents: write
@@ -16,10 +12,6 @@ permissions:
 
 jobs:
   claude:
-    # Trigger when @claude is mentioned in any issue or comment
-    if: |
-      contains(github.event.issue.body, '@claude') ||
-      contains(github.event.comment.body, '@claude')
     runs-on: ubuntu-latest
 
     steps:
@@ -29,10 +21,30 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Read CLAUDE.md for full project context first.
+
+            A new GitHub issue has been filed:
+            Issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
+
+            Issue body:
+            ${{ github.event.issue.body }}
+
+            Your task:
+            1. Analyse the issue and determine whether it is an actionable bug or feature request.
+            2. If it is actionable, implement a fix on a new branch named
+               claude/issue-${{ github.event.issue.number }}-<short-description>.
+            3. Set up the test environment first if needed:
+               python3 -m venv .venv && .venv/bin/pip install -r requirements_test.txt
+            4. Run the full test suite before opening the PR:
+               PYTHONPATH="$PWD" .venv/bin/pytest tests/ -v
+            5. Bump the patch version in manifest.json and add a CHANGELOG.md entry.
+            6. Open a PR targeting main. Do NOT comment on the issue itself.
+            7. If the issue is not actionable (e.g. a question, duplicate, or needs more info),
+               do nothing — do not comment, do not create a branch.
+
+            Important constraints:
+            - Do NOT implement WH77 support (it is a test sensor only).
+            - Do NOT auto-merge the PR — leave it open for review.
           custom_instructions: |
-            Read CLAUDE.md for full project context before doing anything.
-            Always create a branch named claude/issue-{number}-{short-description}.
-            Always run tests before creating a PR: PYTHONPATH="$PWD" .venv/bin/pytest tests/ -v
-            Set up the venv first if needed: python3 -m venv .venv && .venv/bin/pip install -r requirements_test.txt
-            Do NOT implement WH77 support - it is a testing sensor only.
-            Do NOT auto-merge PRs - create the PR and leave it for review.
+            Do not post any comments on GitHub issues. Only create branches and PRs.
