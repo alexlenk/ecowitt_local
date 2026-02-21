@@ -321,6 +321,41 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                             all_sensor_items.append({"id": battery_key, "val": battery_pct})
                             _LOGGER.debug("Added WH34 battery sensor: %s = %s%%", battery_key, battery_pct)
 
+        # Extract ch_pm25 data (WH41 PM2.5 air quality sensors)
+        ch_pm25 = raw_data.get("ch_pm25", [])
+        if ch_pm25:
+            _LOGGER.debug("Found ch_pm25 data with %d items", len(ch_pm25))
+            for item in ch_pm25:
+                _LOGGER.debug("ch_pm25 item: %s", item)
+                if isinstance(item, dict):
+                    channel = item.get("channel")
+                    # Real-time PM2.5 (gateway may use lowercase or uppercase key)
+                    pm25_val = item.get("pm25") or item.get("PM25")
+                    # 24-hour average PM2.5
+                    pm25_24h_val = (
+                        item.get("pm25_avg_24h")
+                        or item.get("PM25_24HAQI")
+                        or item.get("pm25_24h")
+                    )
+                    battery = item.get("battery")
+
+                    if channel:
+                        if pm25_val and pm25_val != "None":
+                            pm25_key = f"pm25_ch{channel}"
+                            all_sensor_items.append({"id": pm25_key, "val": pm25_val})
+                            _LOGGER.debug("Added PM2.5 sensor: %s = %s", pm25_key, pm25_val)
+
+                        if pm25_24h_val and pm25_24h_val != "None":
+                            pm25_24h_key = f"pm25_avg_24h_ch{channel}"
+                            all_sensor_items.append({"id": pm25_24h_key, "val": pm25_24h_val})
+                            _LOGGER.debug("Added PM2.5 24h avg sensor: %s = %s", pm25_24h_key, pm25_24h_val)
+
+                        if battery and battery != "None":
+                            battery_key = f"pm25batt{channel}"
+                            battery_pct = str(int(battery) * 20) if str(battery).isdigit() else battery
+                            all_sensor_items.append({"id": battery_key, "val": battery_pct})
+                            _LOGGER.debug("Added PM2.5 battery sensor: %s = %s%%", battery_key, battery_pct)
+
         _LOGGER.debug("Total sensor items to process: %d", len(all_sensor_items))
         
         for item in all_sensor_items:

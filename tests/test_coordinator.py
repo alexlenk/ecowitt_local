@@ -1619,3 +1619,80 @@ async def test_coordinator_ch_temp_empty_handling(coordinator):
         result = await coordinator._async_update_data()
         assert result is not None
         assert "sensors" in result
+
+@pytest.mark.asyncio
+async def test_coordinator_ch_pm25_processing(coordinator):
+    """Test coordinator processing WH41 ch_pm25 PM2.5 air quality data."""
+    mock_live_data = {
+        "common_list": [],
+        "ch_pm25": [
+            {
+                "channel": "1",
+                "pm25": "2.0",
+                "pm25_avg_24h": "8.0",
+                "battery": "5",
+            },
+            {
+                "channel": "2",
+                "PM25": "15.5",          # Test uppercase field name variant
+                "PM25_24HAQI": "12.0",   # Test alternative 24h field name
+                "battery": "3",
+            },
+        ],
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_version = AsyncMock(return_value={"stationtype": "GW3000C", "version": "2.1.0"})
+
+    result = await coordinator._async_update_data()
+
+    assert result is not None
+    sensors = result["sensors"]
+
+    pm25_ch1_found = pm25_24h_ch1_found = batt1_found = False
+    pm25_ch2_found = pm25_24h_ch2_found = batt2_found = False
+
+    for sensor_id, sensor_data in sensors.items():
+        key = sensor_data.get("sensor_key", "")
+        if key == "pm25_ch1":
+            pm25_ch1_found = True
+            assert sensor_data["state"] == 2.0
+        elif key == "pm25_avg_24h_ch1":
+            pm25_24h_ch1_found = True
+            assert sensor_data["state"] == 8.0
+        elif key == "pm25batt1":
+            batt1_found = True
+            assert sensor_data["state"] == "100"  # 5 * 20 = 100%
+        elif key == "pm25_ch2":
+            pm25_ch2_found = True
+            assert sensor_data["state"] == 15.5
+        elif key == "pm25_avg_24h_ch2":
+            pm25_24h_ch2_found = True
+            assert sensor_data["state"] == 12.0
+        elif key == "pm25batt2":
+            batt2_found = True
+            assert sensor_data["state"] == "60"  # 3 * 20 = 60%
+
+    assert pm25_ch1_found, "pm25_ch1 sensor not found"
+    assert pm25_24h_ch1_found, "pm25_avg_24h_ch1 sensor not found"
+    assert batt1_found, "pm25batt1 sensor not found"
+    assert pm25_ch2_found, "pm25_ch2 sensor not found (uppercase PM25 field)"
+    assert pm25_24h_ch2_found, "pm25_avg_24h_ch2 sensor not found (PM25_24HAQI field)"
+    assert batt2_found, "pm25batt2 sensor not found"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_ch_pm25_empty_handling(coordinator):
+    """Test coordinator handles empty or missing ch_pm25 gracefully."""
+    for ch_pm25_val in [[], None]:
+        mock_live_data = {"common_list": []}
+        if ch_pm25_val is not None:
+            mock_live_data["ch_pm25"] = ch_pm25_val
+
+        coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+        coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+        coordinator.api.get_version = AsyncMock(return_value={"stationtype": "GW3000C", "version": "2.1.0"})
+
+        result = await coordinator._async_update_data()
+        assert result is not None

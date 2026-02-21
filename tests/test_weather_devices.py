@@ -478,9 +478,9 @@ class TestWH41PM25Sensor:
         assert entity_id == "sensor.ecowitt_pm25_g8h9i0"
         assert "PM2.5" in name
         
-        # Test PM2.5 24h average sensor
+        # Test PM2.5 24h average sensor — must have a distinct entity_id from the real-time sensor
         entity_id, name = mapper.generate_entity_id("pm25_avg_24h_ch1", "G8H9I0")
-        assert entity_id == "sensor.ecowitt_pm25_g8h9i0"
+        assert entity_id == "sensor.ecowitt_pm25_24h_avg_g8h9i0"
         assert "PM2.5" in name
         
         # Test battery sensor
