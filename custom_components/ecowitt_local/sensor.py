@@ -168,11 +168,12 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        sensor_info = self.coordinator.get_sensor_data(self.entity_id)
-        
-        # Fallback: lookup by sensor_key and hardware_id for hex ID sensors
-        if sensor_info is None and self._sensor_key:
-            sensor_info = self.coordinator.get_sensor_data_by_key(self._sensor_key, self._hardware_id)
+        # Primary: look up by sensor_key + hardware_id. This is stable regardless of
+        # whether the entity's registry entity_id matches the coordinator's generated
+        # entity_id (they can diverge when entity_id format changes between versions).
+        sensor_info = self.coordinator.get_sensor_data_by_key(self._sensor_key, self._hardware_id)
+        if sensor_info is None:
+            sensor_info = self.coordinator.get_sensor_data(self.entity_id)
         if sensor_info:
             self._update_attributes(sensor_info)
         self.async_write_ha_state()
@@ -217,7 +218,9 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return additional state attributes."""
-        sensor_info = self.coordinator.get_sensor_data(self.entity_id)
+        sensor_info = self.coordinator.get_sensor_data_by_key(self._sensor_key, self._hardware_id)
+        if sensor_info is None:
+            sensor_info = self.coordinator.get_sensor_data(self.entity_id)
         if not sensor_info:
             return {}
         
@@ -269,9 +272,11 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
         """Return if entity is available."""
         if not self.coordinator.last_update_success:
             return False
-            
-        # Check if sensor has recent data
-        sensor_info = self.coordinator.get_sensor_data(self.entity_id)
+
+        # Primary: look up by sensor_key + hardware_id (stable across entity_id format changes)
+        sensor_info = self.coordinator.get_sensor_data_by_key(self._sensor_key, self._hardware_id)
+        if sensor_info is None:
+            sensor_info = self.coordinator.get_sensor_data(self.entity_id)
         if not sensor_info:
             return False
             

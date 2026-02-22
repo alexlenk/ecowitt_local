@@ -1,145 +1,206 @@
 # Spec 009: WS90 / GW2000 / GW3000 — Incomplete or Unavailable Entities
 
 **GitHub Issues:** #5, #40, #15, #41 (partial)
-**Status:** 🟡 Partial — wh25 temperature unit fixed in v1.5.19; hardware_id mapping conflict still open
-**Priority:** HIGH — affects many users with GW2000/GW3000 + WS90 combination
+**Status:** 🟡 Partial — most issues fixed through v1.5.21; entity-ID mismatch being fixed in v1.5.23
+**Priority:** HIGH — affects many users with GW2000/GW3000 + WS90/WH90 combination
 
 ---
 
 ## Background
 
-Users with GW2000 or GW3000 gateways + WS90 outdoor sensor consistently report:
-- WS90 device created but most entities show "unavailable" or are never created
+Users with GW2000 or GW3000 gateways + WS90/WH90 outdoor sensor consistently report:
+- WS90/WH90 device created but most entities show "unavailable" or are never created
 - Gateway device only shows a small subset of expected entities (9 instead of 20+)
 - Some gateway sensors incorrectly show values like 160°F instead of ~74°F
+- Sensors populate at startup/reload but then freeze (stop updating)
 
 Representative reports:
 - **@timnis (GW2000 + WS90):** "9 entities each even with 'Include Inactive Sensors'" — both gateway and WS90 severely truncated
 - **@nicokars (GW3000):** Same — confirmed with screenshot
 - **@darrendavid:** "My gateway temp is showing as over 160 degrees when the web UI reads 74.1F"
-- Multiple users in #40 confirm across GW2000/GW3000 variants
+- **@nmaster2042 (GW2000 + WH90):** "Sensors populate at start but freeze — wind, UV, radiation stuck. Only humidity and dewpoint update."
 
 ---
 
-## Known Live Data Structure (GW2000 + WS90)
+## Known Live Data Structure (GW2000 + WH90, FW 3.2.9)
 
-From user-provided `get_livedata_info` (issue #5, user @Rakkzi):
+From user-provided `get_livedata_info` (@nmaster2042, GW2000 FW 3.2.9):
 
 ```json
 {
   "common_list": [
-    {"id": "0x02", "val": "66.0", "unit": "F"},
-    {"id": "0x07", "val": "89%"},           ← percent sign embedded, no space
-    {"id": "3",    "val": "66.0", "unit": "F"},
-    {"id": "5",    "val": "0.071 inHg"},    ← embedded unit with space
-    {"id": "0x03", "val": "62.8", "unit": "F"},
-    {"id": "0x0B", "val": "1.34 mph"},
-    {"id": "0x0C", "val": "1.57 mph"},
-    {"id": "0x19", "val": "7.38 mph"},
+    {"id": "0x02", "val": "9.1",  "unit": "C"},
+    {"id": "0x07", "val": "94%"},
+    {"id": "4",    "val": "7.4",  "unit": "C"},   ← apparent temperature
+    {"id": "5",    "val": "0.069 kPa"},            ← vapor pressure deficit
+    {"id": "0x03", "val": "8.2",  "unit": "C"},
+    {"id": "0x0B", "val": "1.7 m/s"},
+    {"id": "0x0C", "val": "2.7 m/s"},
+    {"id": "0x19", "val": "6.0 m/s"},
     {"id": "0x15", "val": "0.00 W/m2"},
     {"id": "0x17", "val": "0"},
-    {"id": "0x0A", "val": "133"},
-    {"id": "0x6D", "val": "130"}
+    {"id": "0x0A", "val": "351"},
+    {"id": "0x6D", "val": "21"}
   ],
   "piezoRain": [
     {"id": "srain_piezo", "val": "0"},
-    {"id": "0x0D", "val": "0.00 in"},
-    {"id": "0x0E", "val": "0.00 in/Hr"},
-    {"id": "0x7C", "val": "0.00 in"},
-    {"id": "0x10", "val": "0.00 in"},
-    {"id": "0x11", "val": "0.00 in"},
-    {"id": "0x12", "val": "2.36 in"},
-    {"id": "0x13", "val": "10.15 in", "battery": "3", "voltage": "2.62", "ws90cap_volt": "5.3", "ws90_ver": "153"}
+    {"id": "0x0D", "val": "2.4 mm"},
+    {"id": "0x0E", "val": "0.0 mm/Hr"},
+    {"id": "0x7C", "val": "2.8 mm"},
+    {"id": "0x10", "val": "1.0 mm"},
+    {"id": "0x11", "val": "61.1 mm"},
+    {"id": "0x12", "val": "136.7 mm"},
+    {"id": "0x13", "val": "244.8 mm", "battery": "5", "voltage": "3.04", "ws90cap_volt": "4.2", "ws90_ver": "115"}
   ],
-  "wh25": [{"intemp": "80.6", "unit": "F", "inhumi": "35%", "abs": "29.38 inHg", "rel": "30.03 inHg"}]
+  "wh25": [{"intemp": "15.5", "unit": "C", "inhumi": "63%", "abs": "1012.4 hPa", "rel": "1012.4 hPa"}],
+  "debug": [{"heap": "134032", "runtime": "79710", "usr_interval": "60", "is_cnip": false}]
 }
 ```
 
-From `get_sensors_info`:
+Note: GW2000 FW 3.2.9 sends hex IDs with embedded units (`"1.7 m/s"`, `"94%"`) but also sends `"unit"` for temperature IDs. Humidity comes as `"94%"` (no space).
+
+From `get_sensors_info` (@nmaster2042):
+- WH90 hardware ID `4094A8` IS returned (only visible on page 1, @nmaster2042 initially confused by page 1 vs page 2 split)
+- `{"img": "wh90", "type": "48", "name": "Temp & Humidity & Solar & Wind & Rain", "id": "4094A8", "batt": "5", "signal": "4"}`
+
+From `get_sensors_info` (older data, @Rakkzi, GW2000 + WS90):
 ```json
-[
-  {"img": "wh90", "type": "48", "name": "Temp & Humidity & Solar & Wind & Rain", "id": "A238", "batt": "3", "rssi": "-69", "signal": "4"}
-]
+[{"img": "wh90", "type": "48", "name": "Temp & Humidity & Solar & Wind & Rain", "id": "A238", "batt": "3"}]
 ```
-WS90 has hardware ID `A238` and is in `common_list` + `piezoRain`.
 
 ---
 
 ## Root Cause Analysis
 
-### Issue 1: `"89%"` — percent sign without space breaks value parsing
+### ✅ Issue 1 (FIXED v1.5.x): `"89%"` / `"94%"` — percent sign without space
 
-The humidity key `0x07` sends `"89%"` (no space before `%`). The coordinator's embedded-unit extractor uses a regex that expects a space before the unit (e.g. `"89 %"` or `"1.34 mph"`). Without a space, `"89%"` is not split — the raw string is passed to HA, causing a `ValueError` when HA tries to cast it to float.
+The humidity key `0x07` sends `"89%"` or `"94%"` (no space before `%`). Fixed in coordinator `_process_live_data` unit extraction via regex.
 
-**Fix:** Extend `_convert_sensor_value` to also strip trailing `%` (and handle other no-space unit suffixes).
+### ✅ Issue 4 (FIXED v1.5.19): `wh25` indoor temperature wrong unit
 
-### Issue 2: WS90 hardware_id not associated with `common_list` hex keys
+The `wh25` block sends `"unit": "F"` or `"unit": "C"`. Fixed by passing the `unit` field through the sensor item dict.
 
-The sensor mapper maps hex keys (`0x02`, `0x07`, etc.) to a hardware ID only when a known device type is detected in `get_sensors_info`. For WS90 (`wh90`), the hex key → hardware ID mapping IS present (added in v1.4.8). However, there may be a conflict: if multiple sensors share the same hex key (e.g. both WS90 and WH80 use `0x07`), only the last mapping survives in `_hardware_mapping`. The WS90's hardware ID may be overwritten by another device, causing `get_hardware_id("0x07")` to return the wrong ID or `None`.
+### 🔴 Issue 5 (CONFIRMED — fixed in v1.5.23): Entity ID format mismatch → sensors freeze
 
-**Investigation needed:** Check whether `_hardware_mapping` correctly maps `0x07` → `A238` for a GW2000 + WS90 setup.
+**Confirmed by @nmaster2042's debug log (2026-02-21).**
 
-### Issue 3: `piezoRain` → WS90 device association
+When the `hex_to_name` mapping was added to `_extract_sensor_type_from_key`, entity IDs changed format:
+- **Old format (entity registry):** `sensor.ecowitt_0x0b_4094a8`
+- **New format (coordinator data):** `sensor.ecowitt_wind_speed_4094a8`
 
-`piezoRain` items (battery, wind rain values) are appended to `all_sensor_items` by the coordinator, but the hardware_id used when creating those entities comes from `get_hardware_id(sensor_id)`. For `"0x13"` (total rain), the hardware_id lookup must return `A238` for the WS90. This only works if `0x13` is mapped to the WS90's hardware ID in `_hardware_mapping` — which requires the WS90 device type detection to have run successfully.
+Users who had entities registered under the old format keep those entity IDs in their HA entity registry (HA matches by `unique_id` and preserves the registered entity ID). When `_handle_coordinator_update` calls `get_sensor_data(self.entity_id)`:
+1. Direct lookup `sensors_dict.get("sensor.ecowitt_0x0b_4094a8")` fails (data is at `"sensor.ecowitt_wind_speed_4094a8"`)
+2. The fallback iterates and finds the FIRST sensor with `hardware_id="4094A8"` and a key starting with `"0x"` → **always returns outdoor_temp (`0x02`) data**
+3. HA receives wind_speed entity with device_class=temperature / unit=°C → rejects state update
+4. Entity value stays frozen at the initial startup value forever
 
-### Issue 4: `wh25` indoor data — wrong temperature values
+Debug log evidence (repeats every coordinator cycle):
+```
+Found sensor by hardware_id match: sensor.ecowitt_0x0b_4094a8 -> sensor.ecowitt_outdoor_temp_4094a8
+Found sensor by hardware_id match: sensor.ecowitt_0x0c_4094a8 -> sensor.ecowitt_outdoor_temp_4094a8
+Found sensor by hardware_id match: sensor.ecowitt_0x0a_4094a8 -> sensor.ecowitt_outdoor_temp_4094a8
+Found sensor by hardware_id match: sensor.ecowitt_0x6d_4094a8 -> sensor.ecowitt_outdoor_temp_4094a8
+Found sensor by hardware_id match: sensor.ecowitt_0x0d_4094a8 -> sensor.ecowitt_outdoor_temp_4094a8
+Found sensor by hardware_id match: sensor.ecowitt_0x0e_4094a8 -> sensor.ecowitt_outdoor_temp_4094a8
+Found sensor by hardware_id match: sensor.ecowitt_0x7c_4094a8 -> sensor.ecowitt_outdoor_temp_4094a8
+```
 
-The `wh25` block sends `"intemp": "80.6"` with `"unit": "F"`. The coordinator processes this as `tempinf` (indoor temperature Fahrenheit). If the gateway is configured in Celsius but reports `wh25` in Fahrenheit (same issue as `ch_aisle` in spec 003), the value could be double-converted. **But** the `wh25` unit field is explicit — needs to verify whether the spec 003 fix also covers `wh25` data.
+Affected sensors (old-format entity IDs in registry): wind speed, wind gust, wind direction, wind direction avg, rain event, rain rate, daily rain + rain amounts.
 
-The 160°F report is likely a double-conversion: Celsius value being treated as Fahrenheit and converted again.
+Not affected (new-format entity IDs, working): outdoor temp, outdoor humidity, dewpoint, solar radiation, UV index, weekly/monthly/yearly rain.
+
+**Fix:** Change `_handle_coordinator_update`, `available`, and `extra_state_attributes` in `sensor.py` to use `get_sensor_data_by_key(sensor_key, hardware_id)` as the primary lookup. This is stable regardless of entity_id format — finds the sensor by its immutable sensor_key + hardware_id combination.
+
+### ℹ️ Issue 6 (MINOR): Sensor "4" (apparent temperature) missing from GATEWAY_SENSORS / SENSOR_TYPES
+
+`common_list` contains `{"id": "4", "val": "7.4", "unit": "C"}` — the gateway's calculated apparent temperature. Key "4" is not in `GATEWAY_SENSORS` or `SENSOR_TYPES`:
+- No hardware_id mapping → appears under gateway device ✓ (correct, it's gateway-calculated)
+- No SENSOR_TYPES entry → entity_id = `sensor.ecowitt_sensor_ch4` with no device_class or name
+
+Fix: add "4" to `GATEWAY_SENSORS` and `SENSOR_TYPES` as "Apparent Temperature".
+
+### ℹ️ Issue 7 (MINOR): `ws90batt` key in coordinator vs `wh90batt` in sensor_mapper
+
+Coordinator emits key `ws90batt` from `piezoRain` battery data, but sensor_mapper registers `wh90batt` for WH90. Both are defined in `BATTERY_SENSORS`, but the key mismatch means WH90 battery gets `hardware_id=None` and appears under the gateway device.
+
+Fix: change coordinator to emit `wh90batt` instead of `ws90batt`.
 
 ---
 
 ## Requirements
 
-- [ ] **REQ-009-1:** `"89%"` and similar no-space percent/unit suffixes must parse to a numeric value
-- [ ] **REQ-009-2:** WS90 hex-ID sensors in `common_list` must map to the WS90 hardware ID (`A238`)
-- [ ] **REQ-009-3:** `piezoRain` sensors must be associated to the WS90 device
-- [ ] **REQ-009-4:** `wh25` indoor temperature must not double-convert for Celsius gateways
+- [x] **REQ-009-1:** `"89%"` and similar no-space percent/unit suffixes must parse to a numeric value — DONE
+- [x] **REQ-009-4:** `wh25` indoor temperature must not double-convert for Celsius gateways — DONE v1.5.19
+- [ ] **REQ-009-5:** WH90/WS90 hex-ID sensors must update every coordinator cycle (not freeze after startup)
+- [ ] **REQ-009-6:** Sensor "4" (apparent temperature) must appear with correct name and device class
+- [ ] **REQ-009-7:** WH90 battery entity must appear under the WH90 device (not the gateway)
 
 ---
 
 ## Design
 
-### Fix 1: Strip no-space unit suffixes in `_convert_sensor_value`
+### Fix 1 (Critical): Entity lookup by sensor_key + hardware_id
+
+In `sensor.py`, replace direct `entity_id` lookups with `get_sensor_data_by_key`:
 
 ```python
-# In coordinator.py _convert_sensor_value or unit extraction
-# Handle "89%" → 89 with unit "%"
-if value.endswith("%") and not value.endswith(" %"):
-    return float(value[:-1]), "%"
+@callback
+def _handle_coordinator_update(self) -> None:
+    # Primary: look up by sensor_key + hardware_id (stable across entity_id format changes)
+    sensor_info = self.coordinator.get_sensor_data_by_key(self._sensor_key, self._hardware_id)
+    if sensor_info is None:
+        sensor_info = self.coordinator.get_sensor_data(self.entity_id)
+    if sensor_info:
+        self._update_attributes(sensor_info)
+    self.async_write_ha_state()
 ```
 
-### Fix 2: Hardware ID mapping conflict
+Same change in `available` and `extra_state_attributes`. This is backward-compatible — existing entity IDs preserved, they just now correctly find their data.
 
-Check `sensor_mapper.py` — when multiple devices share a hex key, `_hardware_mapping[key]` is overwritten. Need to track hex key → hardware ID per-device rather than a flat map.
+### Fix 2 (Minor): Add sensor "4" to const.py
 
-**⚠️ Architectural issue:** The current flat `_hardware_mapping` dict can only hold one hardware ID per hex key. For GW2000 setups with multiple outdoor sensors (WS90 + WH69), they share hex keys. Only the last device processed will have its hardware ID survive.
+```python
+# GATEWAY_SENSORS set:
+"4",   # Apparent temperature (gateway sensor)
 
-### Fix 3: `wh25` unit handling
+# SENSOR_TYPES dict:
+"4": {
+    "name": "Apparent Temperature",
+    "unit": "°C",
+    "device_class": "temperature",
+    "state_class": "measurement",
+},
+```
 
-Check if `wh25` processing in coordinator applies the spec 003 `_gateway_temp_unit` fix. If `wh25` still uses the hardcoded `tempinf` key (which assumes Fahrenheit), Celsius gateways will double-convert.
+### Fix 3 (Minor): Fix battery key in coordinator.py
 
-### Files to investigate
-- [coordinator.py](../custom_components/ecowitt_local/coordinator.py) — `_convert_sensor_value`, `wh25` processing block
-- [sensor_mapper.py](../custom_components/ecowitt_local/sensor_mapper.py) — `_hardware_mapping` flat dict architecture
+```python
+# In piezoRain processing:
+battery_key = "wh90batt"  # was "ws90batt" — use same key as sensor_mapper
+```
+
+### Files to Change
+- [sensor.py](../custom_components/ecowitt_local/sensor.py) — `_handle_coordinator_update`, `available`, `extra_state_attributes`
+- [const.py](../custom_components/ecowitt_local/const.py) — add "4" to GATEWAY_SENSORS and SENSOR_TYPES
+- [coordinator.py](../custom_components/ecowitt_local/coordinator.py) — change `ws90batt` to `wh90batt`
 
 ---
 
 ## Tasks
 
-- [ ] **TASK-009-1:** Confirm `"89%"` is the exact string in `common_list` for 0x07 (humidity) — confirmed from issue #5 data
-- [ ] **TASK-009-2:** Fix `_convert_sensor_value` to handle no-space percent suffix
-- [ ] **TASK-009-3:** Investigate `_hardware_mapping` conflict for multi-sensor GW2000 setups
-- [ ] **TASK-009-4:** Verify `wh25` processing applies gateway unit setting (or fix if not)
-- [ ] **TASK-009-5:** Add tests for `"89%"` value parsing
-- [ ] **TASK-009-6:** Request updated debug logs from GW2000+WS90 user after v1.5.16 to confirm which issues remain
+- [x] **TASK-009-1:** Confirm `"89%"` is the exact string in `common_list` for 0x07 — confirmed
+- [x] **TASK-009-2:** Fix `_convert_sensor_value` to handle no-space percent suffix — DONE
+- [x] **TASK-009-4:** Verify `wh25` processing applies gateway unit setting — DONE v1.5.19
+- [x] **TASK-009-6:** Get updated debug logs from GW2000+WH90 user after v1.5.21 — received from @nmaster2042
+- [ ] **TASK-009-7:** Fix entity lookup order in sensor.py to use sensor_key+hardware_id primary
+- [ ] **TASK-009-8:** Add sensor "4" (apparent temperature) to const.py
+- [ ] **TASK-009-9:** Fix ws90batt → wh90batt key in coordinator.py piezoRain processing
+- [ ] **TASK-009-10:** Add/update tests for entity lookup fix
+- [ ] **TASK-009-11:** Release v1.5.23
 
 ---
 
-## Open Questions / Blockers
+## Open Questions
 
-- **Multi-sensor hex key conflict:** If GW2000 has both WS90 and WH69, both register `0x07` in `_hardware_mapping`. Whichever runs last in `_update_sensor_mapping()` wins. No fix exists yet — architectural change needed.
-- **Which entities are still missing after v1.5.16?** The `piezoRain` fix (v1.5.4), WS90 device type detection (v1.4.8), and `rain` array fix (v1.5.16) have all been applied. Users need to re-test with v1.5.16 and report exactly which entities are missing.
-- **wh25 double-conversion:** Spec 003 fixed `ch_aisle` but did it also fix `wh25`? Check `wh25` processing in coordinator — it hardcodes `tempinf` without a unit override.
+- **User action required after fix:** Existing entity IDs (`sensor.ecowitt_0x0b_4094a8` etc.) will persist in the registry — they will START updating correctly after the fix. No migration needed. Users do NOT need to re-add the integration.
+- **Multiple outdoor sensors sharing hex keys:** The architectural limitation (flat `_hardware_mapping` dict) remains if GW2000 has both WS90 and WH69. This is an edge case not yet reported and is out of scope for this fix.

@@ -40,6 +40,7 @@ GATEWAY_SENSORS: Final = {
     "baromabsin",   # Absolute pressure
     "baromrelin",   # Relative pressure
     "3",            # Feels like temperature (gateway sensor)
+    "4",            # Apparent temperature (gateway sensor)
     "5",            # Vapor Pressure Deficit (gateway sensor)
 }
 
@@ -99,6 +100,12 @@ SENSOR_TYPES: Final = {
         "name": "Feels Like Temperature",
         "unit": "°C",
         "device_class": "temperature"
+    },
+    "4": {
+        "name": "Apparent Temperature",
+        "unit": "°C",
+        "device_class": "temperature",
+        "state_class": "measurement",
     },
     "5": {
         "name": "Vapor Pressure Deficit",
