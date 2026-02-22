@@ -34,10 +34,12 @@ jobs:
           fi
 
       - uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          claude_args: "--model claude-sonnet-4-6"
+          claude_args: "--model claude-sonnet-4-6 --max-turns 80"
           prompt: |
             Read CLAUDE.md for full project context first.
 
@@ -62,7 +64,7 @@ jobs:
             1. Analyse the issue (including any images) and determine whether it
                is an actionable bug or feature request.
             2. If it is actionable, implement a fix on a new branch named
-               claude/issue-${{ github.event.issue.number }}-<short-description>.
+               claude/issue-${{ steps.issue.outputs.number }}-<short-description>.
             3. Set up the test environment first if needed:
                python3 -m venv .venv && .venv/bin/pip install -r requirements_test.txt
             4. Run the full test suite before opening the PR:
