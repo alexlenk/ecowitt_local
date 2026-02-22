@@ -118,9 +118,10 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             _LOGGER.debug("Updating sensor mapping")
 
             # Fetch gateway unit settings (temp: "0"=Celsius, "1"=Fahrenheit)
+            # Newer firmware (GW3000A, GW1200C) uses key "temperature"; older uses "temp".
             try:
                 units_data = await self.api.get_units()
-                temp_unit_code = units_data.get("temp", "1")
+                temp_unit_code = units_data.get("temperature", units_data.get("temp", "1"))
                 self._gateway_temp_unit = "°C" if temp_unit_code == "0" else "°F"
                 _LOGGER.debug("Gateway temperature unit: %s (code=%s)", self._gateway_temp_unit, temp_unit_code)
             except Exception as err:

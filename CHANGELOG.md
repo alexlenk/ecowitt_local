@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.25] - 2026-02-22
+
+### Fixed
+- **WH31/WH34 temperature still wrong on GW3000A and GW1200C**: The v1.5.14 fix for Celsius temperature double-conversion was not working on newer gateway firmware. Newer firmware (GW3000A, GW1200C) returns the temperature unit setting under the key `"temperature"` in `/get_units_info`, while older firmware uses `"temp"`. The coordinator was only checking `"temp"`, so on newer gateways it silently fell back to assuming Fahrenheit and the double-conversion persisted. Fixed by checking `"temperature"` first and falling back to `"temp"`. Fixes issue #19.
+
 ## [1.5.24] - 2026-02-22
 
 ### Fixed
