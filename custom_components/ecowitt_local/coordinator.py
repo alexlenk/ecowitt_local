@@ -544,8 +544,8 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     "name": "Signal Strength",
                     "state": signal_pct,
                     "unit_of_measurement": "%",
-                    "device_class": "signal_strength",
-                    "category": "diagnostic",  # Move signal strength to diagnostic
+                    "device_class": None,
+                    "category": "diagnostic",
                     "sensor_key": f"signal_{hardware_id}",
                     "hardware_id": hardware_id,
                     "raw_value": signal,

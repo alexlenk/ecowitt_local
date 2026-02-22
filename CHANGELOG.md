@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.24] - 2026-02-22
+
+### Fixed
+- **Signal strength entity causes HA validation error**: Signal strength sensors (reporting 0–100% converted from the gateway's 0–4 bar scale) were incorrectly using `device_class: signal_strength`, which Home Assistant requires to be in dB or dBm. This caused a log error on every HA startup: *"is using native unit of measurement '%' which is not a valid unit for the device class ('signal_strength')"*. Removed the device class; the sensor now reports a plain percentage with no device class, which is valid and suppresses the error. Reported by @mlohus93 in issue #13.
+
 ## [1.5.23] - 2026-02-22
 
 ### Fixed
