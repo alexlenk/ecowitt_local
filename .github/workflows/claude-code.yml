@@ -2,7 +2,13 @@ name: Claude Code
 
 on:
   issues:
-    types: [opened]
+    types: [opened, reopened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to process'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -18,6 +24,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Resolve issue number
+        id: issue
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "number=${{ inputs.issue_number }}" >> $GITHUB_OUTPUT
+          else
+            echo "number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
+          fi
+
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -26,10 +41,12 @@ jobs:
           prompt: |
             Read CLAUDE.md for full project context first.
 
-            A new GitHub issue has been filed:
-            Issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
+            Fetch the full details of issue #${{ steps.issue.outputs.number }} from this
+            repository using: gh issue view ${{ steps.issue.outputs.number }} --repo ${{ github.repository }}
 
-            Issue body:
+            Also fetch all comments: gh issue view ${{ steps.issue.outputs.number }} --repo ${{ github.repository }} --comments
+
+            Issue body excerpt (may be truncated):
             ${{ github.event.issue.body }}
 
             IMPORTANT - Images and attachments:
