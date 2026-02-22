@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.23] - 2026-02-22
+
+### Fixed
+- **WS90/WH90 sensors freeze after startup — wind, UV, radiation, rain stuck at initial value**: When the integration was updated in a prior version, entity IDs for hex-sensor types were renamed (e.g. `sensor.ecowitt_0x0b_4094a8` → `sensor.ecowitt_wind_speed_4094a8`). Home Assistant kept the old entity IDs in the entity registry for existing installations. On each coordinator refresh, the data lookup failed to find the old entity_id in the new-format sensor dict; the broken fallback then returned the wrong sensor's data (always outdoor temperature). Home Assistant rejected the resulting device-class/unit mismatch and left the entity frozen at its startup value. Fixed by switching the primary lookup to `sensor_key + hardware_id`, which is stable across entity_id format changes. All sensors now update on every coordinator refresh regardless of which entity_id format is stored in the registry. Reported by @nmaster2042 in issue #5.
+- **WH90 battery entity appears under gateway device instead of WH90 device**: The battery value extracted from `piezoRain` was stored with key `ws90batt`, but the sensor mapper registered `wh90batt` for WH90. The key mismatch caused the battery entity to have no hardware ID and appear under the gateway device. Changed coordinator to use `wh90batt` to match the sensor mapper, so the battery is now correctly associated with the WH90 device.
+- **Apparent temperature (sensor "4") appears with wrong name and no device class**: GW2000/GW3000 gateways report apparent temperature as common_list id `"4"` alongside outdoor sensors. This key was missing from `GATEWAY_SENSORS` and `SENSOR_TYPES`, so it appeared as an unnamed sensor with entity_id `sensor.ecowitt_sensor_ch4`. Added proper definition: "Apparent Temperature", device class temperature, state class measurement.
+
 ## [1.5.22] - 2026-02-21
 
 ### Fixed

@@ -53,7 +53,8 @@ def mock_coordinator():
     # Mock data methods
     coordinator.get_all_sensors.return_value = {}
     coordinator.get_sensor_data.return_value = None
-    
+    coordinator.get_sensor_data_by_key.return_value = None
+
     return coordinator
 
 
@@ -344,14 +345,15 @@ async def test_sensor_coordinator_update(mock_coordinator):
         "name": "Temperature",
         "state": 75.0
     }
-    mock_coordinator.get_sensor_data.return_value = updated_info
-    
+    # get_sensor_data_by_key is now the primary lookup
+    mock_coordinator.get_sensor_data_by_key.return_value = updated_info
+
     # Mock async_write_ha_state
     sensor.async_write_ha_state = Mock()
-    
+
     # Trigger update
     sensor._handle_coordinator_update()
-    
+
     # Verify update
     assert sensor.native_value == 75.0
     sensor.async_write_ha_state.assert_called_once()
@@ -383,6 +385,56 @@ async def test_sensor_coordinator_update_no_data(mock_coordinator):
     sensor._handle_coordinator_update()
     
     # Should still call async_write_ha_state
+    sensor.async_write_ha_state.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_sensor_coordinator_update_old_entity_id_format(mock_coordinator):
+    """Test that sensors with old entity_id format (pre hex_to_name) still update correctly.
+
+    Regression test for entity_id mismatch: the entity registry may store
+    sensor.ecowitt_0x0b_4094a8 (old) but coordinator data is keyed as
+    sensor.ecowitt_wind_speed_4094a8 (new). The fix uses get_sensor_data_by_key
+    (sensor_key + hardware_id) as primary lookup, which is stable across formats.
+    """
+    sensor_info = {
+        "sensor_key": "0x0B",
+        "hardware_id": "4094A8",
+        "category": "sensor",
+        "name": "Wind Speed",
+        "state": 0.7,
+        "unit_of_measurement": "m/s",
+        "device_class": "wind_speed",
+    }
+
+    # Entity created with old-format entity_id (as stored in entity registry)
+    sensor = EcowittLocalSensor(
+        coordinator=mock_coordinator,
+        entity_id="sensor.ecowitt_0x0b_4094a8",
+        sensor_info=sensor_info,
+    )
+
+    # Coordinator data uses new-format key; get_sensor_data would return None
+    # because the old entity_id doesn't match the new key
+    mock_coordinator.get_sensor_data.return_value = None
+
+    # get_sensor_data_by_key (primary lookup) returns the correct wind speed data
+    updated_info = {
+        "sensor_key": "0x0B",
+        "hardware_id": "4094A8",
+        "category": "sensor",
+        "name": "Wind Speed",
+        "state": 4.6,
+        "unit_of_measurement": "m/s",
+        "device_class": "wind_speed",
+    }
+    mock_coordinator.get_sensor_data_by_key.return_value = updated_info
+
+    sensor.async_write_ha_state = Mock()
+    sensor._handle_coordinator_update()
+
+    # Must update via get_sensor_data_by_key, not freeze at initial value
+    assert sensor.native_value == 4.6
     sensor.async_write_ha_state.assert_called_once()
 
 
