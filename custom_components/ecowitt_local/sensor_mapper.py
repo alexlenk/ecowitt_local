@@ -194,7 +194,7 @@ class SensorMapper:
                 "0x17",  # UV index
                 "0x0D",  # Rain event
                 "0x0E",  # Rain rate
-                "0x7C",  # Rain daily
+                "0x7C",  # 24-hour rolling rain
                 "0x10",  # Rain hourly
                 "0x11",  # Rain weekly
                 "0x12",  # Rain monthly
@@ -216,7 +216,7 @@ class SensorMapper:
                 "0x17",  # UV index
                 "0x0D",  # Rain event
                 "0x0E",  # Rain rate
-                "0x7C",  # Rain daily
+                "0x7C",  # 24-hour rolling rain
                 "0x10",  # Rain hourly
                 "0x11",  # Rain weekly
                 "0x12",  # Rain monthly
@@ -253,7 +253,7 @@ class SensorMapper:
                 "0x17",  # UV index
                 "0x0D",  # Rain event
                 "0x0E",  # Rain rate
-                "0x7C",  # Rain daily
+                "0x7C",  # 24-hour rolling rain
                 "0x10",  # Rain hourly
                 "0x11",  # Rain weekly
                 "0x12",  # Rain monthly
@@ -275,7 +275,7 @@ class SensorMapper:
                 "0x17",  # UV index
                 "0x0D",  # Rain event
                 "0x0E",  # Rain rate
-                "0x7C",  # Rain daily
+                "0x7C",  # 24-hour rolling rain
                 "0x10",  # Rain hourly
                 "0x11",  # Rain weekly
                 "0x12",  # Rain monthly
@@ -413,7 +413,7 @@ class SensorMapper:
                 "0x17": "uv_index",
                 "0x0D": "rain_event",
                 "0x0E": "rain_rate",
-                "0x7C": "daily_rain",
+                "0x7C": "24h_rain",
                 "0x10": "hourly_rain",
                 "0x11": "weekly_rain",
                 "0x12": "monthly_rain",

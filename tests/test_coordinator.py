@@ -296,7 +296,7 @@ async def test_coordinator_ch_aisle_processing(coordinator):
             assert sensor_data["state"] == 22.1  # Converted to float
         elif sensor_key == "batt2":
             batt2_found = True
-            assert sensor_data["state"] == "0"  # Battery stays as string
+            assert sensor_data["state"] == "100"  # Binary 0 = battery OK (100%)
     
     # Verify sensors were created
     assert temp1_found, "temp1f sensor not found"
@@ -889,7 +889,8 @@ async def test_coordinator_rain_array_processing(coordinator):
     processed = await coordinator._process_live_data(raw_data)
     sensors = processed["sensors"]
 
-    # 0x0D/0x0E/0x7C have uppercase hex letters → entity IDs use key.lower() (e.g. 0x0d, 0x0e, 0x7c)
+    # 0x0D/0x0E have uppercase hex letters → entity IDs use key.lower() (e.g. 0x0d, 0x0e)
+    # 0x7C is in hex_to_name → entity ID uses "24h_rain"
     rain_event = [k for k in sensors if "0x0d" in k]
     assert len(rain_event) >= 1, "Rain Event (0x0D) should be created from 'rain' array"
     assert sensors[rain_event[0]]["state"] == 0.0
@@ -897,6 +898,11 @@ async def test_coordinator_rain_array_processing(coordinator):
     rain_rate = [k for k in sensors if "0x0e" in k]
     assert len(rain_rate) >= 1, "Rain Rate (0x0E) should be created from 'rain' array"
     assert sensors[rain_rate[0]]["state"] == 0.12
+
+    # 0x7C is in hex_to_name → entity ID uses "24h_rain"
+    rain_24h = [k for k in sensors if "24h_rain" in k]
+    assert len(rain_24h) >= 1, "24-Hour Rain (0x7C) should be created from 'rain' array"
+    assert sensors[rain_24h[0]]["state"] == 0.0
 
     # 0x10/0x11/0x12/0x13 are in hex_to_name → entity IDs use the mapped name (hourly_rain etc.)
     hourly_rain = [k for k in sensors if "hourly_rain" in k]
