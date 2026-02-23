@@ -53,7 +53,7 @@ The existing Home Assistant Ecowitt integration relies on webhooks with fundamen
 - **Automatic device assignment** - Entities go to correct sensor devices
 
 ### 🔧 Developer & Maintainer Friendly
-- **89% test coverage** - Comprehensive automated testing
+- **94% test coverage** - Comprehensive automated testing
 - **Type safety** - Full mypy type checking
 - **Code optimization** - Dynamic sensor generation reduces duplication
 - **CI/CD pipeline** - Automated testing and quality checks
@@ -181,12 +181,11 @@ binary_sensor.ecowitt_lightning_e4f5a6_online # Online status [Diagnostic]
 ### Rain Gauge
 ```
 sensor.ecowitt_rain_f6g7h8                  # Rain rate (Hardware ID F6G7H8)
-sensor.ecowitt_rain_f6g7h8_daily            # Daily rainfall accumulation
-sensor.ecowitt_rain_f6g7h8_hourly           # Hourly rainfall accumulation
-sensor.ecowitt_rain_f6g7h8_weekly           # Weekly rainfall accumulation
-sensor.ecowitt_rain_f6g7h8_monthly          # Monthly rainfall accumulation
-sensor.ecowitt_rain_f6g7h8_yearly           # Yearly rainfall accumulation
-sensor.ecowitt_rain_f6g7h8_total            # Total rainfall since reset
+sensor.ecowitt_rain_f6g7h8_24h_rain         # Rolling 24-hour rainfall
+sensor.ecowitt_rain_f6g7h8_hourly_rain      # Hourly rainfall accumulation
+sensor.ecowitt_rain_f6g7h8_weekly_rain      # Weekly rainfall accumulation
+sensor.ecowitt_rain_f6g7h8_monthly_rain     # Monthly rainfall accumulation
+sensor.ecowitt_rain_f6g7h8_yearly_rain      # Yearly rainfall accumulation
 sensor.ecowitt_rain_f6g7h8_battery          # Battery level [Diagnostic]
 binary_sensor.ecowitt_rain_f6g7h8_online    # Online status [Diagnostic]
 ```
@@ -295,7 +294,7 @@ The integration provides detailed logging to help identify which entities need u
 - **Temperature & Humidity**: Indoor/outdoor, multi-channel (CH1-8)
 - **Barometric Pressure**: Absolute and relative readings
 - **Wind**: Speed, direction, gusts, averages
-- **Precipitation**: Rate, hourly, daily, weekly, monthly totals
+- **Precipitation**: Rate, 24-hour rolling, hourly, weekly, monthly, yearly totals
 - **Solar & UV**: Radiation levels, UV index
 
 ### Soil & Plant Monitoring
@@ -353,7 +352,7 @@ All other sensor types are tested using detailed mock datasets derived from:
 - Cross-validated against aioecowitt's proven sensor mappings
 - Based on real API response patterns from EcoWitt gateways
 - Comprehensive test coverage for sensor discovery, entity creation, and hardware ID mapping
-- Accurate battery level conversion (0-5 raw scale → 0-100% display)
+- Accurate battery level conversion (0-5 bar scale for soil sensors; binary 0/1 for WH31/WH69)
 - Accurate signal strength conversion (0-4 raw scale → 0-100% display)
 
 **Regression Testing:**
@@ -363,8 +362,8 @@ All other sensor types are tested using detailed mock datasets derived from:
 - Performance testing with large sensor counts (71+ devices)
 
 **Quality Assurance:**
-- **89% test coverage** maintained across all modules
-- **96 automated tests** covering device discovery, mapping, and edge cases
+- **94% test coverage** maintained across all modules
+- **245 automated tests** covering device discovery, mapping, and edge cases
 - **Type safety** with full mypy compliance
 - **CI/CD pipeline** prevents regressions
 
@@ -390,7 +389,7 @@ All other sensor types are tested using detailed mock datasets derived from:
 ### v1.2.0+ - Code Optimization & Maintainability  
 - **Dynamic sensor generation** - Reduced code duplication
 - **Enhanced type safety** - Full mypy compliance
-- **Improved test coverage** - 89% coverage with 96 passing tests
+- **Improved test coverage** - 94% coverage with 245 passing tests
 - **Better maintainability** - Easier to add new sensor types
 
 ### v1.1.0+ - Core Features
