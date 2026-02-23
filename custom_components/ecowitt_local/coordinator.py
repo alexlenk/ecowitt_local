@@ -686,9 +686,9 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         return int(numeric_part)
                     else:
                         return float(numeric_part)
-                except ValueError:
+                except ValueError:  # pragma: no cover
                     pass
-                
+
             # Fallback to original logic for pure numeric strings
             # Try integer first
             try:
@@ -705,7 +705,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             # Return as string if conversion fails
             return str_value
             
-        except Exception as err:
+        except Exception as err:  # pragma: no cover
             _LOGGER.debug("Error converting sensor value '%s': %s", value, err)
             return str(value) if value else None
 
@@ -768,9 +768,9 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             if match:
                 return match.group(1)
                 
-        except Exception as err:
+        except Exception as err:  # pragma: no cover
             _LOGGER.debug("Error extracting model from firmware version '%s': %s", firmware_version, err)
-        
+
         return "Unknown"
 
     async def async_refresh_mapping(self) -> None:

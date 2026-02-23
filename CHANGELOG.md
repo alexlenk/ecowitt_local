@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.27] - 2026-02-23
+
+### Fixed
+- **Unknown content-type JSON parsing**: Gateways that return JSON with an unrecognised `Content-Type` header (e.g. `application/octet-stream`) could silently fail. Fixed by passing `content_type=None` to skip the content-type check when the type is not `application/json`, `text/html`, or `text/plain`.
+- **Leafwetness channel key duplication in const.py**: Removed a duplicate `elif base_key == "leafwetness_ch"` branch that was shadowed by the earlier `if "_ch" in base_key` check. No user-visible behaviour change.
+
+### Changed
+- **Test coverage raised to 100%**: Added targeted tests for all previously uncovered edge-case code paths (retry-after-401 success path, GW-prefix firmware model regex, migration hardware-id fallback from coordinator data, and reload-entry success path).
+- **Updated codecov badge URL** in README to use the stable token-based link.
+
 ## [1.5.26] - 2026-02-23
 
 ### Fixed

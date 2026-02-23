@@ -184,8 +184,8 @@ class EcowittLocalAPI:
                             else:
                                 raise DataError(f"Gateway returned non-JSON content with content-type '{content_type}': {text_content[:200]}...")
                     else:
-                        # Unknown content type, try JSON parsing anyway
-                        response_data = await response.json()
+                        # Unknown content type, try JSON parsing anyway (skip content-type check)
+                        response_data = await response.json(content_type=None)
                         return response_data
 
                 except DataError:

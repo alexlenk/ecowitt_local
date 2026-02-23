@@ -75,8 +75,7 @@ def _generate_channel_sensors(
             key = f"humidity{i}"
         elif base_key == "soilmoisture":
             key = f"soilmoisture{i}"
-        elif base_key == "leafwetness_ch":
-            key = f"leafwetness_ch{i}"
+        # Note: "leafwetness_ch" also contains "_ch", so the if "_ch" branch above handles it
 
         name = name_template.format(ch=i)
         sensors[key] = {**sensor_def, "name": name}
