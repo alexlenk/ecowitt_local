@@ -294,8 +294,13 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         # Create battery sensor if battery data exists
                         if battery and battery != "None":
                             battery_key = f"batt{channel}"
-                            # Convert battery level (0-5 scale to percentage)
-                            battery_pct = str(int(battery) * 20) if battery.isdigit() else battery
+                            # WH31/WH69 ch_aisle battery is binary: "0"=OK(100%), "1"=weak(10%)
+                            if battery == "0":
+                                battery_pct = "100"
+                            elif battery == "1":
+                                battery_pct = "10"
+                            else:
+                                battery_pct = str(int(battery) * 20) if battery.isdigit() else battery
                             all_sensor_items.append({"id": battery_key, "val": battery_pct})
                             _LOGGER.debug("Added WH31 battery sensor: %s = %s%%", battery_key, battery_pct)
         

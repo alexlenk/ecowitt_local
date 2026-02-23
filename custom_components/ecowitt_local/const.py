@@ -363,7 +363,7 @@ SENSOR_TYPES: Final = {
         "state_class": "measurement"
     },
     "0x7C": {
-        "name": "Daily Rain",
+        "name": "24-Hour Rain",
         "unit": "mm",
         "device_class": "precipitation",
         "state_class": "total_increasing"

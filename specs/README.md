@@ -6,26 +6,21 @@ Kiro-style specs for open GitHub issues. Each spec has: requirements, design, ta
 
 | Spec | Issue(s) | Title | Priority | Status |
 |------|----------|-------|----------|--------|
-| [001](001-options-flow-values-not-saved.md) | #50, #31 | Options flow values not saved after edit | HIGH | ✅ Fixed in v1.5.12 |
-| [002](002-rain-sensor-state-class.md) | #32, #45 | Rain entities missing `state_class` | HIGH | ✅ Fixed in v1.5.13 |
-| [003](003-temperature-double-conversion.md) | #19, #13 | Temperature double-conversion for Celsius gateways | HIGH | ✅ Fixed in v1.5.14 |
-| [004](004-wind-rain-hex-id-mapping.md) | #22, #23 | Wind/rain sensors unavailable (missing hardware_id mapping) | HIGH | ⚠️ Partial — WS80/WH80 fixed in v1.5.15; GW1100 still awaiting user data |
-| [006](006-wh34-pool-temperature.md) | #16 | WH34 pool temperature — no entities | MEDIUM | ✅ Fixed in v1.5.15 |
-| [007](007-rain-array-not-processed.md) | #59, #11 | `"rain"` array (tipping-bucket) not processed | HIGH | ✅ Fixed in v1.5.16 |
-| [008](008-password-auth-fails.md) | #43 | Password authentication fails (GW2000/GW3000) | HIGH | ✅ Fixed in v1.5.17 |
-| [009](009-ws90-gw2000-incomplete-entities.md) | #5, #40, #15 | WS90/GW2000 incomplete or unavailable entities | HIGH | 🟡 Partial — wh25 temperature unit fixed in v1.5.19; hardware_id conflict open |
-| [010](010-wh69-embedded-unit-strings.md) | #41 | WH69 unit strings ("knots", "W/m2") cause unavailable entities | MEDIUM | ✅ Fixed in v1.5.18 |
+| [004](004-wind-rain-hex-id-mapping.md) | #22, #23 | Wind/rain sensors unavailable (missing hardware_id mapping) | HIGH | ✅ Likely fixed — GW1100 data received, all hex IDs already supported; awaiting user confirmation on v1.5.25 |
 | [011](011-ws85-wind-sensors.md) | #20 | WS85 wind sensors missing | MEDIUM | 🔴 Open — awaiting user data |
-| [012](012-klux-solar-radiation-unit.md) | #44 | Solar radiation unavailable — gateway reports Klux instead of W/m² | MEDIUM | ✅ Fixed in v1.5.20 |
+| [013](013-0x7c-24hour-rain-mislabeled.md) | #5 | 0x7C rain entity mislabeled "Daily Rain" (is 24-Hour Rain) | HIGH | ✅ Fixed in v1.5.26 — renamed to "24-Hour Rain", entity_id changed |
+| [014](014-wh31-entities-under-gateway-device.md) | #19 | WH31 entities under gateway device, WH31 device empty | MEDIUM | 🔴 Open — awaiting `get_sensors_info` from affected user |
+| [015](015-wh31-battery-binary.md) | #19 | WH31/WH69 battery binary conversion wrong | MEDIUM | ✅ Fixed in v1.5.26 — binary 0=100%, 1=10% for ch_aisle |
+| [016](016-solar-lux-entity.md) | #84 | Solar illuminance (lux) entity missing | LOW | 🔴 Open — feature request, likely Option C (document gateway setting) |
 
-## Recommended Implementation Order
+## Waiting On
 
-1. **Spec 009 (WS90/GW2000)** — wh25 unit fix in v1.5.19; hardware_id mapping conflict still open (awaiting user feedback)
-2. **Spec 011 (WS85)** — awaiting `get_sensors_info` data from user
-3. **Spec 004 (GW1100 part)** — awaiting `get_sensors_info` + `get_livedata_info` JSON from a GW1100 user
+- **Spec 004 (GW1100)** — awaiting user confirmation that v1.5.25 resolves their issues
+- **Spec 011 (WS85)** — need `get_sensors_info` data showing WS85 device type string
+- **Spec 014** — need `get_sensors_info` from @AnHardt to confirm WH31 hardware_id
+- **Spec 016** — need to clarify with user if gateway lux mode solves it
 
-## Limitations / Notes
+## Notes
 
-- **Images viewable:** GitHub issue images can be downloaded with `curl -sL <url> -o /tmp/img.png` and read with the Read tool. Specs 003, 004, 006 have been updated with image findings.
-- **No physical hardware:** All fixes are based on user-provided JSON dumps and logs. Mock data testing is the only validation path before user confirmation.
-- **Sensor rename in v1.5.15:** `tf_ch` sensors renamed from "Soil Temperature CH{n}" to "Temperature CH{n}". Not a breaking change since no WH34 users had working entities before this release.
+- No physical hardware: all fixes are based on user-provided JSON dumps and logs. Mock data testing is the only validation path before user confirmation.
+- Images in GitHub issues can be downloaded with `curl -sL <url> -o /tmp/img.png` and viewed with the Read tool.

@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.26] - 2026-02-23
+
+### Fixed
+- **WH31/WH69 battery always shows 0% even when battery is OK**: WH31 and WH69 sensors report battery as a binary flag — `0` means OK, `1` means weak — not a 0–5 bar scale. The previous code applied `value × 20` (designed for WH51 soil sensors), which mapped `0` → 0% and `1` → 20%. Both values were wrong. Fixed: binary `0` now displays 100% (OK) and binary `1` displays 10% (weak). Reported by @AnHardt in issue #19.
+- **0x7C rain entity mislabeled "Daily Rain"**: The `0x7C` hex ID contains a rolling 24-hour rain total (not a midnight-reset calendar daily total). It was labeled "Daily Rain" which caused confusion when the value did not reset at midnight. Renamed to "24-Hour Rain". Entity IDs change from `sensor.ecowitt_daily_rain_XXXX` to `sensor.ecowitt_24h_rain_XXXX` — users with automations referencing the old entity ID will need to update them. Confirmed by @nmaster2042 in issue #5.
+
+### Changed
+- **⚠️ Breaking: `sensor.ecowitt_daily_rain_XXXX` entity renamed to `sensor.ecowitt_24h_rain_XXXX`**: If you have automations, scripts, or dashboards referencing `daily_rain` in the entity ID, update them to use `24h_rain` instead.
+
 ## [1.5.25] - 2026-02-22
 
 ### Fixed
