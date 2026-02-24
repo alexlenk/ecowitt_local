@@ -966,3 +966,70 @@ async def test_migration_hardware_id_from_coordinator_data(hass, mock_ecowitt_ap
 
     result = await async_migrate_entry(hass, entry)
     assert result is True
+
+
+# ============================================================================
+# coordinator.py — WH40 rain battery + WH57 lightning block (lines 177-201)
+# ============================================================================
+
+@pytest.mark.asyncio
+async def test_coordinator_wh40_battery_from_rain_array(coordinator):
+    """Test WH40 battery extracted from 0x13 in rain array (coordinator.py:176-179)."""
+    mock_live_data = {
+        "common_list": [],
+        "rain": [
+            {"id": "0x0E", "val": "0.0 mm/Hr"},
+            {"id": "0x13", "val": "192.6 mm", "battery": "4", "voltage": "1.4"},
+        ],
+    }
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_version = AsyncMock(return_value={"stationtype": "GW1100A", "version": "1.7.3"})
+    coordinator._include_inactive = True
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    # wh40batt should be created with 4 × 20 = 80%
+    batt = next((s for s in sensors.values() if s.get("sensor_key") == "wh40batt"), None)
+    assert batt is not None
+    assert batt["state"] == "80"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_wh57_lightning_block(coordinator):
+    """Test WH57 lightning block is processed (coordinator.py:183-201)."""
+    mock_live_data = {
+        "common_list": [],
+        "lightning": [
+            {
+                "distance": "31 km",
+                "date": "2026-02-22T18:00:18",
+                "timestamp": "02/22/2026 18:00:18",
+                "count": "3",
+                "battery": "5",
+            }
+        ],
+    }
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_version = AsyncMock(return_value={"stationtype": "GW1100A", "version": "1.7.3"})
+    coordinator._include_inactive = True
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    keys = {s.get("sensor_key") for s in sensors.values()}
+    assert "lightning_num" in keys
+    assert "lightning_time" in keys
+    assert "lightning" in keys
+    assert "wh57batt" in keys
+
+    batt = next(s for s in sensors.values() if s.get("sensor_key") == "wh57batt")
+    assert batt["state"] == "100"  # 5 × 20 = 100%
+
+    strikes = next(s for s in sensors.values() if s.get("sensor_key") == "lightning_num")
+    assert strikes["state"] == 3  # "3" → int
+
+    dist = next(s for s in sensors.values() if s.get("sensor_key") == "lightning")
+    assert dist["state"] == 31  # "31" → int

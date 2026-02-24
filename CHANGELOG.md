@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.28] - 2026-02-24
+
+### Fixed
+- **WH57 (lightning sensor) has no entities**: The coordinator was completely ignoring the `lightning` block in the gateway API response. Fixed by adding dedicated processing that extracts lightning distance, strike count, last-strike timestamp, and battery level from the `lightning` array and maps them to the WH57 device. Reported by @chrisgillings in issue #19.
+- **WH40 (rain gauge) has no entities**: The sensor mapper was using plain metric key names (`rainratein`, `eventrainin`, etc.) which don't match what the gateway API actually sends — the `rain` array uses hex IDs (`0x0E`, `0x0D`, `0x7C`, `0x10`, `0x11`, `0x12`, `0x13`). Fixed by updating WH40 to use the correct hex ID keys. Reported by @chrisgillings in issue #19.
+- **WH40 battery not shown**: The battery level embedded in the `0x13` (yearly rain) item of the `rain` array was silently discarded. Fixed by extracting it and creating the `wh40batt` entity.
+
 ## [1.5.27] - 2026-02-23
 
 ### Fixed
