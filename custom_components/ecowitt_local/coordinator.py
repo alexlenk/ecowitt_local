@@ -533,7 +533,41 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     **sensor_details,
                 },
             }
-        
+
+            # For solar radiation in W/m², also create a computed illuminance entity.
+            # The gateway's local API always returns W/m² regardless of the unit setting
+            # in the gateway web UI, so we compute lux = W/m² × 126.7 here.
+            if sensor_key == "0x15" and unit == "W/m²" and sensor_value:
+                try:
+                    lux_val = round(float(sensor_value) * 126.7, 1)
+                    lux_entity_id, lux_name = self.sensor_mapper.generate_entity_id(
+                        "solar_lux", hardware_id
+                    )
+                    lux_sensor_info = SENSOR_TYPES.get("solar_lux", {})
+                    sensors_data[lux_entity_id] = {
+                        "entity_id": lux_entity_id,
+                        "name": lux_name,
+                        "state": str(lux_val),
+                        "unit_of_measurement": "lx",
+                        "device_class": "illuminance",
+                        "state_class": lux_sensor_info.get("state_class") or "measurement",
+                        "category": "sensor",
+                        "sensor_key": "solar_lux",
+                        "hardware_id": hardware_id,
+                        "raw_value": str(lux_val),
+                        "attributes": {
+                            "sensor_key": "solar_lux",
+                            "last_update": datetime.now().isoformat(),
+                            **sensor_details,
+                        },
+                    }
+                    _LOGGER.debug(
+                        "Added computed solar_lux entity: %s = %s lx (from %s W/m²)",
+                        lux_entity_id, lux_val, sensor_value,
+                    )
+                except (ValueError, TypeError):
+                    pass
+
         # Add diagnostic and signal strength sensors for hardware devices
         self._add_diagnostic_and_signal_sensors(sensors_data)
         

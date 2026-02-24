@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.29] - 2026-02-24
+
+### Added
+- **Solar Illuminance (lux) entity**: Added a computed `sensor.ecowitt_solar_lux_*` entity alongside the existing solar radiation (`0x15`) entity. The gateway's local API always returns solar radiation in W/m² regardless of the unit setting in the gateway web UI, so illuminance is computed as `lux = W/m² × 126.7`. The entity uses device class `illuminance` and unit `lx`. Users who had their gateway set to "Lux" mode (which was already handled by the Klux conversion) will now also see this computed entity — both show the same value in that case. Closes issue #84.
+
 ## [1.5.28] - 2026-02-24
 
 ### Fixed

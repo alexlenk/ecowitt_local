@@ -1033,3 +1033,33 @@ async def test_coordinator_wh57_lightning_block(coordinator):
 
     dist = next(s for s in sensors.values() if s.get("sensor_key") == "lightning")
     assert dist["state"] == 31  # "31" → int
+
+
+@pytest.mark.asyncio
+async def test_coordinator_solar_lux_invalid_value_except(coordinator):
+    """Test solar_lux ValueError/TypeError except block (lines 568-569).
+
+    When 0x15 reports W/m² but sensor_value is non-numeric (e.g. gateway bug),
+    the except branch must swallow the error gracefully without crashing.
+    """
+    mock_live_data = {
+        "common_list": [
+            # Non-numeric value that won't match the unit-extraction regex but
+            # will end up with unit "W/m²" from SENSOR_TYPES — float() then fails.
+            {"id": "0x15", "val": "N/A"},
+        ],
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_version = AsyncMock(
+        return_value={"stationtype": "GW1100A", "version": "1.7.3"}
+    )
+    coordinator._include_inactive = True
+
+    # Must not raise even though float("N/A") would throw ValueError
+    result = await coordinator._async_update_data()
+    assert result is not None
+    sensors = result["sensors"]
+    # The 0x15 entity may or may not be created (inactive value), but no solar_lux
+    assert not any(s.get("sensor_key") == "solar_lux" for s in sensors.values())
