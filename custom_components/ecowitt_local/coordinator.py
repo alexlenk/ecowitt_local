@@ -165,11 +165,40 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         common_list = raw_data.get("common_list", [])
         all_sensor_items.extend(common_list)
 
-        # Extract rain data (tipping-bucket rain sensor readings — GW1200, GW2000A with WS69/WH69)
+        # Extract rain data (tipping-bucket rain sensor — WH40, GW1200, GW2000A with WH69)
         rain_list = raw_data.get("rain", [])
         if rain_list:
             _LOGGER.debug("Found rain data with %d items", len(rain_list))
-            all_sensor_items.extend(rain_list)
+            for item in rain_list:
+                if isinstance(item, dict) and item.get("id") and item.get("val") is not None:
+                    all_sensor_items.append({"id": item["id"], "val": item["val"]})
+                    # Extract WH40 battery from the 0x13 (yearly rain) item which carries it
+                    if item.get("id") == "0x13" and item.get("battery"):
+                        battery_pct = str(int(item["battery"]) * 20) if str(item["battery"]).isdigit() else item["battery"]
+                        all_sensor_items.append({"id": "wh40batt", "val": battery_pct})
+                        _LOGGER.debug("Added WH40 battery: wh40batt = %s%%", battery_pct)
+
+        # Extract lightning data (WH57 lightning sensor)
+        lightning_data = raw_data.get("lightning", [])
+        if lightning_data and len(lightning_data) > 0:
+            _LOGGER.debug("Found lightning data: %s", lightning_data[0])
+            lightning_item = lightning_data[0]
+            if isinstance(lightning_item, dict):
+                if "count" in lightning_item:
+                    all_sensor_items.append({"id": "lightning_num", "val": lightning_item["count"]})
+                    _LOGGER.debug("Added lightning strikes: %s", lightning_item["count"])
+                if "date" in lightning_item:
+                    all_sensor_items.append({"id": "lightning_time", "val": lightning_item["date"]})
+                    _LOGGER.debug("Added last lightning time: %s", lightning_item["date"])
+                if "distance" in lightning_item:
+                    distance_str = str(lightning_item["distance"]).replace(" km", "").strip()
+                    all_sensor_items.append({"id": "lightning", "val": distance_str})
+                    _LOGGER.debug("Added lightning distance: %s km", distance_str)
+                if "battery" in lightning_item:
+                    battery = lightning_item["battery"]
+                    battery_pct = str(int(battery) * 20) if str(battery).isdigit() else battery
+                    all_sensor_items.append({"id": "wh57batt", "val": battery_pct})
+                    _LOGGER.debug("Added WH57 battery: wh57batt = %s%%", battery_pct)
 
         # Extract ch_soil data (soil sensor readings)
         ch_soil = raw_data.get("ch_soil", [])

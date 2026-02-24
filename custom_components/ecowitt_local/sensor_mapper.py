@@ -150,16 +150,15 @@ class SensorMapper:
                 "wh57batt",
             ])
         elif sensor_type.lower() in ("wh40", "rain"):
-            # Rain sensor
+            # Rain sensor — data arrives via the "rain" array using hex IDs
             keys.extend([
-                "rainratein",
-                "eventrainin",
-                "hourlyrainin",
-                "dailyrainin",
-                "weeklyrainin",
-                "monthlyrainin",
-                "yearlyrainin",
-                "totalrainin",
+                "0x0D",  # Rain event total
+                "0x0E",  # Rain rate
+                "0x7C",  # 24-hour rain
+                "0x10",  # Hourly rain
+                "0x11",  # Weekly rain
+                "0x12",  # Monthly rain
+                "0x13",  # Yearly rain
                 "wh40batt",
             ])
         elif sensor_type.lower() in ("wh68", "weather_station"):
