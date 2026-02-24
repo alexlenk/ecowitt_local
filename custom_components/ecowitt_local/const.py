@@ -224,6 +224,12 @@ SENSOR_TYPES: Final = {
         "unit": "W/m²",
         "device_class": "irradiance"
     },
+    "solar_lux": {
+        "name": "Solar Illuminance",
+        "unit": "lx",
+        "device_class": "illuminance",
+        "state_class": "measurement"
+    },
     "uv": {
         "name": "UV Index",
         "unit": "UV Index",

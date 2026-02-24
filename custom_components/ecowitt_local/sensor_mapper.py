@@ -438,6 +438,7 @@ class SensorMapper:
             "leak": "leak",
             "lightning": "lightning",
             "batt": "battery",
+            "solar_lux": "solar_lux",  # must precede generic "solar"
             "solar": "solar_radiation",
         }
 
