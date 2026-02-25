@@ -241,10 +241,14 @@ class EcowittLocalSensor(CoordinatorEntity[EcowittLocalDataUpdateCoordinator], S
                 extra_attrs[ATTR_CHANNEL] = attributes["channel"]
             if attributes.get("device_model"):
                 extra_attrs[ATTR_DEVICE_MODEL] = attributes["device_model"]
-            if attributes.get("battery"):
+            # For battery entities: export the entity's own state as battery_level so
+            # Battery State Card and HA battery dashboard read the correct percentage.
+            # We no longer propagate the raw batt bar from sensors_info (which was 0-5,
+            # not 0-100) because that caused Battery State Card to show e.g. 5% instead
+            # of 100% for a full WH90 battery.
+            if self._category == "battery" and self._attr_native_value is not None:
                 try:
-                    battery_level = float(attributes["battery"])
-                    extra_attrs[ATTR_BATTERY_LEVEL] = battery_level
+                    extra_attrs[ATTR_BATTERY_LEVEL] = float(self._attr_native_value)
                 except (ValueError, TypeError):
                     pass
             if attributes.get("signal"):

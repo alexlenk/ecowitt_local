@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.30] - 2026-02-25
+
+### Fixed
+- **WH90 battery shown as 5% in Battery State Card**: The raw battery bar value (0–5 scale from the gateway's `get_sensors_info` API) was being spread into the attributes of every entity on a device, including non-battery entities. Battery State Card reads the `battery_level` attribute and interpreted the raw bar value (e.g. `5`) as 5%, showing a nearly-dead battery for a fully charged WH90. Fixed by removing the raw `battery` field from shared sensor details and instead setting `battery_level` only on dedicated battery entities, sourced from the entity's own state (which is already correctly converted to a percentage). Closes issue #90.
+
 ## [1.5.29] - 2026-02-24
 
 ### Added

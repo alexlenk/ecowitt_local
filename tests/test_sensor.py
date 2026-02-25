@@ -587,26 +587,25 @@ async def test_extra_state_attributes_hardware(mock_coordinator):
         "attributes": {
             "channel": "1",
             "device_model": "WH51",
-            "battery": "85",
             "signal": "4",
             "last_update": "2023-01-01T12:00:00Z"
         }
     }
-    
+
     mock_coordinator.get_sensor_data.return_value = sensor_info
-    
+
     sensor = EcowittLocalSensor(
         coordinator=mock_coordinator,
         entity_id="sensor.test_soil",
         sensor_info=sensor_info
     )
-    
+
     attributes = sensor.extra_state_attributes
-    
+
     assert attributes[ATTR_HARDWARE_ID] == "D8174"
     assert attributes[ATTR_CHANNEL] == "1"
     assert attributes[ATTR_DEVICE_MODEL] == "WH51"
-    assert attributes[ATTR_BATTERY_LEVEL] == 85.0
+    assert ATTR_BATTERY_LEVEL not in attributes  # Non-battery entities don't get battery_level
     assert attributes[ATTR_SIGNAL_STRENGTH] == 4
     assert attributes[ATTR_LAST_SEEN] == "2023-01-01T12:00:00Z"
 
@@ -639,6 +638,33 @@ async def test_extra_state_attributes_invalid_values(mock_coordinator):
     # Invalid values should not be included
     assert ATTR_BATTERY_LEVEL not in attributes
     assert ATTR_SIGNAL_STRENGTH not in attributes
+
+
+@pytest.mark.asyncio
+async def test_extra_state_attributes_battery_entity_invalid_state(mock_coordinator):
+    """Test battery_level except branch: non-numeric state on a battery entity."""
+    sensor_info = {
+        "sensor_key": "soilbatt1",
+        "hardware_id": "D8174",
+        "category": "battery",
+        "device_class": "battery",
+        "name": "Soil Battery",
+        "state": "invalid",
+        "attributes": {}
+    }
+
+    mock_coordinator.get_sensor_data.return_value = sensor_info
+
+    sensor = EcowittLocalSensor(
+        coordinator=mock_coordinator,
+        entity_id="sensor.test_battery",
+        sensor_info=sensor_info
+    )
+
+    attributes = sensor.extra_state_attributes
+
+    # float("invalid") raises ValueError — battery_level must NOT be in attributes
+    assert ATTR_BATTERY_LEVEL not in attributes
 
 
 @pytest.mark.asyncio
@@ -822,21 +848,21 @@ async def test_icon_battery_levels(mock_coordinator):
         sensor_info = {
             "sensor_key": "soilbatt1",
             "hardware_id": "D8174",
-            "category": "diagnostic",
+            "category": "battery",
             "device_class": "battery",
             "name": "Soil Battery",
             "state": battery_level,
-            "attributes": {"battery": str(battery_level)}
+            "attributes": {}
         }
-        
+
         mock_coordinator.get_sensor_data.return_value = sensor_info
-        
+
         sensor = EcowittLocalSensor(
             coordinator=mock_coordinator,
             entity_id="sensor.test_battery",
             sensor_info=sensor_info
         )
-        
+
         assert sensor.icon == expected_icon
 
 
