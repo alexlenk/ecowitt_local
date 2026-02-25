@@ -495,7 +495,10 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         "hardware_id": hardware_id,
                         "channel": hardware_info.get("channel"),
                         "device_model": hardware_info.get("device_model"),
-                        "battery": hardware_info.get("battery"),
+                        # Note: raw batt bar (0-5 scale from sensors_info) is intentionally
+                        # omitted here — it is NOT a percentage and must not be exposed as
+                        # "battery" attribute. Battery State Card and HA would misread it.
+                        # Battery percentage is exposed via the dedicated battery entity.
                         "signal": hardware_info.get("signal"),
                     }
             
