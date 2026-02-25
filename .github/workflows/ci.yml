@@ -26,6 +26,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements_test.txt
           
+      - name: Check formatting with black
+        run: |
+          black --check custom_components/ecowitt_local/ tests/
+
+      - name: Check import order with isort
+        run: |
+          isort --check-only custom_components/ecowitt_local/ tests/
+
       - name: Lint with flake8
         run: |
           flake8 custom_components/ecowitt_local --count --select=E9,F63,F7,F82 --show-source --statistics

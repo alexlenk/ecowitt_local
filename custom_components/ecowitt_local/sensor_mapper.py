@@ -1,4 +1,5 @@
 """Hardware ID mapping logic for Ecowitt Local integration."""
+
 from __future__ import annotations
 
 import logging
@@ -63,7 +64,13 @@ class SensorMapper:
 
                 # Map live data keys to hardware IDs
                 live_keys = self._generate_live_data_keys(sensor_type, channel)
-                _LOGGER.debug("Mapping for hardware_id %s (type=%s, channel=%s): keys=%s", hardware_id, sensor_type, channel, live_keys)
+                _LOGGER.debug(
+                    "Mapping for hardware_id %s (type=%s, channel=%s): keys=%s",
+                    hardware_id,
+                    sensor_type,
+                    channel,
+                    live_keys,
+                )
                 for key in live_keys:
                     self._hardware_mapping[key] = hardware_id
 
@@ -71,7 +78,9 @@ class SensorMapper:
                 _LOGGER.warning("Error processing sensor mapping: %s", err)
                 continue
 
-        _LOGGER.debug("Updated hardware mapping with %d sensors", len(self._sensor_info))
+        _LOGGER.debug(
+            "Updated hardware mapping with %d sensors", len(self._sensor_info)
+        )
 
     def _extract_channel_from_name(self, name: str) -> str:
         """Extract channel number from sensor name.
@@ -83,7 +92,8 @@ class SensorMapper:
             Channel number as string (e.g., "2", "3") or empty string if not found
         """
         import re
-        match = re.search(r'CH(\d+)', name)
+
+        match = re.search(r"CH(\d+)", name)
         return match.group(1) if match else ""
 
     def _generate_live_data_keys(self, sensor_type: str, channel: str) -> List[str]:
@@ -113,219 +123,263 @@ class SensorMapper:
         if sensor_type.lower() in ("wh51", "soil"):
             # Soil moisture sensors
             if ch_num:
-                keys.extend([
-                    f"soilmoisture{ch_num}",
-                    f"soilbatt{ch_num}",
-                ])
+                keys.extend(
+                    [
+                        f"soilmoisture{ch_num}",
+                        f"soilbatt{ch_num}",
+                    ]
+                )
         elif sensor_type.lower() in ("wh31", "temp_hum"):
             # Temperature/humidity sensors
             if ch_num:
-                keys.extend([
-                    f"temp{ch_num}f",
-                    f"humidity{ch_num}",
-                    f"batt{ch_num}",
-                ])
+                keys.extend(
+                    [
+                        f"temp{ch_num}f",
+                        f"humidity{ch_num}",
+                        f"batt{ch_num}",
+                    ]
+                )
         elif sensor_type.lower() in ("wh41", "pm25"):
             # PM2.5 sensors
             if ch_num:
-                keys.extend([
-                    f"pm25_ch{ch_num}",
-                    f"pm25_avg_24h_ch{ch_num}",
-                    f"pm25batt{ch_num}",
-                ])
+                keys.extend(
+                    [
+                        f"pm25_ch{ch_num}",
+                        f"pm25_avg_24h_ch{ch_num}",
+                        f"pm25batt{ch_num}",
+                    ]
+                )
         elif sensor_type.lower() in ("wh55", "leak"):
             # Leak sensors
             if ch_num:
-                keys.extend([
-                    f"leak_ch{ch_num}",
-                    f"leakbatt{ch_num}",
-                ])
+                keys.extend(
+                    [
+                        f"leak_ch{ch_num}",
+                        f"leakbatt{ch_num}",
+                    ]
+                )
         elif sensor_type.lower() in ("wh57", "lightning"):
             # Lightning sensor
-            keys.extend([
-                "lightning_num",
-                "lightning_time",
-                "lightning",
-                "lightning_mi",
-                "wh57batt",
-            ])
+            keys.extend(
+                [
+                    "lightning_num",
+                    "lightning_time",
+                    "lightning",
+                    "lightning_mi",
+                    "wh57batt",
+                ]
+            )
         elif sensor_type.lower() in ("wh40", "rain"):
             # Rain sensor — data arrives via the "rain" array using hex IDs
-            keys.extend([
-                "0x0D",  # Rain event total
-                "0x0E",  # Rain rate
-                "0x7C",  # 24-hour rain
-                "0x10",  # Hourly rain
-                "0x11",  # Weekly rain
-                "0x12",  # Monthly rain
-                "0x13",  # Yearly rain
-                "wh40batt",
-            ])
+            keys.extend(
+                [
+                    "0x0D",  # Rain event total
+                    "0x0E",  # Rain rate
+                    "0x7C",  # 24-hour rain
+                    "0x10",  # Hourly rain
+                    "0x11",  # Weekly rain
+                    "0x12",  # Monthly rain
+                    "0x13",  # Yearly rain
+                    "wh40batt",
+                ]
+            )
         elif sensor_type.lower() in ("wh68", "weather_station"):
             # Main weather station
-            keys.extend([
-                "tempf",
-                "humidity",
-                "windspeedmph",
-                "windspdmph_avg10m",
-                "windgustmph",
-                "maxdailygust",
-                "winddir",
-                "winddir_avg10m",
-                "baromrelin",
-                "baromabsin",
-                "solarradiation",
-                "uv",
-                "wh68batt",
-            ])
+            keys.extend(
+                [
+                    "tempf",
+                    "humidity",
+                    "windspeedmph",
+                    "windspdmph_avg10m",
+                    "windgustmph",
+                    "maxdailygust",
+                    "winddir",
+                    "winddir_avg10m",
+                    "baromrelin",
+                    "baromabsin",
+                    "solarradiation",
+                    "uv",
+                    "wh68batt",
+                ]
+            )
         elif sensor_type.lower() in ("wh69", "weather_station_wh69"):
             # WH69 7-in-1 outdoor sensor array (uses hex IDs in common_list)
-            keys.extend([
-                "0x02",  # Temperature
-                "0x03",  # Temperature (alternate)
-                "0x07",  # Humidity
-                "0x0B",  # Wind speed
-                "0x0C",  # Wind speed (alternate)
-                "0x19",  # Wind gust
-                "0x0A",  # Wind direction
-                "0x6D",  # Wind direction (alternate)
-                "0x15",  # Solar radiation
-                "0x17",  # UV index
-                "0x0D",  # Rain event
-                "0x0E",  # Rain rate
-                "0x7C",  # 24-hour rolling rain
-                "0x10",  # Rain hourly
-                "0x11",  # Rain weekly
-                "0x12",  # Rain monthly
-                "0x13",  # Rain yearly
-                "wh69batt",  # Battery level
-            ])
+            keys.extend(
+                [
+                    "0x02",  # Temperature
+                    "0x03",  # Temperature (alternate)
+                    "0x07",  # Humidity
+                    "0x0B",  # Wind speed
+                    "0x0C",  # Wind speed (alternate)
+                    "0x19",  # Wind gust
+                    "0x0A",  # Wind direction
+                    "0x6D",  # Wind direction (alternate)
+                    "0x15",  # Solar radiation
+                    "0x17",  # UV index
+                    "0x0D",  # Rain event
+                    "0x0E",  # Rain rate
+                    "0x7C",  # 24-hour rolling rain
+                    "0x10",  # Rain hourly
+                    "0x11",  # Rain weekly
+                    "0x12",  # Rain monthly
+                    "0x13",  # Rain yearly
+                    "wh69batt",  # Battery level
+                ]
+            )
         elif sensor_type.lower() in ("ws90", "weather_station_ws90"):
             # WS90 outdoor sensor array (similar to WH69, uses hex IDs in common_list)
-            keys.extend([
-                "0x02",  # Temperature
-                "0x03",  # Temperature (alternate)
-                "0x07",  # Humidity
-                "0x0B",  # Wind speed
-                "0x0C",  # Wind speed (alternate)
-                "0x19",  # Wind gust
-                "0x0A",  # Wind direction
-                "0x6D",  # Wind direction (alternate)
-                "0x15",  # Solar radiation
-                "0x17",  # UV index
-                "0x0D",  # Rain event
-                "0x0E",  # Rain rate
-                "0x7C",  # 24-hour rolling rain
-                "0x10",  # Rain hourly
-                "0x11",  # Rain weekly
-                "0x12",  # Rain monthly
-                "0x13",  # Rain yearly
-                "ws90batt",  # Battery level
-            ])
-        elif sensor_type.lower() in ("wh80", "ws80") or "temp & humidity & solar & wind" in sensor_type.lower() and "rain" not in sensor_type.lower():
+            keys.extend(
+                [
+                    "0x02",  # Temperature
+                    "0x03",  # Temperature (alternate)
+                    "0x07",  # Humidity
+                    "0x0B",  # Wind speed
+                    "0x0C",  # Wind speed (alternate)
+                    "0x19",  # Wind gust
+                    "0x0A",  # Wind direction
+                    "0x6D",  # Wind direction (alternate)
+                    "0x15",  # Solar radiation
+                    "0x17",  # UV index
+                    "0x0D",  # Rain event
+                    "0x0E",  # Rain rate
+                    "0x7C",  # 24-hour rolling rain
+                    "0x10",  # Rain hourly
+                    "0x11",  # Rain weekly
+                    "0x12",  # Rain monthly
+                    "0x13",  # Rain yearly
+                    "ws90batt",  # Battery level
+                ]
+            )
+        elif (
+            sensor_type.lower() in ("wh80", "ws80")
+            or "temp & humidity & solar & wind" in sensor_type.lower()
+            and "rain" not in sensor_type.lower()
+        ):
             # WH80/WS80 outdoor sensor array — wind/solar station, no rain (uses hex IDs in common_list)
-            keys.extend([
-                "0x02",   # Temperature
-                "0x03",   # Dewpoint
-                "0x07",   # Humidity
-                "0x0B",   # Wind Speed
-                "0x0C",   # Wind Gust
-                "0x19",   # Max Daily Gust
-                "0x0A",   # Wind Direction
-                "0x6D",   # Wind Direction Avg
-                "0x15",   # Solar Radiation
-                "0x17",   # UV Index
-                "wh80batt",  # Battery
-            ])
-        elif sensor_type.lower() in ("wh90", "weather_station_wh90") or "temp & humidity & solar & wind & rain" in sensor_type.lower():
+            keys.extend(
+                [
+                    "0x02",  # Temperature
+                    "0x03",  # Dewpoint
+                    "0x07",  # Humidity
+                    "0x0B",  # Wind Speed
+                    "0x0C",  # Wind Gust
+                    "0x19",  # Max Daily Gust
+                    "0x0A",  # Wind Direction
+                    "0x6D",  # Wind Direction Avg
+                    "0x15",  # Solar Radiation
+                    "0x17",  # UV Index
+                    "wh80batt",  # Battery
+                ]
+            )
+        elif (
+            sensor_type.lower() in ("wh90", "weather_station_wh90")
+            or "temp & humidity & solar & wind & rain" in sensor_type.lower()
+        ):
             # WH90 outdoor sensor array (similar to WH69/WS90, uses hex IDs in common_list)
-            keys.extend([
-                "0x02",  # Temperature
-                "0x03",  # Temperature (alternate)
-                "0x07",  # Humidity
-                "0x0B",  # Wind speed
-                "0x0C",  # Wind speed (alternate)
-                "0x19",  # Wind gust
-                "0x0A",  # Wind direction
-                "0x6D",  # Wind direction (alternate)
-                "0x15",  # Solar radiation
-                "0x17",  # UV index
-                "0x0D",  # Rain event
-                "0x0E",  # Rain rate
-                "0x7C",  # 24-hour rolling rain
-                "0x10",  # Rain hourly
-                "0x11",  # Rain weekly
-                "0x12",  # Rain monthly
-                "0x13",  # Rain yearly
-                "wh90batt",  # Battery level
-            ])
-        elif sensor_type.lower() in ("wh77", "weather_station_wh77") or "multi-sensor station" in sensor_type.lower():
+            keys.extend(
+                [
+                    "0x02",  # Temperature
+                    "0x03",  # Temperature (alternate)
+                    "0x07",  # Humidity
+                    "0x0B",  # Wind speed
+                    "0x0C",  # Wind speed (alternate)
+                    "0x19",  # Wind gust
+                    "0x0A",  # Wind direction
+                    "0x6D",  # Wind direction (alternate)
+                    "0x15",  # Solar radiation
+                    "0x17",  # UV index
+                    "0x0D",  # Rain event
+                    "0x0E",  # Rain rate
+                    "0x7C",  # 24-hour rolling rain
+                    "0x10",  # Rain hourly
+                    "0x11",  # Rain weekly
+                    "0x12",  # Rain monthly
+                    "0x13",  # Rain yearly
+                    "wh90batt",  # Battery level
+                ]
+            )
+        elif (
+            sensor_type.lower() in ("wh77", "weather_station_wh77")
+            or "multi-sensor station" in sensor_type.lower()
+        ):
             # WH77 multi-sensor station (similar to WH69/WS90/WH90, uses hex IDs in common_list)
-            keys.extend([
-                "0x02",  # Temperature
-                "0x03",  # Temperature (alternate)
-                "0x07",  # Humidity
-                "0x0B",  # Wind speed
-                "0x0C",  # Wind speed (alternate)
-                "0x19",  # Wind gust
-                "0x0A",  # Wind direction
-                "0x6D",  # Wind direction (alternate)
-                "0x15",  # Solar radiation
-                "0x17",  # UV index
-                "0x0D",  # Rain event
-                "0x0E",  # Rain rate
-                "0x7C",  # 24-hour rolling rain
-                "0x10",  # Rain hourly
-                "0x11",  # Rain weekly
-                "0x12",  # Rain monthly
-                "0x13",  # Rain yearly
-                "wh77batt",  # Battery level
-            ])
+            keys.extend(
+                [
+                    "0x02",  # Temperature
+                    "0x03",  # Temperature (alternate)
+                    "0x07",  # Humidity
+                    "0x0B",  # Wind speed
+                    "0x0C",  # Wind speed (alternate)
+                    "0x19",  # Wind gust
+                    "0x0A",  # Wind direction
+                    "0x6D",  # Wind direction (alternate)
+                    "0x15",  # Solar radiation
+                    "0x17",  # UV index
+                    "0x0D",  # Rain event
+                    "0x0E",  # Rain rate
+                    "0x7C",  # 24-hour rolling rain
+                    "0x10",  # Rain hourly
+                    "0x11",  # Rain weekly
+                    "0x12",  # Rain monthly
+                    "0x13",  # Rain yearly
+                    "wh77batt",  # Battery level
+                ]
+            )
         elif sensor_type.lower() in ("wh25", "indoor_station"):
             # Indoor temperature/humidity/pressure station
-            keys.extend([
-                "tempinf",
-                "humidityin",
-                "baromrelin",
-                "baromabsin",
-                "wh25batt",
-            ])
+            keys.extend(
+                [
+                    "tempinf",
+                    "humidityin",
+                    "baromrelin",
+                    "baromabsin",
+                    "wh25batt",
+                ]
+            )
         elif sensor_type.lower() in ("wh26", "indoor_temp_hum"):
             # Indoor temperature/humidity sensor
-            keys.extend([
-                "tempinf",
-                "humidityin",
-                "wh26batt",
-            ])
+            keys.extend(
+                [
+                    "tempinf",
+                    "humidityin",
+                    "wh26batt",
+                ]
+            )
         elif sensor_type.lower() in ("wh34", "temp_only"):
             # Temperature-only sensors
             if ch_num:
-                keys.extend([
-                    f"tf_ch{ch_num}",
-                    f"tf_ch{ch_num}c",
-                    f"tf_batt{ch_num}",
-                ])
+                keys.extend(
+                    [
+                        f"tf_ch{ch_num}",
+                        f"tf_ch{ch_num}c",
+                        f"tf_batt{ch_num}",
+                    ]
+                )
         elif sensor_type.lower() in ("wh35", "leaf_wetness"):
             # Leaf wetness sensors
             if ch_num:
-                keys.extend([
-                    f"leafwetness_ch{ch_num}",
-                    f"leaf_batt{ch_num}",
-                ])
+                keys.extend(
+                    [
+                        f"leafwetness_ch{ch_num}",
+                        f"leaf_batt{ch_num}",
+                    ]
+                )
         elif sensor_type.lower() in ("wh45", "combo", "co2_pm"):
             # WH45 combo sensor (CO2 + PM2.5 + PM10 + temp/humidity)
-            keys.extend([
-                "tf_co2",           # Temperature (F)
-                "tf_co2c",          # Temperature (C)
-                "humi_co2",         # Humidity
-                "pm25_co2",         # PM2.5 current
-                "pm25_24h_co2",     # PM2.5 24h average
-                "pm10_co2",         # PM10 current
-                "pm10_24h_co2",     # PM10 24h average
-                "co2",              # CO2 current
-                "co2_24h",          # CO2 24h average
-                "co2_batt",         # Battery
-            ])
+            keys.extend(
+                [
+                    "tf_co2",  # Temperature (F)
+                    "tf_co2c",  # Temperature (C)
+                    "humi_co2",  # Humidity
+                    "pm25_co2",  # PM2.5 current
+                    "pm25_24h_co2",  # PM2.5 24h average
+                    "pm10_co2",  # PM10 current
+                    "pm10_24h_co2",  # PM10 24h average
+                    "co2",  # CO2 current
+                    "co2_24h",  # CO2 24h average
+                    "co2_batt",  # Battery
+                ]
+            )
 
         return keys
 
@@ -420,10 +474,10 @@ class SensorMapper:
             }
             # Return mapped name or fallback to hex format if unknown
             return hex_to_name.get(key, key.lower().replace("0x", "hex"))
-        
+
         # Remove channel numbers and common suffixes
-        clean_key = re.sub(r'\d+$', '', key)
-        clean_key = re.sub(r'(in|f|ch\d*)$', '', clean_key)
+        clean_key = re.sub(r"\d+$", "", key)
+        clean_key = re.sub(r"(in|f|ch\d*)$", "", clean_key)
 
         # Map common patterns (more specific patterns must come before generic ones)
         type_mappings = {
@@ -472,12 +526,12 @@ class SensorMapper:
     def _extract_identifier_from_key(self, key: str) -> str:
         """Extract identifier from live data key."""
         # Extract channel number if present (at end or before suffix)
-        channel_match = re.search(r'(\d+)(?:[a-z]*)$', key)
+        channel_match = re.search(r"(\d+)(?:[a-z]*)$", key)
         if channel_match:
             return f"ch{channel_match.group(1)}"
 
         # Extract channel from middle (e.g., pm25_ch1)
-        ch_match = re.search(r'ch(\d+)', key)
+        ch_match = re.search(r"ch(\d+)", key)
         if ch_match:
             return f"ch{ch_match.group(1)}"
 
@@ -502,7 +556,7 @@ class SensorMapper:
         return {
             "total_sensors": len(self._sensor_info),
             "mapped_keys": len(self._hardware_mapping),
-            "sensor_types": len(set(
-                info.get("sensor_type", "") for info in self._sensor_info.values()
-            )),
+            "sensor_types": len(
+                set(info.get("sensor_type", "") for info in self._sensor_info.values())
+            ),
         }

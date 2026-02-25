@@ -1,4 +1,5 @@
 """Fixtures for Ecowitt Local integration tests."""
+
 from __future__ import annotations
 
 import json
@@ -6,13 +7,13 @@ from typing import Any, Dict
 from unittest.mock import patch
 
 import pytest
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
-from custom_components.ecowitt_local.const import DOMAIN, CONF_HOST, CONF_PASSWORD
+from custom_components.ecowitt_local.const import CONF_HOST, CONF_PASSWORD, DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -55,12 +56,12 @@ def mock_wh68_sensor_mapping() -> Dict[str, Any]:
     return {
         "id": "A1B2C3",
         "img": "wh68",
-        "type": "1", 
+        "type": "1",
         "name": "Solar & Wind",
         "batt": "3",
         "rssi": "-72",
         "signal": "4",
-        "idst": "1"
+        "idst": "1",
     }
 
 
@@ -70,17 +71,17 @@ def mock_wh68_live_data() -> Dict[str, Any]:
     return {
         "tempf": "75.2",
         "humidity": "45",
-        "windspeedmph": "5.2", 
+        "windspeedmph": "5.2",
         "windspdmph_avg10m": "4.8",
         "windgustmph": "8.1",
         "maxdailygust": "15.3",
         "winddir": "180",
         "winddir_avg10m": "185",
         "baromrelin": "29.85",
-        "baromabsin": "29.85", 
+        "baromabsin": "29.85",
         "solarradiation": "850.5",
         "uv": "6",
-        "wh68batt": "3"
+        "wh68batt": "3",
     }
 
 
@@ -91,38 +92,41 @@ def mock_wh31_sensor_mapping() -> Dict[str, Any]:
         "id": "D1E2F3",
         "img": "wh31",
         "type": "6",
-        "name": "Temp & Humidity CH1", 
+        "name": "Temp & Humidity CH1",
         "batt": "4",
         "rssi": "-68",
         "signal": "4",
-        "idst": "1"
-    }
-
-
-@pytest.fixture 
-def mock_wh31_live_data() -> Dict[str, Any]:
-    """Mock WH31 temp/humidity live data."""
-    return {
-        "temp1f": "72.5",
-        "humidity1": "50",
-        "dewpoint1f": "52.1",
-        "batt1": "4"
+        "idst": "1",
     }
 
 
 @pytest.fixture
-def mock_complete_sensor_mappings(mock_wh68_sensor_mapping, mock_wh31_sensor_mapping, mock_wh57_sensor_mapping, mock_wh40_sensor_mapping, mock_wh41_sensor_mapping, mock_wh55_sensor_mapping, mock_wh45_sensor_mapping) -> list[Dict[str, Any]]:
+def mock_wh31_live_data() -> Dict[str, Any]:
+    """Mock WH31 temp/humidity live data."""
+    return {"temp1f": "72.5", "humidity1": "50", "dewpoint1f": "52.1", "batt1": "4"}
+
+
+@pytest.fixture
+def mock_complete_sensor_mappings(
+    mock_wh68_sensor_mapping,
+    mock_wh31_sensor_mapping,
+    mock_wh57_sensor_mapping,
+    mock_wh40_sensor_mapping,
+    mock_wh41_sensor_mapping,
+    mock_wh55_sensor_mapping,
+    mock_wh45_sensor_mapping,
+) -> list[Dict[str, Any]]:
     """Mock complete sensor mappings including soil sensors and all weather/environmental/air quality sensors."""
     return [
         {
-            "id": "D8174", 
+            "id": "D8174",
             "img": "wh51",
             "type": "15",
             "name": "Soil moisture CH2",
             "batt": "1",
-            "rssi": "-83", 
+            "rssi": "-83",
             "signal": "4",
-            "idst": "1"
+            "idst": "1",
         },
         mock_wh68_sensor_mapping,
         mock_wh31_sensor_mapping,
@@ -130,7 +134,7 @@ def mock_complete_sensor_mappings(mock_wh68_sensor_mapping, mock_wh31_sensor_map
         mock_wh40_sensor_mapping,
         mock_wh41_sensor_mapping,
         mock_wh55_sensor_mapping,
-        mock_wh45_sensor_mapping
+        mock_wh45_sensor_mapping,
     ]
 
 
@@ -145,7 +149,7 @@ def mock_wh57_sensor_mapping() -> Dict[str, Any]:
         "batt": "4",
         "rssi": "-65",
         "signal": "4",
-        "idst": "1"
+        "idst": "1",
     }
 
 
@@ -157,7 +161,7 @@ def mock_wh57_live_data() -> Dict[str, Any]:
         "lightning_time": "2024-08-18T14:30:15",
         "lightning": "8.5",
         "lightning_mi": "5.3",
-        "wh57batt": "4"
+        "wh57batt": "4",
     }
 
 
@@ -172,7 +176,7 @@ def mock_wh40_sensor_mapping() -> Dict[str, Any]:
         "batt": "3",
         "rssi": "-70",
         "signal": "4",
-        "idst": "1"
+        "idst": "1",
     }
 
 
@@ -188,7 +192,7 @@ def mock_wh40_live_data() -> Dict[str, Any]:
         "monthlyrainin": "5.67",
         "yearlyrainin": "45.23",
         "totalrainin": "112.56",
-        "wh40batt": "3"
+        "wh40batt": "3",
     }
 
 
@@ -203,18 +207,14 @@ def mock_wh41_sensor_mapping() -> Dict[str, Any]:
         "batt": "4",
         "rssi": "-72",
         "signal": "4",
-        "idst": "1"
+        "idst": "1",
     }
 
 
 @pytest.fixture
 def mock_wh41_live_data() -> Dict[str, Any]:
     """Mock WH41 PM2.5 live data."""
-    return {
-        "pm25_ch1": "35.2",
-        "pm25_avg_24h_ch1": "28.7",
-        "pm25batt1": "4"
-    }
+    return {"pm25_ch1": "35.2", "pm25_avg_24h_ch1": "28.7", "pm25batt1": "4"}
 
 
 @pytest.fixture
@@ -228,17 +228,14 @@ def mock_wh55_sensor_mapping() -> Dict[str, Any]:
         "batt": "5",
         "rssi": "-68",
         "signal": "4",
-        "idst": "1"
+        "idst": "1",
     }
 
 
 @pytest.fixture
 def mock_wh55_live_data() -> Dict[str, Any]:
     """Mock WH55 leak detection live data."""
-    return {
-        "leak_ch1": "0",
-        "leakbatt1": "5"
-    }
+    return {"leak_ch1": "0", "leakbatt1": "5"}
 
 
 @pytest.fixture
@@ -252,7 +249,7 @@ def mock_wh45_sensor_mapping() -> Dict[str, Any]:
         "batt": "4",
         "rssi": "-65",
         "signal": "4",
-        "idst": "1"
+        "idst": "1",
     }
 
 
@@ -269,12 +266,20 @@ def mock_wh45_live_data() -> Dict[str, Any]:
         "pm10_24h_co2": "38.9",
         "co2": "487",
         "co2_24h": "512",
-        "co2_batt": "4"
+        "co2_batt": "4",
     }
 
 
 @pytest.fixture
-def mock_complete_live_data(mock_wh68_live_data, mock_wh31_live_data, mock_wh57_live_data, mock_wh40_live_data, mock_wh41_live_data, mock_wh55_live_data, mock_wh45_live_data) -> Dict[str, Any]:
+def mock_complete_live_data(
+    mock_wh68_live_data,
+    mock_wh31_live_data,
+    mock_wh57_live_data,
+    mock_wh40_live_data,
+    mock_wh41_live_data,
+    mock_wh55_live_data,
+    mock_wh45_live_data,
+) -> Dict[str, Any]:
     """Mock complete live data including soil, weather, lightning, rain, air quality, leak detection, and combo sensors."""
     return {
         "soilmoisture2": "24",
@@ -285,7 +290,7 @@ def mock_complete_live_data(mock_wh68_live_data, mock_wh31_live_data, mock_wh57_
         **mock_wh40_live_data,
         **mock_wh41_live_data,
         **mock_wh55_live_data,
-        **mock_wh45_live_data
+        **mock_wh45_live_data,
     }
 
 
@@ -324,7 +329,7 @@ def mock_sensor_mapping() -> list[Dict[str, Any]]:
         },
         {
             "id": "D8648",
-            "img": "WH51", 
+            "img": "WH51",
             "name": "Soil moisture CH2",
             "batt": "4",
             "signal": "3",
@@ -355,21 +360,23 @@ def mock_units_data() -> Dict[str, Any]:
 def mock_ecowitt_api():
     """Mock the EcowittLocalAPI."""
     from unittest.mock import AsyncMock, MagicMock
-    
+
     mock_instance = AsyncMock()
     mock_instance.authenticate.return_value = True
     mock_instance.test_connection.return_value = True
     mock_instance.close = AsyncMock(return_value=None)
     mock_instance.get_live_data = AsyncMock(return_value={"common_list": []})
-    mock_instance.get_version = AsyncMock(return_value={"stationtype": "GW1100A", "version": "1.7.3"})
+    mock_instance.get_version = AsyncMock(
+        return_value={"stationtype": "GW1100A", "version": "1.7.3"}
+    )
     mock_instance.get_all_sensor_mappings = AsyncMock(return_value=[])
-    
+
     return mock_instance
 
 
 @pytest.fixture
 async def setup_integration(
-    hass: HomeAssistant, 
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_ecowitt_api,
     mock_gateway_version,
@@ -378,7 +385,7 @@ async def setup_integration(
     mock_units_data,
 ):
     """Set up the integration with mocked data."""
-    # Configure mock API responses  
+    # Configure mock API responses
     mock_ecowitt_api.get_version.return_value = mock_gateway_version
     mock_ecowitt_api.get_live_data.return_value = mock_live_data
     mock_ecowitt_api.get_all_sensor_mappings.return_value = mock_sensor_mapping
@@ -386,20 +393,28 @@ async def setup_integration(
     mock_ecowitt_api.test_connection.return_value = True
     mock_ecowitt_api.authenticate.return_value = True
     mock_ecowitt_api.close.return_value = None
-    
+
     # Add config entry to hass
     mock_config_entry.add_to_hass(hass)
-    
+
     # Patch the API class in both locations where it's imported
-    with patch("custom_components.ecowitt_local.coordinator.EcowittLocalAPI", return_value=mock_ecowitt_api), \
-         patch("custom_components.ecowitt_local.api.EcowittLocalAPI", return_value=mock_ecowitt_api):
-        
+    with (
+        patch(
+            "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+            return_value=mock_ecowitt_api,
+        ),
+        patch(
+            "custom_components.ecowitt_local.api.EcowittLocalAPI",
+            return_value=mock_ecowitt_api,
+        ),
+    ):
+
         # Setup the integration
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        
+
         # Verify the entry was loaded
         assert result is True
         assert mock_config_entry.state == ConfigEntryState.LOADED
-        
+
         yield mock_config_entry

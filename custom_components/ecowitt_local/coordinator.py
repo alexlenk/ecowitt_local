@@ -1,4 +1,5 @@
 """Data update coordinator for Ecowitt Local integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -13,18 +14,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import EcowittLocalAPI, AuthenticationError, ConnectionError as APIConnectionError
+from .api import (
+    AuthenticationError,
+)
+from .api import ConnectionError as APIConnectionError
+from .api import (
+    EcowittLocalAPI,
+)
 from .const import (
-    DOMAIN,
-    CONF_SCAN_INTERVAL,
-    CONF_MAPPING_INTERVAL,
-    CONF_INCLUDE_INACTIVE,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_MAPPING_INTERVAL,
-    SENSOR_TYPES,
     BATTERY_SENSORS,
-    SYSTEM_SENSORS,
+    CONF_INCLUDE_INACTIVE,
+    CONF_MAPPING_INTERVAL,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_MAPPING_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     GATEWAY_SENSORS,
+    SENSOR_TYPES,
+    SYSTEM_SENSORS,
 )
 from .sensor_mapper import SensorMapper
 
@@ -49,11 +56,13 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         self._gateway_info: Dict[str, Any] = {}
         self._last_mapping_update: Optional[datetime] = None
         self._include_inactive = config_entry.data.get(CONF_INCLUDE_INACTIVE, False)
-        self._gateway_temp_unit: str = "°F"  # default; overridden by get_units_info ("0"=°C, "1"=°F)
-        
+        self._gateway_temp_unit: str = (
+            "°F"  # default; overridden by get_units_info ("0"=°C, "1"=°F)
+        )
+
         # Get update intervals
         scan_interval = config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        
+
         super().__init__(
             hass,
             _LOGGER,
@@ -66,27 +75,34 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         try:
             # Update sensor mapping if needed
             await self._update_sensor_mapping_if_needed()
-            
+
             # Get live data
             live_data = await self.api.get_live_data()
-            _LOGGER.debug("Raw live data keys: %s", list(live_data.keys()) if live_data else "None")
+            _LOGGER.debug(
+                "Raw live data keys: %s",
+                list(live_data.keys()) if live_data else "None",
+            )
             if live_data.get("common_list"):
-                _LOGGER.debug("Found %d items in common_list", len(live_data["common_list"]))
+                _LOGGER.debug(
+                    "Found %d items in common_list", len(live_data["common_list"])
+                )
                 for item in live_data["common_list"]:
-                    _LOGGER.debug("Sensor item: id=%s, val=%s", item.get("id"), item.get("val"))
+                    _LOGGER.debug(
+                        "Sensor item: id=%s, val=%s", item.get("id"), item.get("val")
+                    )
             else:
                 _LOGGER.debug("No common_list found in live data")
-            
+
             # Also check other data structures
             for key in live_data.keys():
                 if key != "common_list":
                     _LOGGER.debug("Additional data key '%s': %s", key, live_data[key])
-            
+
             # Process the data
             processed_data = await self._process_live_data(live_data)
-            
+
             return processed_data
-            
+
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except APIConnectionError as err:
@@ -100,17 +116,25 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         mapping_interval = self.config_entry.data.get(
             CONF_MAPPING_INTERVAL, DEFAULT_MAPPING_INTERVAL
         )
-        
+
         now = datetime.now()
         if (
             self._last_mapping_update is None
             or (now - self._last_mapping_update).total_seconds() >= mapping_interval
         ):
-            _LOGGER.debug("Triggering sensor mapping update (last_update=%s, interval=%s)", self._last_mapping_update, mapping_interval)
+            _LOGGER.debug(
+                "Triggering sensor mapping update (last_update=%s, interval=%s)",
+                self._last_mapping_update,
+                mapping_interval,
+            )
             await self._update_sensor_mapping()
             self._last_mapping_update = now
         else:
-            _LOGGER.debug("Skipping sensor mapping update (last_update=%s, interval=%s)", self._last_mapping_update, mapping_interval)
+            _LOGGER.debug(
+                "Skipping sensor mapping update (last_update=%s, interval=%s)",
+                self._last_mapping_update,
+                mapping_interval,
+            )
 
     async def _update_sensor_mapping(self) -> None:
         """Update sensor hardware ID mapping."""
@@ -121,23 +145,33 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             # Newer firmware (GW3000A, GW1200C) uses key "temperature"; older uses "temp".
             try:
                 units_data = await self.api.get_units()
-                temp_unit_code = units_data.get("temperature", units_data.get("temp", "1"))
+                temp_unit_code = units_data.get(
+                    "temperature", units_data.get("temp", "1")
+                )
                 self._gateway_temp_unit = "°C" if temp_unit_code == "0" else "°F"
-                _LOGGER.debug("Gateway temperature unit: %s (code=%s)", self._gateway_temp_unit, temp_unit_code)
+                _LOGGER.debug(
+                    "Gateway temperature unit: %s (code=%s)",
+                    self._gateway_temp_unit,
+                    temp_unit_code,
+                )
             except Exception as err:
-                _LOGGER.warning("Could not fetch gateway unit settings, assuming °F: %s", err)
+                _LOGGER.warning(
+                    "Could not fetch gateway unit settings, assuming °F: %s", err
+                )
 
             # Get sensor mappings from both pages
             sensor_mappings = await self.api.get_all_sensor_mappings()
             _LOGGER.debug("Retrieved %d sensor mappings from API", len(sensor_mappings))
             if not sensor_mappings:
-                _LOGGER.warning("No sensor mappings returned from API - this will cause all sensors to appear on gateway device")
+                _LOGGER.warning(
+                    "No sensor mappings returned from API - this will cause all sensors to appear on gateway device"
+                )
             for mapping in sensor_mappings:
                 _LOGGER.debug("Sensor mapping: %s", mapping)
-            
+
             # Update the mapper
             self.sensor_mapper.update_mapping(sensor_mappings)
-            
+
             stats = self.sensor_mapper.get_mapping_stats()
             _LOGGER.info(
                 "Updated sensor mapping: %d sensors, %d mapped keys, %d sensor types",
@@ -145,7 +179,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 stats["mapped_keys"],
                 stats["sensor_types"],
             )
-            
+
         except Exception as err:
             _LOGGER.warning("Failed to update sensor mapping: %s", err)
 
@@ -157,10 +191,10 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             "gateway_info": {},
             "last_update": datetime.now(),
         }
-        
+
         # Process all sensor data sources
         all_sensor_items = []
-        
+
         # Extract common_list data (main sensor readings)
         common_list = raw_data.get("common_list", [])
         all_sensor_items.extend(common_list)
@@ -170,13 +204,23 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         if rain_list:
             _LOGGER.debug("Found rain data with %d items", len(rain_list))
             for item in rain_list:
-                if isinstance(item, dict) and item.get("id") and item.get("val") is not None:
+                if (
+                    isinstance(item, dict)
+                    and item.get("id")
+                    and item.get("val") is not None
+                ):
                     all_sensor_items.append({"id": item["id"], "val": item["val"]})
                     # Extract WH40 battery from the 0x13 (yearly rain) item which carries it
                     if item.get("id") == "0x13" and item.get("battery"):
-                        battery_pct = str(int(item["battery"]) * 20) if str(item["battery"]).isdigit() else item["battery"]
+                        battery_pct = (
+                            str(int(item["battery"]) * 20)
+                            if str(item["battery"]).isdigit()
+                            else item["battery"]
+                        )
                         all_sensor_items.append({"id": "wh40batt", "val": battery_pct})
-                        _LOGGER.debug("Added WH40 battery: wh40batt = %s%%", battery_pct)
+                        _LOGGER.debug(
+                            "Added WH40 battery: wh40batt = %s%%", battery_pct
+                        )
 
         # Extract lightning data (WH57 lightning sensor)
         lightning_data = raw_data.get("lightning", [])
@@ -185,18 +229,30 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             lightning_item = lightning_data[0]
             if isinstance(lightning_item, dict):
                 if "count" in lightning_item:
-                    all_sensor_items.append({"id": "lightning_num", "val": lightning_item["count"]})
-                    _LOGGER.debug("Added lightning strikes: %s", lightning_item["count"])
+                    all_sensor_items.append(
+                        {"id": "lightning_num", "val": lightning_item["count"]}
+                    )
+                    _LOGGER.debug(
+                        "Added lightning strikes: %s", lightning_item["count"]
+                    )
                 if "date" in lightning_item:
-                    all_sensor_items.append({"id": "lightning_time", "val": lightning_item["date"]})
-                    _LOGGER.debug("Added last lightning time: %s", lightning_item["date"])
+                    all_sensor_items.append(
+                        {"id": "lightning_time", "val": lightning_item["date"]}
+                    )
+                    _LOGGER.debug(
+                        "Added last lightning time: %s", lightning_item["date"]
+                    )
                 if "distance" in lightning_item:
-                    distance_str = str(lightning_item["distance"]).replace(" km", "").strip()
+                    distance_str = (
+                        str(lightning_item["distance"]).replace(" km", "").strip()
+                    )
                     all_sensor_items.append({"id": "lightning", "val": distance_str})
                     _LOGGER.debug("Added lightning distance: %s km", distance_str)
                 if "battery" in lightning_item:
                     battery = lightning_item["battery"]
-                    battery_pct = str(int(battery) * 20) if str(battery).isdigit() else battery
+                    battery_pct = (
+                        str(int(battery) * 20) if str(battery).isdigit() else battery
+                    )
                     all_sensor_items.append({"id": "wh57batt", "val": battery_pct})
                     _LOGGER.debug("Added WH57 battery: wh57batt = %s%%", battery_pct)
 
@@ -212,23 +268,33 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     channel = item.get("channel")
                     humidity = item.get("humidity", "").replace("%", "")
                     battery = item.get("battery")
-                    
+
                     if channel and humidity:
                         # Create soil moisture sensor
                         soil_key = f"soilmoisture{channel}"
                         all_sensor_items.append({"id": soil_key, "val": humidity})
-                        _LOGGER.debug("Added soil sensor: %s = %s%%", soil_key, humidity)
-                        
+                        _LOGGER.debug(
+                            "Added soil sensor: %s = %s%%", soil_key, humidity
+                        )
+
                         # Create battery sensor if battery data exists
                         if battery:
                             battery_key = f"soilbatt{channel}"
                             # Convert battery level (1=20%, 2=40%, 3=60%, 4=80%, 5=100%)
-                            battery_pct = str(int(battery) * 20) if battery.isdigit() else battery
-                            all_sensor_items.append({"id": battery_key, "val": battery_pct})
-                            _LOGGER.debug("Added soil battery sensor: %s = %s", battery_key, battery_pct)
-                        
+                            battery_pct = (
+                                str(int(battery) * 20) if battery.isdigit() else battery
+                            )
+                            all_sensor_items.append(
+                                {"id": battery_key, "val": battery_pct}
+                            )
+                            _LOGGER.debug(
+                                "Added soil battery sensor: %s = %s",
+                                battery_key,
+                                battery_pct,
+                            )
+
                         # Get signal strength from sensor mapping (we'll add this in processing)
-        
+
         # Extract wh25 data (indoor temp/humidity/pressure)
         wh25_data = raw_data.get("wh25", [])
         if wh25_data and len(wh25_data) > 0:
@@ -241,29 +307,41 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 if "intemp" in wh25_item:
                     temp_val = wh25_item["intemp"]
                     temp_unit = wh25_item.get("unit", "F")
-                    all_sensor_items.append({"id": "tempinf", "val": temp_val, "unit": temp_unit})
-                    _LOGGER.debug("Added indoor temp: tempinf = %s (%s)", temp_val, temp_unit)
-                
-                # Indoor humidity  
+                    all_sensor_items.append(
+                        {"id": "tempinf", "val": temp_val, "unit": temp_unit}
+                    )
+                    _LOGGER.debug(
+                        "Added indoor temp: tempinf = %s (%s)", temp_val, temp_unit
+                    )
+
+                # Indoor humidity
                 if "inhumi" in wh25_item:
                     humi_val = wh25_item["inhumi"].replace("%", "")
                     all_sensor_items.append({"id": "humidityin", "val": humi_val})
                     _LOGGER.debug("Added indoor humidity: humidityin = %s", humi_val)
-                
+
                 # Absolute pressure
                 if "abs" in wh25_item:
                     abs_val = wh25_item["abs"].replace(" hPa", "")
-                    _LOGGER.debug("Raw absolute pressure from gateway: '%s', cleaned: '%s'", wh25_item["abs"], abs_val)
+                    _LOGGER.debug(
+                        "Raw absolute pressure from gateway: '%s', cleaned: '%s'",
+                        wh25_item["abs"],
+                        abs_val,
+                    )
                     all_sensor_items.append({"id": "baromabsin", "val": abs_val})
                     _LOGGER.debug("Added absolute pressure: baromabsin = %s", abs_val)
-                
+
                 # Relative pressure
                 if "rel" in wh25_item:
                     rel_val = wh25_item["rel"].replace(" hPa", "")
-                    _LOGGER.debug("Raw relative pressure from gateway: '%s', cleaned: '%s'", wh25_item["rel"], rel_val)
+                    _LOGGER.debug(
+                        "Raw relative pressure from gateway: '%s', cleaned: '%s'",
+                        wh25_item["rel"],
+                        rel_val,
+                    )
                     all_sensor_items.append({"id": "baromrelin", "val": rel_val})
                     _LOGGER.debug("Added relative pressure: baromrelin = %s", rel_val)
-        
+
         # Extract piezoRain data (rain sensor readings from WS90/WH40)
         piezo_rain = raw_data.get("piezoRain", [])
         if piezo_rain:
@@ -277,18 +355,30 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     sensor_val = item["val"]
                     all_sensor_items.append({"id": sensor_id, "val": sensor_val})
                     _LOGGER.debug("Added rain sensor: %s = %s", sensor_id, sensor_val)
-                    
+
                     # Add battery sensor if present in the item
                     if "battery" in item and item["battery"]:
                         # For WS90/WH90, battery is associated with the last rain item.
                         # Use "wh90batt" to match the key registered in sensor_mapper for WH90,
                         # so the battery entity is correctly associated with the WH90 hardware_id.
-                        if sensor_id == "0x13":  # Total rain - usually the last item with battery info
+                        if (
+                            sensor_id == "0x13"
+                        ):  # Total rain - usually the last item with battery info
                             battery_key = "wh90batt"
-                            battery_val = str(int(item["battery"]) * 20) if item["battery"].isdigit() else item["battery"]
-                            all_sensor_items.append({"id": battery_key, "val": battery_val})
-                            _LOGGER.debug("Added WS90 battery sensor: %s = %s%%", battery_key, battery_val)
-        
+                            battery_val = (
+                                str(int(item["battery"]) * 20)
+                                if item["battery"].isdigit()
+                                else item["battery"]
+                            )
+                            all_sensor_items.append(
+                                {"id": battery_key, "val": battery_val}
+                            )
+                            _LOGGER.debug(
+                                "Added WS90 battery sensor: %s = %s%%",
+                                battery_key,
+                                battery_val,
+                            )
+
         # Extract ch_aisle data (WH31 temperature/humidity sensors)
         ch_aisle = raw_data.get("ch_aisle", [])
         if ch_aisle:
@@ -302,7 +392,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     temp = item.get("temp")
                     humidity = item.get("humidity")
                     battery = item.get("battery")
-                    
+
                     if channel:
                         # Create temperature sensor if temp data exists
                         if temp and temp != "None":
@@ -310,16 +400,33 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                             # Pass the actual gateway unit so the coordinator overrides the
                             # SENSOR_TYPES "°F" default. Ecowitt firmware always reports
                             # "unit": "F" in ch_aisle even when the gateway is in Celsius mode.
-                            all_sensor_items.append({"id": temp_key, "val": temp, "unit": self._gateway_temp_unit})
-                            _LOGGER.debug("Added WH31 temperature sensor: %s = %s (%s)", temp_key, temp, self._gateway_temp_unit)
-                        
+                            all_sensor_items.append(
+                                {
+                                    "id": temp_key,
+                                    "val": temp,
+                                    "unit": self._gateway_temp_unit,
+                                }
+                            )
+                            _LOGGER.debug(
+                                "Added WH31 temperature sensor: %s = %s (%s)",
+                                temp_key,
+                                temp,
+                                self._gateway_temp_unit,
+                            )
+
                         # Create humidity sensor if humidity data exists
                         if humidity and humidity != "None":
                             humidity_val = humidity.replace("%", "")
                             humidity_key = f"humidity{channel}"
-                            all_sensor_items.append({"id": humidity_key, "val": humidity_val})
-                            _LOGGER.debug("Added WH31 humidity sensor: %s = %s%%", humidity_key, humidity_val)
-                        
+                            all_sensor_items.append(
+                                {"id": humidity_key, "val": humidity_val}
+                            )
+                            _LOGGER.debug(
+                                "Added WH31 humidity sensor: %s = %s%%",
+                                humidity_key,
+                                humidity_val,
+                            )
+
                         # Create battery sensor if battery data exists
                         if battery and battery != "None":
                             battery_key = f"batt{channel}"
@@ -329,10 +436,20 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                             elif battery == "1":
                                 battery_pct = "10"
                             else:
-                                battery_pct = str(int(battery) * 20) if battery.isdigit() else battery
-                            all_sensor_items.append({"id": battery_key, "val": battery_pct})
-                            _LOGGER.debug("Added WH31 battery sensor: %s = %s%%", battery_key, battery_pct)
-        
+                                battery_pct = (
+                                    str(int(battery) * 20)
+                                    if battery.isdigit()
+                                    else battery
+                                )
+                            all_sensor_items.append(
+                                {"id": battery_key, "val": battery_pct}
+                            )
+                            _LOGGER.debug(
+                                "Added WH31 battery sensor: %s = %s%%",
+                                battery_key,
+                                battery_pct,
+                            )
+
         # Extract ch_temp data (WH34 wired temperature sensors)
         ch_temp = raw_data.get("ch_temp", [])
         if ch_temp:
@@ -349,14 +466,33 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                             temp_key = f"tf_ch{channel}"
                             # Same as ch_aisle: Ecowitt firmware reports the raw value; apply
                             # the actual gateway unit to avoid double-conversion.
-                            all_sensor_items.append({"id": temp_key, "val": temp, "unit": self._gateway_temp_unit})
-                            _LOGGER.debug("Added WH34 temperature sensor: %s = %s (%s)", temp_key, temp, self._gateway_temp_unit)
+                            all_sensor_items.append(
+                                {
+                                    "id": temp_key,
+                                    "val": temp,
+                                    "unit": self._gateway_temp_unit,
+                                }
+                            )
+                            _LOGGER.debug(
+                                "Added WH34 temperature sensor: %s = %s (%s)",
+                                temp_key,
+                                temp,
+                                self._gateway_temp_unit,
+                            )
 
                         if battery and battery != "None":
                             battery_key = f"tf_batt{channel}"
-                            battery_pct = str(int(battery) * 20) if battery.isdigit() else battery
-                            all_sensor_items.append({"id": battery_key, "val": battery_pct})
-                            _LOGGER.debug("Added WH34 battery sensor: %s = %s%%", battery_key, battery_pct)
+                            battery_pct = (
+                                str(int(battery) * 20) if battery.isdigit() else battery
+                            )
+                            all_sensor_items.append(
+                                {"id": battery_key, "val": battery_pct}
+                            )
+                            _LOGGER.debug(
+                                "Added WH34 battery sensor: %s = %s%%",
+                                battery_key,
+                                battery_pct,
+                            )
 
         # Extract ch_pm25 data (WH41 PM2.5 air quality sensors)
         ch_pm25 = raw_data.get("ch_pm25", [])
@@ -380,56 +516,92 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         if pm25_val and pm25_val != "None":
                             pm25_key = f"pm25_ch{channel}"
                             all_sensor_items.append({"id": pm25_key, "val": pm25_val})
-                            _LOGGER.debug("Added PM2.5 sensor: %s = %s", pm25_key, pm25_val)
+                            _LOGGER.debug(
+                                "Added PM2.5 sensor: %s = %s", pm25_key, pm25_val
+                            )
 
                         if pm25_24h_val and pm25_24h_val != "None":
                             pm25_24h_key = f"pm25_avg_24h_ch{channel}"
-                            all_sensor_items.append({"id": pm25_24h_key, "val": pm25_24h_val})
-                            _LOGGER.debug("Added PM2.5 24h avg sensor: %s = %s", pm25_24h_key, pm25_24h_val)
+                            all_sensor_items.append(
+                                {"id": pm25_24h_key, "val": pm25_24h_val}
+                            )
+                            _LOGGER.debug(
+                                "Added PM2.5 24h avg sensor: %s = %s",
+                                pm25_24h_key,
+                                pm25_24h_val,
+                            )
 
                         if battery and battery != "None":
                             battery_key = f"pm25batt{channel}"
-                            battery_pct = str(int(battery) * 20) if str(battery).isdigit() else battery
-                            all_sensor_items.append({"id": battery_key, "val": battery_pct})
-                            _LOGGER.debug("Added PM2.5 battery sensor: %s = %s%%", battery_key, battery_pct)
+                            battery_pct = (
+                                str(int(battery) * 20)
+                                if str(battery).isdigit()
+                                else battery
+                            )
+                            all_sensor_items.append(
+                                {"id": battery_key, "val": battery_pct}
+                            )
+                            _LOGGER.debug(
+                                "Added PM2.5 battery sensor: %s = %s%%",
+                                battery_key,
+                                battery_pct,
+                            )
 
         _LOGGER.debug("Total sensor items to process: %d", len(all_sensor_items))
-        
+
         for item in all_sensor_items:
             sensor_key = item.get("id") or ""
             sensor_value = item.get("val") or ""
-            item_unit = item.get("unit")  # Check for separate unit field (e.g., {"id": "0x02", "val": "43.7", "unit": "F"})
-            
+            item_unit = item.get(
+                "unit"
+            )  # Check for separate unit field (e.g., {"id": "0x02", "val": "43.7", "unit": "F"})
+
             if not sensor_key:
                 continue
-                
+
             # Skip empty values unless we include inactive sensors
             if not sensor_value and not self._include_inactive:
-                _LOGGER.debug("Skipping sensor %s with empty value (include_inactive=%s)", sensor_key, self._include_inactive)
+                _LOGGER.debug(
+                    "Skipping sensor %s with empty value (include_inactive=%s)",
+                    sensor_key,
+                    self._include_inactive,
+                )
                 continue
-            
+
             # Extract unit from either the separate "unit" field OR embedded in the value
             embedded_unit = None
             numeric_value = sensor_value
-            
+
             # First, check for separate "unit" field in the item (temperature sensors use this)
             if item_unit:
                 # Normalize unit to standard Home Assistant format
                 embedded_unit = self._normalize_unit(item_unit)
-                _LOGGER.debug("Found unit field in item: '%s' -> normalized='%s'", item_unit, embedded_unit)
+                _LOGGER.debug(
+                    "Found unit field in item: '%s' -> normalized='%s'",
+                    item_unit,
+                    embedded_unit,
+                )
             # Otherwise, try to extract unit from value string (e.g., "2.24 mph")
             elif sensor_value and isinstance(sensor_value, str):
                 import re
-                match = re.match(r'^([-+]?\d*\.?\d+)\s*([a-zA-Z%°/]+.*)$', sensor_value.strip())
+
+                match = re.match(
+                    r"^([-+]?\d*\.?\d+)\s*([a-zA-Z%°/]+.*)$", sensor_value.strip()
+                )
                 if match:
                     numeric_value = match.group(1)
                     embedded_unit = match.group(2).strip()
                     if embedded_unit:
                         # Normalize unit to standard Home Assistant format
                         unit_normalized = self._normalize_unit(embedded_unit)
-                        
-                        _LOGGER.debug("Extracted unit from value: '%s' -> numeric='%s', unit='%s' (normalized='%s')", 
-                                     sensor_value, numeric_value, embedded_unit, unit_normalized)
+
+                        _LOGGER.debug(
+                            "Extracted unit from value: '%s' -> numeric='%s', unit='%s' (normalized='%s')",
+                            sensor_value,
+                            numeric_value,
+                            embedded_unit,
+                            unit_normalized,
+                        )
                         embedded_unit = unit_normalized  # Use normalized unit
                         sensor_value = numeric_value  # Use just the numeric part
 
@@ -448,25 +620,32 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             if sensor_key not in GATEWAY_SENSORS:
                 hardware_id = self.sensor_mapper.get_hardware_id(sensor_key)
                 _LOGGER.debug("Hardware ID lookup for %s: %s", sensor_key, hardware_id)
-            
+
             # Generate entity information
             entity_id, friendly_name = self.sensor_mapper.generate_entity_id(
                 sensor_key, hardware_id
             )
-            _LOGGER.debug("Processing sensor: key=%s, value=%s, hardware_id=%s, entity_id=%s", 
-                         sensor_key, sensor_value, hardware_id, entity_id)
-            
+            _LOGGER.debug(
+                "Processing sensor: key=%s, value=%s, hardware_id=%s, entity_id=%s",
+                sensor_key,
+                sensor_value,
+                hardware_id,
+                entity_id,
+            )
+
             # Get sensor type information
             sensor_info = SENSOR_TYPES.get(sensor_key, {})
             battery_info = BATTERY_SENSORS.get(sensor_key, {})
             system_info = SYSTEM_SENSORS.get(sensor_key, {})
-            
+
             # Determine sensor category
             if battery_info:
                 category = "diagnostic"  # Move battery to diagnostic
                 device_class = "battery"
                 unit = "%"
-                _LOGGER.debug("Battery sensor %s assigned to diagnostic category", sensor_key)
+                _LOGGER.debug(
+                    "Battery sensor %s assigned to diagnostic category", sensor_key
+                )
             elif system_info:
                 category = "system"
                 device_class = system_info.get("device_class") or ""
@@ -475,7 +654,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 category = "sensor"
                 device_class = sensor_info.get("device_class") or ""
                 unit = sensor_info.get("unit") or ""
-            
+
             # Override unit with detected unit from data if available
             if embedded_unit:
                 unit = embedded_unit
@@ -501,7 +680,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         # Battery percentage is exposed via the dedicated battery entity.
                         "signal": hardware_info.get("signal"),
                     }
-            
+
             # Convert battery values from 0-5 scale to 0-100%
             converted_value = sensor_value
             if battery_info and sensor_value and str(sensor_value).isdigit():
@@ -510,14 +689,23 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 if int_value <= 5:
                     # Raw scale 1-5, convert to percentage
                     converted_value = str(int_value * 20)
-                    _LOGGER.debug("Converted battery value %s to %s%% for sensor %s", sensor_value, converted_value, sensor_key)
+                    _LOGGER.debug(
+                        "Converted battery value %s to %s%% for sensor %s",
+                        sensor_value,
+                        converted_value,
+                        sensor_key,
+                    )
                 else:
                     # Already a percentage value, keep as is
                     converted_value = sensor_value
-                    _LOGGER.debug("Battery value %s already in percentage for sensor %s", sensor_value, sensor_key)
+                    _LOGGER.debug(
+                        "Battery value %s already in percentage for sensor %s",
+                        sensor_value,
+                        sensor_key,
+                    )
             else:
                 converted_value = self._convert_sensor_value(sensor_value, unit)
-            
+
             # Store processed sensor data
             sensors_data[entity_id] = {
                 "entity_id": entity_id,
@@ -553,7 +741,8 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         "state": str(lux_val),
                         "unit_of_measurement": "lx",
                         "device_class": "illuminance",
-                        "state_class": lux_sensor_info.get("state_class") or "measurement",
+                        "state_class": lux_sensor_info.get("state_class")
+                        or "measurement",
                         "category": "sensor",
                         "sensor_key": "solar_lux",
                         "hardware_id": hardware_id,
@@ -566,49 +755,57 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     }
                     _LOGGER.debug(
                         "Added computed solar_lux entity: %s = %s lx (from %s W/m²)",
-                        lux_entity_id, lux_val, sensor_value,
+                        lux_entity_id,
+                        lux_val,
+                        sensor_value,
                     )
                 except (ValueError, TypeError):
                     pass
 
         # Add diagnostic and signal strength sensors for hardware devices
         self._add_diagnostic_and_signal_sensors(sensors_data)
-        
+
         # Process gateway information
         processed_data["gateway_info"] = await self._process_gateway_info()
-        
+
         _LOGGER.debug("Processed data summary: %d sensors total", len(sensors_data))
         for entity_id, sensor_info in sensors_data.items():
-            _LOGGER.debug("Final sensor: %s -> category=%s, key=%s, value=%s", 
-                         entity_id, sensor_info.get("category"), 
-                         sensor_info.get("sensor_key"), sensor_info.get("state"))
-        
+            _LOGGER.debug(
+                "Final sensor: %s -> category=%s, key=%s, value=%s",
+                entity_id,
+                sensor_info.get("category"),
+                sensor_info.get("sensor_key"),
+                sensor_info.get("state"),
+            )
+
         return processed_data
 
     def _add_diagnostic_and_signal_sensors(self, sensors_data: Dict[str, Any]) -> None:
         """Add signal strength and diagnostic sensors for hardware devices."""
         # Track which hardware IDs we've already added diagnostics for
         added_hardware_ids = set()
-        
+
         # Create a copy of the values to avoid "dictionary changed size during iteration" error
         for sensor_info in list(sensors_data.values()):
             hardware_id = sensor_info.get("hardware_id")
             if not hardware_id or hardware_id in added_hardware_ids:
                 continue
-                
+
             # Get hardware info from sensor mapper
             hardware_info = self.sensor_mapper.get_sensor_info(hardware_id)
             if not hardware_info:
                 continue
-                
+
             channel = hardware_info.get("channel")
             signal = hardware_info.get("signal")
             if not channel:
                 continue
-                
+
             # Add Signal Strength sensor (regular sensor, same level as battery)
             if signal and signal not in ("--", ""):
-                signal_entity_id = f"sensor.ecowitt_signal_strength_{hardware_id.lower()}"
+                signal_entity_id = (
+                    f"sensor.ecowitt_signal_strength_{hardware_id.lower()}"
+                )
                 # Convert signal strength (0-4 scale to 0-100%)
                 signal_pct = str(int(signal) * 25) if signal.isdigit() else signal
                 sensors_data[signal_entity_id] = {
@@ -629,8 +826,12 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         "signal_percentage": signal_pct,
                     },
                 }
-                _LOGGER.debug("Added signal strength sensor for hardware_id: %s (signal: %s)", hardware_id, signal)
-                
+                _LOGGER.debug(
+                    "Added signal strength sensor for hardware_id: %s (signal: %s)",
+                    hardware_id,
+                    signal,
+                )
+
             # Add Hardware ID diagnostic sensor
             hardware_id_entity_id = f"sensor.ecowitt_hardware_id_{hardware_id.lower()}"
             sensors_data[hardware_id_entity_id] = {
@@ -650,7 +851,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     "entity_category": "diagnostic",
                 },
             }
-            
+
             # Add Channel diagnostic sensor
             channel_entity_id = f"sensor.ecowitt_channel_{hardware_id.lower()}"
             sensors_data[channel_entity_id] = {
@@ -671,17 +872,22 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     "entity_category": "diagnostic",
                 },
             }
-            
+
             added_hardware_ids.add(hardware_id)
-            _LOGGER.debug("Added diagnostic sensors for hardware_id: %s (channel: %s, signal: %s)", hardware_id, channel, signal)
+            _LOGGER.debug(
+                "Added diagnostic sensors for hardware_id: %s (channel: %s, signal: %s)",
+                hardware_id,
+                channel,
+                signal,
+            )
 
     def _normalize_unit(self, unit: str) -> str:
         """Normalize unit string to Home Assistant standard format."""
         if not unit:
             return unit
-        
+
         unit_upper = unit.upper()
-        
+
         # Temperature
         if unit_upper == "F":
             return "°F"
@@ -725,30 +931,33 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         """Convert sensor value to appropriate type."""
         if not value or value == "":
             return None
-            
+
         try:
             # Handle numeric values
             if isinstance(value, (int, float)):
                 return value
-                
+
             # Try to convert string to number
             str_value = str(value).strip()
-            
+
             # Handle special cases and invalid sensor readings
-            if (str_value.lower() in ("--", "null", "none", "n/a") or 
-                str_value.startswith("--") or 
-                str_value.replace("-", "").replace(".", "").strip() == ""):
+            if (
+                str_value.lower() in ("--", "null", "none", "n/a")
+                or str_value.startswith("--")
+                or str_value.replace("-", "").replace(".", "").strip() == ""
+            ):
                 return None
-            
+
             # Handle values with embedded units (e.g., "29.40 inHg", "46.4 F", "89%")
             import re
+
             # Extract numeric part from strings with units
-            unit_match = re.match(r'^([-+]?\d*\.?\d+)\s*([a-zA-Z%/]+.*)?$', str_value)
+            unit_match = re.match(r"^([-+]?\d*\.?\d+)\s*([a-zA-Z%/]+.*)?$", str_value)
             if unit_match:
                 numeric_part = unit_match.group(1)
                 try:
                     # Try integer first
-                    if '.' not in numeric_part:
+                    if "." not in numeric_part:
                         return int(numeric_part)
                     else:
                         return float(numeric_part)
@@ -761,16 +970,16 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 return int(str_value)
             except ValueError:
                 pass
-                
+
             # Try float
             try:
                 return float(str_value)
             except ValueError:
                 pass
-                
+
             # Return as string if conversion fails
             return str_value
-            
+
         except Exception as err:  # pragma: no cover
             _LOGGER.debug("Error converting sensor value '%s': %s", value, err)
             return str(value) if value else None
@@ -781,13 +990,13 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             try:
                 version_info = await self.api.get_version()
                 firmware_version = version_info.get("version", "Unknown")
-                
+
                 # Extract model from firmware version (e.g., "GW1100A_V2.4.3" -> "GW1100A")
                 model = self._extract_model_from_firmware(firmware_version)
                 if not model or model == "Unknown":
                     # Fallback to stationtype if model extraction fails
                     model = version_info.get("stationtype", "Unknown")
-                
+
                 self._gateway_info = {
                     "model": model,
                     "firmware_version": firmware_version,
@@ -802,40 +1011,47 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     "host": self.config_entry.data[CONF_HOST],
                     "gateway_id": "unknown",
                 }
-        
+
         return self._gateway_info
 
     def _extract_model_from_firmware(self, firmware_version: str) -> str:
         """Extract gateway model from firmware version string.
-        
+
         Args:
             firmware_version: Firmware version string (e.g., "GW1100A_V2.4.3")
-            
+
         Returns:
             Gateway model (e.g., "GW1100A") or "Unknown" if extraction fails
         """
         if not firmware_version or firmware_version == "Unknown":
             return "Unknown"
-        
+
         try:
             # Look for pattern like "GW1100A_V2.4.3" where model is before the first underscore
             if "_" in firmware_version:
                 model = firmware_version.split("_")[0].strip()
                 if model and model.upper().startswith("GW"):
                     return model
-            
+
             # If no underscore, check if the entire string looks like a model
-            if firmware_version.upper().startswith("GW") and not "." in firmware_version:
+            if (
+                firmware_version.upper().startswith("GW")
+                and not "." in firmware_version
+            ):
                 return firmware_version.strip()
-                
+
             # Look for other common patterns (model could be at the start)
             # Pattern to match gateway models like GW1100A, GW2000, etc.
-            match = re.match(r'^(GW\w+)', firmware_version)
+            match = re.match(r"^(GW\w+)", firmware_version)
             if match:
                 return match.group(1)
-                
+
         except Exception as err:  # pragma: no cover
-            _LOGGER.debug("Error extracting model from firmware version '%s': %s", firmware_version, err)
+            _LOGGER.debug(
+                "Error extracting model from firmware version '%s': %s",
+                firmware_version,
+                err,
+            )
 
         return "Unknown"
 
@@ -849,12 +1065,12 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         try:
             # Test initial connection
             await self.api.test_connection()
-            
+
             # Do initial sensor mapping update
             await self._update_sensor_mapping()
-            
+
             _LOGGER.info("Ecowitt Local coordinator setup complete")
-            
+
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except APIConnectionError as err:
@@ -866,16 +1082,16 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
     async def async_shutdown(self) -> None:
         """Shutdown the coordinator."""
         # Cancel any pending refresh tasks
-        if hasattr(self, '_debounced_refresh'):
+        if hasattr(self, "_debounced_refresh"):
             self._debounced_refresh.async_cancel()
-        
+
         # Cancel the refresh interval timer
-        if hasattr(self, '_unsub_refresh') and getattr(self, '_unsub_refresh', None):
-            unsub_refresh = getattr(self, '_unsub_refresh')
+        if hasattr(self, "_unsub_refresh") and getattr(self, "_unsub_refresh", None):
+            unsub_refresh = getattr(self, "_unsub_refresh")
             if unsub_refresh:
                 unsub_refresh()
-            setattr(self, '_unsub_refresh', None)
-        
+            setattr(self, "_unsub_refresh", None)
+
         # Close the API connection
         await self.api.close()
 
@@ -903,21 +1119,27 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         stored_hw_id = sdata.get("hardware_id", "")
                         if stored_hw_id and stored_hw_id.lower() in entity_id.lower():
                             if stored_key.startswith("0x"):
-                                _LOGGER.debug("Found sensor by hardware_id match: %s -> %s", entity_id, eid)
+                                _LOGGER.debug(
+                                    "Found sensor by hardware_id match: %s -> %s",
+                                    entity_id,
+                                    eid,
+                                )
                                 return dict(sdata)
             return None
         return dict(sensor_data) if isinstance(sensor_data, dict) else None
 
-    def get_sensor_data_by_key(self, sensor_key: str, hardware_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    def get_sensor_data_by_key(
+        self, sensor_key: str, hardware_id: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
         """Get sensor data by sensor key and optional hardware ID.
-        
+
         This is a fallback method for finding sensor data when entity_id lookup fails,
         which can happen with hex ID sensors during entity_id format transitions.
         """
         if not self.data:
             return None
         sensors_dict = self.data.get("sensors", {})
-        
+
         for eid, sdata in sensors_dict.items():
             if isinstance(sdata, dict):
                 if sdata.get("sensor_key") == sensor_key:

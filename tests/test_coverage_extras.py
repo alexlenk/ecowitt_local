@@ -3,66 +3,78 @@
 This file contains targeted tests for edge cases and defensive code paths
 that are not covered by the main test files.
 """
+
 from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from aioresponses import aioresponses
-
-from homeassistant.core import HomeAssistant
 from homeassistant import config_entries
+from homeassistant.core import HomeAssistant
 
 from custom_components.ecowitt_local.api import (
-    EcowittLocalAPI,
     AuthenticationError,
-    ConnectionError as APIConnectionError,
-    DataError,
 )
-from custom_components.ecowitt_local.sensor_mapper import SensorMapper
+from custom_components.ecowitt_local.api import ConnectionError as APIConnectionError
+from custom_components.ecowitt_local.api import (
+    DataError,
+    EcowittLocalAPI,
+)
 from custom_components.ecowitt_local.const import DOMAIN
-
+from custom_components.ecowitt_local.sensor_mapper import SensorMapper
 
 # ============================================================================
 # coordinator fixture (mirrors test_coordinator.py)
 # ============================================================================
 
+
 @pytest.fixture
 async def coordinator(hass, mock_config_entry, mock_ecowitt_api):
     """Create a coordinator for testing."""
-    from custom_components.ecowitt_local.coordinator import EcowittLocalDataUpdateCoordinator
+    from custom_components.ecowitt_local.coordinator import (
+        EcowittLocalDataUpdateCoordinator,
+    )
 
     mock_config_entry.add_to_hass(hass)
 
-    with patch("custom_components.ecowitt_local.coordinator.EcowittLocalAPI", return_value=mock_ecowitt_api):
+    with patch(
+        "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+        return_value=mock_ecowitt_api,
+    ):
         crd = EcowittLocalDataUpdateCoordinator(hass, mock_config_entry)
 
         mock_ecowitt_api.get_live_data.return_value = {"common_list": []}
-        mock_ecowitt_api.get_version.return_value = {"stationtype": "GW1100A", "version": "1.7.3"}
+        mock_ecowitt_api.get_version.return_value = {
+            "stationtype": "GW1100A",
+            "version": "1.7.3",
+        }
         mock_ecowitt_api.get_all_sensor_mappings.return_value = []
         mock_ecowitt_api.get_units.return_value = {"temp": "1"}
         mock_ecowitt_api.close = AsyncMock(return_value=None)
 
         crd._update_sensor_mapping_if_needed = AsyncMock()
-        crd._process_gateway_info = AsyncMock(return_value={
-            "model": "GW1100A",
-            "firmware_version": "1.7.3",
-            "host": "192.168.1.100",
-            "gateway_id": "GW1100A",
-        })
+        crd._process_gateway_info = AsyncMock(
+            return_value={
+                "model": "GW1100A",
+                "firmware_version": "1.7.3",
+                "host": "192.168.1.100",
+                "gateway_id": "GW1100A",
+            }
+        )
         crd.async_request_refresh = AsyncMock()
 
-        if hasattr(crd, '_debounced_refresh'):
+        if hasattr(crd, "_debounced_refresh"):
             crd._debounced_refresh.async_cancel()
 
         yield crd
 
         try:
-            if hasattr(crd, '_debounced_refresh'):
+            if hasattr(crd, "_debounced_refresh"):
                 crd._debounced_refresh.async_cancel()
-            if hasattr(crd, '_unsub_refresh') and crd._unsub_refresh:
+            if hasattr(crd, "_unsub_refresh") and crd._unsub_refresh:
                 crd._unsub_refresh()
         except Exception:
             pass
@@ -71,6 +83,7 @@ async def coordinator(hass, mock_config_entry, mock_ecowitt_api):
 # ============================================================================
 # api.py uncovered lines
 # ============================================================================
+
 
 @pytest.mark.asyncio
 async def test_authenticate_non_200_status():
@@ -120,11 +133,12 @@ async def test_make_request_unknown_content_type():
 # binary_sensor.py line 157 — return True from timestamp fallback
 # ============================================================================
 
+
 def test_binary_sensor_online_from_recent_timestamp():
     """Test that sensor is online when state is invalid but timestamp is recent (line 157)."""
     from custom_components.ecowitt_local.binary_sensor import (
-        EcowittSensorOnlineBinarySensor,
         OFFLINE_THRESHOLD_MINUTES,
+        EcowittSensorOnlineBinarySensor,
     )
 
     coordinator = Mock()
@@ -143,20 +157,24 @@ def test_binary_sensor_online_from_recent_timestamp():
 
     # State is "unknown" → invalid, but last_update is recent → online
     recent_time = (datetime.now() - timedelta(minutes=1)).isoformat()
-    coordinator.get_all_sensors = Mock(return_value={
-        "sensor.ecowitt_soil_moisture_d8174": {
-            "hardware_id": "D8174",
-            "state": "unknown",
-            "attributes": {"last_update": recent_time},
+    coordinator.get_all_sensors = Mock(
+        return_value={
+            "sensor.ecowitt_soil_moisture_d8174": {
+                "hardware_id": "D8174",
+                "state": "unknown",
+                "attributes": {"last_update": recent_time},
+            }
         }
-    })
+    )
 
     assert entity.is_on is True
 
 
 def test_binary_sensor_online_invalid_timestamp():
     """Test that invalid timestamp string is handled gracefully (line 158-159)."""
-    from custom_components.ecowitt_local.binary_sensor import EcowittSensorOnlineBinarySensor
+    from custom_components.ecowitt_local.binary_sensor import (
+        EcowittSensorOnlineBinarySensor,
+    )
 
     coordinator = Mock()
     coordinator.config_entry = Mock()
@@ -169,13 +187,15 @@ def test_binary_sensor_online_invalid_timestamp():
     entity._hardware_id = "D8174"
     entity.coordinator = coordinator
 
-    coordinator.get_all_sensors = Mock(return_value={
-        "sensor.ecowitt_test": {
-            "hardware_id": "D8174",
-            "state": "unknown",
-            "attributes": {"last_update": "not-a-valid-datetime"},
+    coordinator.get_all_sensors = Mock(
+        return_value={
+            "sensor.ecowitt_test": {
+                "hardware_id": "D8174",
+                "state": "unknown",
+                "attributes": {"last_update": "not-a-valid-datetime"},
+            }
         }
-    })
+    )
 
     assert entity.is_on is False
 
@@ -184,6 +204,7 @@ def test_binary_sensor_online_invalid_timestamp():
 # sensor.py lines 144-146 — invalid state_class ValueError
 # ============================================================================
 
+
 def test_sensor_invalid_state_class():
     """Test that invalid state_class string is handled gracefully (lines 144-146)."""
     from custom_components.ecowitt_local.sensor import EcowittLocalSensor
@@ -191,8 +212,12 @@ def test_sensor_invalid_state_class():
     coordinator = Mock()
     coordinator.config_entry = Mock()
     coordinator.config_entry.entry_id = "test"
-    coordinator.gateway_info = {"gateway_id": "GW1100A", "host": "192.168.1.100",
-                                "model": "GW1100A", "firmware_version": "1.7.3"}
+    coordinator.gateway_info = {
+        "gateway_id": "GW1100A",
+        "host": "192.168.1.100",
+        "model": "GW1100A",
+        "firmware_version": "1.7.3",
+    }
     coordinator.sensor_mapper = Mock()
     coordinator.sensor_mapper.get_sensor_info.return_value = {"sensor_type": "WH51"}
 
@@ -220,6 +245,7 @@ def test_sensor_invalid_state_class():
 # coordinator.py — targeted edge case tests
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_coordinator_update_sensor_mapping_get_units_exception(coordinator):
     """Test _update_sensor_mapping handles get_units() exception (lines 127-128)."""
@@ -237,7 +263,13 @@ async def test_coordinator_ch_aisle_battery_weak(coordinator):
     mock_live_data = {
         "common_list": [],
         "ch_aisle": [
-            {"channel": "1", "temp": "20.0", "unit": "C", "humidity": "50", "battery": "1"},
+            {
+                "channel": "1",
+                "temp": "20.0",
+                "unit": "C",
+                "humidity": "50",
+                "battery": "1",
+            },
         ],
     }
 
@@ -260,8 +292,8 @@ async def test_coordinator_skip_item_with_empty_sensor_key(coordinator):
     """Test that items with empty/missing 'id' key are skipped (line 375)."""
     mock_live_data = {
         "common_list": [
-            {"id": "", "val": "25.0"},   # empty id → skip
-            {"val": "25.0"},              # no id → skip
+            {"id": "", "val": "25.0"},  # empty id → skip
+            {"val": "25.0"},  # no id → skip
             {"id": "tempf", "val": "72.5"},  # valid
         ],
     }
@@ -320,7 +352,9 @@ async def test_coordinator_system_sensor_category(coordinator):
     result = await coordinator._async_update_data()
     sensors = result["sensors"]
 
-    runtime = next((s for s in sensors.values() if s.get("sensor_key") == "runtime"), None)
+    runtime = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "runtime"), None
+    )
     assert runtime is not None
     assert runtime["category"] == "system"
 
@@ -371,14 +405,19 @@ async def test_coordinator_signal_no_channel(coordinator):
     )
 
     result = await coordinator._async_update_data()
-    signal_sensors = [s for s in result["sensors"].values()
-                      if "signal_strength" in s.get("sensor_key", "")]
+    signal_sensors = [
+        s
+        for s in result["sensors"].values()
+        if "signal_strength" in s.get("sensor_key", "")
+    ]
     assert len(signal_sensors) == 0
 
 
 def test_coordinator_normalize_unit_hpa():
     """Test _normalize_unit handles HPA → hPa (line 636)."""
-    from custom_components.ecowitt_local.coordinator import EcowittLocalDataUpdateCoordinator
+    from custom_components.ecowitt_local.coordinator import (
+        EcowittLocalDataUpdateCoordinator,
+    )
 
     obj = EcowittLocalDataUpdateCoordinator.__new__(EcowittLocalDataUpdateCoordinator)
     assert obj._normalize_unit("HPA") == "hPa"
@@ -395,7 +434,9 @@ def test_coordinator_normalize_unit_hpa():
 
 def test_coordinator_get_sensor_data_hardware_id_fallback():
     """Test get_sensor_data falls back to hardware_id matching for hex ID sensors (lines 835-841)."""
-    from custom_components.ecowitt_local.coordinator import EcowittLocalDataUpdateCoordinator
+    from custom_components.ecowitt_local.coordinator import (
+        EcowittLocalDataUpdateCoordinator,
+    )
 
     obj = EcowittLocalDataUpdateCoordinator.__new__(EcowittLocalDataUpdateCoordinator)
     obj.data = {
@@ -417,7 +458,9 @@ def test_coordinator_get_sensor_data_hardware_id_fallback():
 
 def test_coordinator_get_sensor_data_by_key_no_data():
     """Test get_sensor_data_by_key returns None when no data (line 852)."""
-    from custom_components.ecowitt_local.coordinator import EcowittLocalDataUpdateCoordinator
+    from custom_components.ecowitt_local.coordinator import (
+        EcowittLocalDataUpdateCoordinator,
+    )
 
     obj = EcowittLocalDataUpdateCoordinator.__new__(EcowittLocalDataUpdateCoordinator)
     obj.data = None
@@ -427,7 +470,9 @@ def test_coordinator_get_sensor_data_by_key_no_data():
 
 def test_coordinator_get_sensor_data_by_key_no_match():
     """Test get_sensor_data_by_key returns None when sensor_key not found (line 861)."""
-    from custom_components.ecowitt_local.coordinator import EcowittLocalDataUpdateCoordinator
+    from custom_components.ecowitt_local.coordinator import (
+        EcowittLocalDataUpdateCoordinator,
+    )
 
     obj = EcowittLocalDataUpdateCoordinator.__new__(EcowittLocalDataUpdateCoordinator)
     obj.data = {
@@ -448,7 +493,9 @@ def test_coordinator_get_sensor_data_by_key_no_match():
 
 def test_coordinator_get_all_sensors_no_data():
     """Test get_all_sensors returns {} when no data."""
-    from custom_components.ecowitt_local.coordinator import EcowittLocalDataUpdateCoordinator
+    from custom_components.ecowitt_local.coordinator import (
+        EcowittLocalDataUpdateCoordinator,
+    )
 
     obj = EcowittLocalDataUpdateCoordinator.__new__(EcowittLocalDataUpdateCoordinator)
     obj.data = None
@@ -459,13 +506,26 @@ def test_coordinator_get_all_sensors_no_data():
 # sensor_mapper.py — uncovered branches
 # ============================================================================
 
+
 def test_sensor_mapper_update_mapping_exception_handling():
     """Test update_mapping continues after exception in one entry (lines 70-72)."""
     mapper = SensorMapper()
 
-    bad_mapping = {"id": None, "img": "wh51", "name": "Soil CH1", "batt": "2", "signal": "3"}
-    good_mapping = {"id": "D8174", "img": "wh51", "name": "Soil moisture CH2",
-                    "batt": "2", "signal": "3", "type": "15"}
+    bad_mapping = {
+        "id": None,
+        "img": "wh51",
+        "name": "Soil CH1",
+        "batt": "2",
+        "signal": "3",
+    }
+    good_mapping = {
+        "id": "D8174",
+        "img": "wh51",
+        "name": "Soil moisture CH2",
+        "batt": "2",
+        "signal": "3",
+        "type": "15",
+    }
 
     # Should not raise; bad entry skipped, good entry processed
     mapper.update_mapping([bad_mapping, good_mapping])
@@ -555,7 +615,10 @@ def test_sensor_mapper_wh35_with_channel():
 def test_sensor_mapper_extract_battery_sensor_type_ws90():
     """Test _extract_sensor_type_from_battery returns ws90 name (line 466)."""
     mapper = SensorMapper()
-    assert mapper._extract_sensor_type_from_battery("ws90batt") == "ws90_weather_station_battery"
+    assert (
+        mapper._extract_sensor_type_from_battery("ws90batt")
+        == "ws90_weather_station_battery"
+    )
 
 
 def test_sensor_mapper_extract_identifier_ch_in_middle():
@@ -571,14 +634,19 @@ def test_sensor_mapper_extract_identifier_ch_in_middle():
 # config_flow.py — uncovered branches
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_validate_input_authentication_error(hass: HomeAssistant):
     """Test validate_input raises InvalidAuth on AuthenticationError (line 76-77)."""
-    from custom_components.ecowitt_local.config_flow import validate_input, InvalidAuth
+    from custom_components.ecowitt_local.config_flow import InvalidAuth, validate_input
 
-    with patch("custom_components.ecowitt_local.config_flow.EcowittLocalAPI") as MockAPI:
+    with patch(
+        "custom_components.ecowitt_local.config_flow.EcowittLocalAPI"
+    ) as MockAPI:
         mock_api = MockAPI.return_value
-        mock_api.test_connection = AsyncMock(side_effect=AuthenticationError("bad auth"))
+        mock_api.test_connection = AsyncMock(
+            side_effect=AuthenticationError("bad auth")
+        )
         mock_api.close = AsyncMock()
 
         with pytest.raises(InvalidAuth):
@@ -588,9 +656,14 @@ async def test_validate_input_authentication_error(hass: HomeAssistant):
 @pytest.mark.asyncio
 async def test_validate_input_connection_error(hass: HomeAssistant):
     """Test validate_input raises CannotConnect on APIConnectionError (lines 78-79)."""
-    from custom_components.ecowitt_local.config_flow import validate_input, CannotConnect
+    from custom_components.ecowitt_local.config_flow import (
+        CannotConnect,
+        validate_input,
+    )
 
-    with patch("custom_components.ecowitt_local.config_flow.EcowittLocalAPI") as MockAPI:
+    with patch(
+        "custom_components.ecowitt_local.config_flow.EcowittLocalAPI"
+    ) as MockAPI:
         mock_api = MockAPI.return_value
         mock_api.test_connection = AsyncMock(side_effect=APIConnectionError("no route"))
         mock_api.close = AsyncMock()
@@ -602,9 +675,14 @@ async def test_validate_input_connection_error(hass: HomeAssistant):
 @pytest.mark.asyncio
 async def test_validate_input_generic_exception(hass: HomeAssistant):
     """Test validate_input raises CannotConnect on generic Exception (lines 80-82)."""
-    from custom_components.ecowitt_local.config_flow import validate_input, CannotConnect
+    from custom_components.ecowitt_local.config_flow import (
+        CannotConnect,
+        validate_input,
+    )
 
-    with patch("custom_components.ecowitt_local.config_flow.EcowittLocalAPI") as MockAPI:
+    with patch(
+        "custom_components.ecowitt_local.config_flow.EcowittLocalAPI"
+    ) as MockAPI:
         mock_api = MockAPI.return_value
         mock_api.test_connection = AsyncMock(side_effect=RuntimeError("unexpected"))
         mock_api.close = AsyncMock()
@@ -616,8 +694,9 @@ async def test_validate_input_generic_exception(hass: HomeAssistant):
 @pytest.mark.asyncio
 async def test_config_flow_unexpected_exception(hass: HomeAssistant, mock_ecowitt_api):
     """Test config flow handles unexpected Exception (lines 112-114)."""
-    from custom_components.ecowitt_local.const import ERROR_UNKNOWN
     from homeassistant.data_entry_flow import FlowResultType
+
+    from custom_components.ecowitt_local.const import ERROR_UNKNOWN
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -637,7 +716,9 @@ async def test_config_flow_unexpected_exception(hass: HomeAssistant, mock_ecowit
 
 
 @pytest.mark.asyncio
-async def test_config_flow_options_step_none_discovered_info(hass: HomeAssistant, mock_ecowitt_api):
+async def test_config_flow_options_step_none_discovered_info(
+    hass: HomeAssistant, mock_ecowitt_api
+):
     """Test options step handles None _discovered_info (line 145)."""
     from homeassistant.data_entry_flow import FlowResultType
 
@@ -679,14 +760,20 @@ async def test_config_flow_options_step_none_discovered_info(hass: HomeAssistant
 # __init__.py — uncovered branches
 # ============================================================================
 
+
 @pytest.mark.asyncio
-async def test_async_reload_entry_unload_fails(hass: HomeAssistant, mock_config_entry, mock_ecowitt_api):
+async def test_async_reload_entry_unload_fails(
+    hass: HomeAssistant, mock_config_entry, mock_ecowitt_api
+):
     """Test async_reload_entry returns False when unload fails (lines 84-87)."""
     from custom_components.ecowitt_local import async_reload_entry
 
     mock_config_entry.add_to_hass(hass)
 
-    with patch("custom_components.ecowitt_local.coordinator.EcowittLocalAPI", return_value=mock_ecowitt_api):
+    with patch(
+        "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+        return_value=mock_ecowitt_api,
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     with patch(
@@ -699,7 +786,9 @@ async def test_async_reload_entry_unload_fails(hass: HomeAssistant, mock_config_
 
 
 @pytest.mark.asyncio
-async def test_refresh_mapping_service_device_id_as_list(hass: HomeAssistant, setup_integration):
+async def test_refresh_mapping_service_device_id_as_list(
+    hass: HomeAssistant, setup_integration
+):
     """Test refresh_mapping service handles device_id passed as list (line 162)."""
     from custom_components.ecowitt_local.const import SERVICE_REFRESH_MAPPING
 
@@ -707,6 +796,7 @@ async def test_refresh_mapping_service_device_id_as_list(hass: HomeAssistant, se
     crd.async_refresh_mapping = AsyncMock()
 
     from homeassistant.helpers import device_registry as dr
+
     device_registry = dr.async_get(hass)
     gateway_id = crd.gateway_info.get("gateway_id", "unknown")
     device = device_registry.async_get_device(identifiers={(DOMAIN, gateway_id)})
@@ -722,7 +812,9 @@ async def test_refresh_mapping_service_device_id_as_list(hass: HomeAssistant, se
 
 
 @pytest.mark.asyncio
-async def test_update_data_service_device_id_as_list(hass: HomeAssistant, setup_integration):
+async def test_update_data_service_device_id_as_list(
+    hass: HomeAssistant, setup_integration
+):
     """Test update_data service handles device_id passed as list (line 194)."""
     from custom_components.ecowitt_local.const import SERVICE_UPDATE_DATA
 
@@ -730,6 +822,7 @@ async def test_update_data_service_device_id_as_list(hass: HomeAssistant, setup_
     crd.async_request_refresh = AsyncMock()
 
     from homeassistant.helpers import device_registry as dr
+
     device_registry = dr.async_get(hass)
     gateway_id = crd.gateway_info.get("gateway_id", "unknown")
     device = device_registry.async_get_device(identifiers={(DOMAIN, gateway_id)})
@@ -747,10 +840,12 @@ async def test_update_data_service_device_id_as_list(hass: HomeAssistant, setup_
 @pytest.mark.asyncio
 async def test_migration_entity_reassignment(hass: HomeAssistant, mock_ecowitt_api):
     """Test migration reassigns entities to individual devices (lines 278-320)."""
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
     from pytest_homeassistant_custom_component.common import MockConfigEntry
+
     from custom_components.ecowitt_local import async_migrate_entry
     from custom_components.ecowitt_local.const import CONF_HOST, CONF_PASSWORD
-    from homeassistant.helpers import device_registry as dr, entity_registry as er
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -765,7 +860,9 @@ async def test_migration_entity_reassignment(hass: HomeAssistant, mock_ecowitt_a
     mock_coordinator = Mock()
     mock_coordinator.sensor_mapper = Mock()
     mock_coordinator.sensor_mapper.get_sensor_info = Mock(
-        side_effect=lambda hid: {"sensor_type": "WH51", "channel": "2"} if hid == "D8174" else None
+        side_effect=lambda hid: (
+            {"sensor_type": "WH51", "channel": "2"} if hid == "D8174" else None
+        )
     )
     mock_coordinator.sensor_mapper.get_all_hardware_ids = Mock(return_value=["D8174"])
     mock_coordinator.get_all_sensors = Mock(return_value={})
@@ -824,6 +921,7 @@ async def test_migration_entity_reassignment(hass: HomeAssistant, mock_ecowitt_a
 # Final 4 missing lines — api:160, coordinator:769, __init__:86, __init__:290-295
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_make_request_retry_succeeds_after_401():
     """Test that after 401 + re-auth, line 160 (response = retry_response) is reached (api.py:160).
@@ -861,7 +959,9 @@ def test_coordinator_extract_model_regex_gw_with_dot():
     Firmware like "GW1100A.V2.4.3" has no underscore and has a dot,
     so it falls through to the regex branch.
     """
-    from custom_components.ecowitt_local.coordinator import EcowittLocalDataUpdateCoordinator
+    from custom_components.ecowitt_local.coordinator import (
+        EcowittLocalDataUpdateCoordinator,
+    )
 
     obj = EcowittLocalDataUpdateCoordinator.__new__(EcowittLocalDataUpdateCoordinator)
     # No underscore, starts with GW, has dot → skips first two branches → regex → line 769
@@ -876,11 +976,16 @@ async def test_async_reload_entry_success(hass, mock_config_entry, mock_ecowitt_
 
     mock_config_entry.add_to_hass(hass)
 
-    with patch("custom_components.ecowitt_local.coordinator.EcowittLocalAPI", return_value=mock_ecowitt_api):
+    with patch(
+        "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+        return_value=mock_ecowitt_api,
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    with patch("custom_components.ecowitt_local.async_unload_entry", return_value=True), \
-         patch("custom_components.ecowitt_local.async_setup_entry", return_value=True):
+    with (
+        patch("custom_components.ecowitt_local.async_unload_entry", return_value=True),
+        patch("custom_components.ecowitt_local.async_setup_entry", return_value=True),
+    ):
         result = await async_reload_entry(hass, mock_config_entry)
 
     assert result is True
@@ -893,10 +998,12 @@ async def test_migration_hardware_id_from_coordinator_data(hass, mock_ecowitt_ap
     When the unique_id parts don't yield a valid hardware_id, migration falls back
     to searching coordinator.get_all_sensors() for a matching entity_id.
     """
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
     from pytest_homeassistant_custom_component.common import MockConfigEntry
+
     from custom_components.ecowitt_local import async_migrate_entry
     from custom_components.ecowitt_local.const import CONF_HOST, CONF_PASSWORD
-    from homeassistant.helpers import device_registry as dr, entity_registry as er
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -942,17 +1049,21 @@ async def test_migration_hardware_id_from_coordinator_data(hass, mock_ecowitt_ap
     mock_coordinator = Mock()
     mock_coordinator.sensor_mapper = Mock()
     mock_coordinator.sensor_mapper.get_sensor_info = Mock(
-        side_effect=lambda hid: {"sensor_type": "WH51", "channel": "1"} if hid == "D8174" else None
+        side_effect=lambda hid: (
+            {"sensor_type": "WH51", "channel": "1"} if hid == "D8174" else None
+        )
     )
     mock_coordinator.sensor_mapper.get_all_hardware_ids = Mock(return_value=["D8174"])
     # Return sensor data keyed by the entity's entity_id → covers lines 290-295
-    mock_coordinator.get_all_sensors = Mock(return_value={
-        entity_entry.entity_id: {
-            "hardware_id": "D8174",
-            "sensor_key": "soilmoisture1",
-            "state": "35",
+    mock_coordinator.get_all_sensors = Mock(
+        return_value={
+            entity_entry.entity_id: {
+                "hardware_id": "D8174",
+                "sensor_key": "soilmoisture1",
+                "state": "35",
+            }
         }
-    })
+    )
     mock_coordinator.gateway_info = {
         "gateway_id": "GW1100A",
         "host": "192.168.1.100",
@@ -972,6 +1083,7 @@ async def test_migration_hardware_id_from_coordinator_data(hass, mock_ecowitt_ap
 # coordinator.py — WH40 rain battery + WH57 lightning block (lines 177-201)
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_coordinator_wh40_battery_from_rain_array(coordinator):
     """Test WH40 battery extracted from 0x13 in rain array (coordinator.py:176-179)."""
@@ -984,14 +1096,18 @@ async def test_coordinator_wh40_battery_from_rain_array(coordinator):
     }
     coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
     coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
-    coordinator.api.get_version = AsyncMock(return_value={"stationtype": "GW1100A", "version": "1.7.3"})
+    coordinator.api.get_version = AsyncMock(
+        return_value={"stationtype": "GW1100A", "version": "1.7.3"}
+    )
     coordinator._include_inactive = True
 
     result = await coordinator._async_update_data()
     sensors = result["sensors"]
 
     # wh40batt should be created with 4 × 20 = 80%
-    batt = next((s for s in sensors.values() if s.get("sensor_key") == "wh40batt"), None)
+    batt = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "wh40batt"), None
+    )
     assert batt is not None
     assert batt["state"] == "80"
 
@@ -1013,7 +1129,9 @@ async def test_coordinator_wh57_lightning_block(coordinator):
     }
     coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
     coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
-    coordinator.api.get_version = AsyncMock(return_value={"stationtype": "GW1100A", "version": "1.7.3"})
+    coordinator.api.get_version = AsyncMock(
+        return_value={"stationtype": "GW1100A", "version": "1.7.3"}
+    )
     coordinator._include_inactive = True
 
     result = await coordinator._async_update_data()
@@ -1028,7 +1146,9 @@ async def test_coordinator_wh57_lightning_block(coordinator):
     batt = next(s for s in sensors.values() if s.get("sensor_key") == "wh57batt")
     assert batt["state"] == "100"  # 5 × 20 = 100%
 
-    strikes = next(s for s in sensors.values() if s.get("sensor_key") == "lightning_num")
+    strikes = next(
+        s for s in sensors.values() if s.get("sensor_key") == "lightning_num"
+    )
     assert strikes["state"] == 3  # "3" → int
 
     dist = next(s for s in sensors.values() if s.get("sensor_key") == "lightning")
