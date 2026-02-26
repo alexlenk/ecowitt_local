@@ -170,9 +170,7 @@ class EcowittLocalSensor(
                 self._attr_state_class = SensorStateClass.MEASUREMENT
 
         # For timestamp device class, convert naive string to timezone-aware datetime
-        if device_class_str == "timestamp" and isinstance(
-            self._attr_native_value, str
-        ):
+        if device_class_str == "timestamp" and isinstance(self._attr_native_value, str):
             from datetime import timezone as tz
 
             try:
