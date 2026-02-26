@@ -241,6 +241,64 @@ def test_sensor_invalid_state_class():
     assert entity._attr_state_class is None
 
 
+def _make_sensor(sensor_info):
+    """Helper: create an EcowittLocalSensor with minimal mocks."""
+    from custom_components.ecowitt_local.sensor import EcowittLocalSensor
+
+    coordinator = Mock()
+    coordinator.config_entry = Mock()
+    coordinator.config_entry.entry_id = "test"
+    coordinator.gateway_info = {
+        "gateway_id": "GW1100A",
+        "host": "192.168.1.100",
+        "model": "GW1100A",
+        "firmware_version": "1.7.3",
+    }
+    coordinator.sensor_mapper = Mock()
+    coordinator.sensor_mapper.get_sensor_info.return_value = None
+    return EcowittLocalSensor(coordinator, "sensor.ecowitt_test", sensor_info)
+
+
+def test_sensor_timestamp_naive_string_converted_to_utc():
+    """Naive ISO 8601 string for timestamp device class → timezone-aware UTC datetime."""
+    from datetime import datetime, timezone
+
+    entity = _make_sensor(
+        {
+            "state": "2026-02-26T20:40:36",
+            "unit_of_measurement": "",
+            "device_class": "timestamp",
+            "state_class": "",
+            "friendly_name": "Last Lightning",
+            "hardware_id": "E4F5A6",
+            "sensor_key": "lightning_time",
+            "category": "sensor",
+        }
+    )
+
+    assert isinstance(entity._attr_native_value, datetime)
+    assert entity._attr_native_value.tzinfo == timezone.utc
+    assert entity._attr_native_value.year == 2026
+
+
+def test_sensor_timestamp_invalid_string_becomes_none():
+    """Unparseable string for timestamp device class → native_value is None."""
+    entity = _make_sensor(
+        {
+            "state": "not-a-date",
+            "unit_of_measurement": "",
+            "device_class": "timestamp",
+            "state_class": "",
+            "friendly_name": "Last Lightning",
+            "hardware_id": "E4F5A6",
+            "sensor_key": "lightning_time",
+            "category": "sensor",
+        }
+    )
+
+    assert entity._attr_native_value is None
+
+
 # ============================================================================
 # coordinator.py — targeted edge case tests
 # ============================================================================

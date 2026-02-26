@@ -490,6 +490,9 @@ class SensorMapper:
             "pm25_avg_24h": "pm25_24h_avg",  # must precede generic "pm25"
             "pm25": "pm25",
             "leak": "leak",
+            "lightning_num": "lightning_strikes",  # must precede generic "lightning"
+            "lightning_time": "last_lightning",  # must precede generic "lightning"
+            "lightning_mi": "lightning_distance_mi",  # must precede generic "lightning"
             "lightning": "lightning",
             "batt": "battery",
             "solar_lux": "solar_lux",  # must precede generic "solar"

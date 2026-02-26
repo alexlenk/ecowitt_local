@@ -207,17 +207,17 @@ class TestWH57LightningDetector:
         mapper = SensorMapper()
         mapper.update_mapping([mock_wh57_sensor_mapping])
 
-        # Test lightning count sensor
+        # Test lightning count sensor — must have unique entity_id (issue #19 fix)
         entity_id, name = mapper.generate_entity_id("lightning_num", "E4F5A6")
-        assert entity_id == "sensor.ecowitt_lightning_e4f5a6"
+        assert entity_id == "sensor.ecowitt_lightning_strikes_e4f5a6"
         assert "Lightning" in name
 
-        # Test lightning time sensor
+        # Test lightning time sensor — must have unique entity_id (issue #19 fix)
         entity_id, name = mapper.generate_entity_id("lightning_time", "E4F5A6")
-        assert entity_id == "sensor.ecowitt_lightning_e4f5a6"
+        assert entity_id == "sensor.ecowitt_last_lightning_e4f5a6"
         assert "Lightning" in name
 
-        # Test lightning distance sensor
+        # Test lightning distance sensor — entity_id unchanged for existing users
         entity_id, name = mapper.generate_entity_id("lightning", "E4F5A6")
         assert entity_id == "sensor.ecowitt_lightning_e4f5a6"
         assert "Lightning" in name
@@ -243,9 +243,9 @@ class TestWH57LightningDetector:
         # Verify timestamp sensor maps correctly
         assert mapper.get_hardware_id("lightning_time") == "E4F5A6"
 
-        # Test entity ID for timestamp
+        # Test entity ID for timestamp — must be unique (issue #19 fix)
         entity_id, name = mapper.generate_entity_id("lightning_time", "E4F5A6")
-        assert "lightning" in entity_id.lower()
+        assert entity_id == "sensor.ecowitt_last_lightning_e4f5a6"
 
     def test_wh57_multiple_distance_units(self, mock_wh57_sensor_mapping):
         """Test WH57 supports both km and miles distance."""

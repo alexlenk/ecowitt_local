@@ -169,6 +169,20 @@ class EcowittLocalSensor(
             ):
                 self._attr_state_class = SensorStateClass.MEASUREMENT
 
+        # For timestamp device class, convert naive string to timezone-aware datetime
+        if device_class_str == "timestamp" and isinstance(
+            self._attr_native_value, str
+        ):
+            from datetime import timezone as tz
+
+            try:
+                dt = datetime.fromisoformat(self._attr_native_value)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=tz.utc)
+                self._attr_native_value = dt
+            except (ValueError, TypeError):
+                self._attr_native_value = None
+
         # Set battery sensor specific attributes (now diagnostic category)
         if device_class_str == "battery":
             self._attr_device_class = SensorDeviceClass.BATTERY
