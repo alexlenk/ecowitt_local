@@ -49,10 +49,10 @@ This same `* 20` logic was designed for WH51 soil moisture sensors which use a
 
 ## Requirements
 
-- [ ] **REQ-015-1:** WH31/WH69 ch_aisle battery `"0"` must display as battery OK (100%)
-- [ ] **REQ-015-2:** WH31/WH69 ch_aisle battery `"1"` must display as battery Low (10% or similar)
-- [ ] **REQ-015-3:** No regression for WH51 soil sensors which correctly use `* 20` scale
-- [ ] **REQ-015-4:** Same fix applies to `0x13` rain battery field if it uses binary encoding
+- [x] **REQ-015-1:** WH31/WH69 ch_aisle battery `"0"` must display as battery OK (100%) — fixed v1.5.28
+- [x] **REQ-015-2:** WH31/WH69 ch_aisle battery `"1"` must display as battery Low (10% or similar) — fixed v1.5.28
+- [x] **REQ-015-3:** No regression for WH51 soil sensors which correctly use `* 20` scale — verified
+- [ ] **REQ-015-4:** Same fix applies to `0x13` rain battery field if it uses binary encoding — unconfirmed
 
 ---
 
@@ -88,15 +88,15 @@ Simpler to keep as a numeric sensor with 100%/10% mapping for now.
 
 ## Tasks
 
-- [ ] **TASK-015-1:** Fix ch_aisle battery processing: `"0"` → `"100"`, `"1"` → `"10"`
-- [ ] **TASK-015-2:** Fix `0x13` rain battery if same binary format confirmed
-- [ ] **TASK-015-3:** Check if WH34 `ch_temp` battery uses same binary format
-- [ ] **TASK-015-4:** Update/add tests for binary battery conversion
-- [ ] **TASK-015-5:** Release and comment on issue #19
+- [x] **TASK-015-1:** Fix ch_aisle battery processing: `"0"` → `"100"`, `"1"` → `"10"` — done in v1.5.28
+- [ ] **TASK-015-2:** Fix `0x13` rain battery if same binary format confirmed — unconfirmed; needs user data
+- [ ] **TASK-015-3:** Check if WH34 `ch_temp` battery uses same binary format — unconfirmed; needs user data
+- [x] **TASK-015-4:** Update/add tests for binary battery conversion — done in v1.5.28
+- [x] **TASK-015-5:** Release and comment on issue #19 — released v1.5.28
 
 ---
 
 ## Open Questions
 
-- **OPEN:** Does `ch_temp` (WH34) use the same binary battery format?
-- **OPEN:** Is the `0x13` rain `"battery": "0"` also binary, or a different scale?
+- **OPEN:** Does `ch_temp` (WH34) use the same binary battery format? No WH34 user data received.
+- **OPEN:** Is the `0x13` rain `"battery": "0"` binary, or a different scale? No user data confirming 0x13 battery encoding.

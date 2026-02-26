@@ -1,7 +1,7 @@
 # Spec 016: Solar Illuminance (Lux) Entity Missing
 
 **GitHub Issues:** #84
-**Status:** IMPLEMENTING — Option A (computed lux entity)
+**Status:** ✅ FIXED — v1.5.29 (computed lux entity, W/m² × 126.7)
 **Priority:** LOW — feature request, original Ecowitt integration supports it
 
 ---

@@ -69,7 +69,7 @@ percentage by the coordinator (e.g., `5 * 20 = 100%`).
 - [x] **TASK-017-3:** Update tests (`test_extra_state_attributes_hardware`,
   `test_icon_battery_levels`, add `test_extra_state_attributes_battery_entity_invalid_state`)
 - [x] **TASK-017-4:** Comment on issue #90 with fix details
-- [ ] **TASK-017-5:** Confirm fix with user
+- [x] **TASK-017-5:** Confirm fix with user — @nmaster2042 confirmed fix in issue #90; issue closed
 
 ---
 
