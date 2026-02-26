@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.32] - 2026-02-26
+
+### Fixed
+- **WS90 battery entity appears under Gateway instead of WS90 device**: The `piezoRain` battery extraction always used the key `wh90batt`, so WS90 users' battery entity was assigned no hardware ID and fell to the gateway device. Fixed by checking which battery key (`ws90batt` or `wh90batt`) is registered in the sensor mapper and using the correct one. WH90 users are unaffected.
+
 ## [1.5.31] - 2026-02-26
 
 ### Fixed

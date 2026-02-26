@@ -359,12 +359,17 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     # Add battery sensor if present in the item
                     if "battery" in item and item["battery"]:
                         # For WS90/WH90, battery is associated with the last rain item.
-                        # Use "wh90batt" to match the key registered in sensor_mapper for WH90,
-                        # so the battery entity is correctly associated with the WH90 hardware_id.
+                        # Use the key that is actually registered in sensor_mapper so the
+                        # entity appears under the correct device (WS90 vs WH90).
                         if (
                             sensor_id == "0x13"
                         ):  # Total rain - usually the last item with battery info
-                            battery_key = "wh90batt"
+                            battery_key = (
+                                "ws90batt"
+                                if self.sensor_mapper.get_hardware_id("ws90batt")
+                                is not None
+                                else "wh90batt"
+                            )
                             battery_val = (
                                 str(int(item["battery"]) * 20)
                                 if item["battery"].isdigit()
