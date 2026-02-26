@@ -1,7 +1,7 @@
 # Spec 013: 0x7C Rain Entity Mislabeled as "Daily Rain"
 
 **GitHub Issues:** #5
-**Status:** OPEN
+**Status:** ✅ FIXED — v1.5.26
 **Priority:** HIGH — all WH90/WH69/WS90 users see wrong rain values
 
 ---

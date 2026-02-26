@@ -1,7 +1,7 @@
 # Spec 015: WH31/WH69 Battery Reports Binary (0=OK / 1=Weak) Not 0–4 Scale
 
 **GitHub Issues:** #19 (comment by @AnHardt)
-**Status:** OPEN
+**Status:** ✅ FIXED — v1.5.28 (binary conversion 0→100%, 1→10% implemented in coordinator ch_aisle processing)
 **Priority:** MEDIUM — battery always shows 0% or 20%, never reflects actual level
 
 ---

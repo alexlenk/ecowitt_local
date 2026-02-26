@@ -1,7 +1,7 @@
 # Spec 018: WH57 Lightning Strikes and Timestamp Entities Missing
 
 **GitHub Issue:** #19 (WH31 Celsius raw value is converting to Fahrenheit)
-**Status:** 🔴 Open — entity_id collision causes lightning_num and lightning_time to be overwritten
+**Status:** ✅ FIXED — v1.5.31
 **Priority:** HIGH — strikes count and last-lightning timestamp never appear as entities
 
 ---
