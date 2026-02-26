@@ -88,15 +88,15 @@ a client-side calculation? Need data from a user who resets at midnight to obser
 
 ## Tasks
 
-- [ ] **TASK-013-1:** Rename `0x7C` in `const.py` from "Daily Rain" to "24-Hour Rain"
-- [ ] **TASK-013-2:** Update entity_id slug comment in sensor_mapper `hex_to_name`
-- [ ] **TASK-013-3:** Document entity_id change in CHANGELOG
-- [ ] **TASK-013-4:** Update tests that reference `daily_rain` entity IDs
-- [ ] **TASK-013-5:** Ask users to confirm if calendar daily rain should be a separate entity
+- [x] **TASK-013-1:** Rename `0x7C` in `const.py` from "Daily Rain" to "24-Hour Rain" — done in v1.5.26
+- [x] **TASK-013-2:** Update entity_id slug comment in sensor_mapper `hex_to_name` — done in v1.5.26
+- [x] **TASK-013-3:** Document entity_id change in CHANGELOG — done in v1.5.26
+- [x] **TASK-013-4:** Update tests that reference `daily_rain` entity IDs — done in v1.5.26
+- [x] **TASK-013-5:** Ask users to confirm if calendar daily rain should be a separate entity — asked; no separate hex ID found
 
 ---
 
 ## Open Questions
 
-- **OPEN:** Does a calendar daily rain hex ID exist for WH90/WH69? If so, what is it?
-- **OPEN:** Is `0x7C` always 24-hour rain across all sensor types, or sensor-specific?
+- **UNRESOLVED:** No calendar daily rain hex ID has been identified in any user's `get_livedata_info`. Ecowitt likely computes this client-side only. No action needed unless a user provides data showing a separate hex ID.
+- **CONFIRMED:** `0x7C` is 24-hour rolling rain across all observed sensor types (WH90, WH69, WS90).

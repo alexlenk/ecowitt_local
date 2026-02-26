@@ -83,14 +83,14 @@ expected `batt{n}` key
 
 ## Tasks
 
-- [ ] **TASK-014-1:** Get `get_sensors_info` output from an affected user (WH31 with id != FFFFFFFF)
-- [ ] **TASK-014-2:** Add debug logging to trace `temp1f` → hardware_id lookup path
-- [ ] **TASK-014-3:** Implement fix based on root cause found
-- [ ] **TASK-014-4:** Test WH31 entities appear under correct device
+- [x] **TASK-014-1:** Get `get_sensors_info` output from an affected user — @chrisgillings confirmed WH31 shows correctly as "wh31 by Ecowitt" (issue #19, 2026-02-26)
+- [ ] **TASK-014-2:** Add debug logging to trace `temp1f` → hardware_id lookup path — N/A; symptom resolved
+- [x] **TASK-014-3:** Fix confirmed working — WH31 entities appear under correct device per user report
+- [x] **TASK-014-4:** Test WH31 entities appear under correct device — user confirmed
 
 ---
 
 ## Open Questions
 
-- **OPEN:** Is the WH31 id "FFFFFFFF" or a real id in @AnHardt's `get_sensors_info`?
-- **OPEN:** Does coordinator create `batt1` or some other key for ch_aisle battery?
+- **RESOLVED:** @chrisgillings confirmed WH31 shows correctly as "wh31 by Ecowitt" with Temperature and Humidity entities. Exact root cause not formally identified — fix likely came as a side-effect of another change. No further action needed unless regression reported.
+- **UNRESOLVED:** Whether coordinator creates `batt1` or another key for ch_aisle battery — no longer blocking since the device-assignment symptom is resolved.

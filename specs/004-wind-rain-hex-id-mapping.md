@@ -1,8 +1,8 @@
 # Spec 004: Wind / Rain Sensors Unavailable (Missing hardware_id Mapping)
 
 **GitHub Issues:** #22, #23
-**Status:** ✅ Likely fixed — GW1100 live data received (Feb 2026); all hex IDs already supported; awaiting user confirmation on v1.5.25
-**Priority:** HIGH — GW1100 wind/rain still broken; WS80 wind sensors now resolved
+**Status:** ✅ Partially fixed — WS80 (#23) fixed v1.5.15; GW1100 (#22) open — awaiting user data
+**Priority:** HIGH — GW1100 wind/rain still broken; WS80 wind sensors resolved in v1.5.15
 
 ---
 
