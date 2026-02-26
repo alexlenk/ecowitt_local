@@ -1,7 +1,7 @@
 # Spec 014: WH31 Entities Appear Under Gateway Device, WH31 Device Empty
 
 **GitHub Issues:** #19 (comment by @AnHardt)
-**Status:** OPEN
+**Status:** ✅ Likely FIXED — @chrisgillings (issue #19, 2026-02-26) confirms WH31 device shows correctly as "wh31 by Ecowitt" with Temperature and Humidity entities under it
 **Priority:** MEDIUM — WH31 temperature/humidity entities work but are under wrong device
 
 ---

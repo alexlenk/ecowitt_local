@@ -1047,6 +1047,49 @@ async def test_coordinator_rain_array_does_not_affect_piezo_rain(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_piezo_rain_uses_ws90batt_when_ws90_mapped(coordinator):
+    """Test that piezoRain battery uses ws90batt when a WS90 is registered (not wh90batt)."""
+    # Register a WS90 hardware_id so get_hardware_id("ws90batt") returns a value
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "AABBCC",
+                "img": "ws90",
+                "type": "1",
+                "name": "WS90",
+                "batt": "3",
+                "signal": "4",
+            }
+        ]
+    )
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "piezoRain": [
+            {
+                "id": "0x13",
+                "val": "100.0 mm",
+                "battery": "4",
+            },
+        ]
+    }
+
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    # Battery key should be ws90batt (mapped to AABBCC hardware_id), not wh90batt
+    ws90_battery_found = any(
+        sensors[k].get("sensor_key") == "ws90batt" for k in sensors
+    )
+    assert ws90_battery_found, "ws90batt should be used when WS90 is registered"
+
+    wh90_battery_found = any(
+        sensors[k].get("sensor_key") == "wh90batt" for k in sensors
+    )
+    assert not wh90_battery_found, "wh90batt should NOT be used when WS90 is registered"
+
+
+@pytest.mark.asyncio
 async def test_coordinator_gateway_info_property(coordinator):
     """Test gateway info property access."""
     test_info = {"model": "GW1100A", "version": "1.7.3"}
