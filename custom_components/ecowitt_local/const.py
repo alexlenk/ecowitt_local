@@ -1,4 +1,5 @@
 """Constants for the Ecowitt Local integration."""
+
 from __future__ import annotations
 
 from typing import Any, Dict, Final
@@ -35,21 +36,18 @@ DEVICE_ID_FORMAT: Final = "ecowitt_{gateway_id}"
 
 # Gateway built-in sensors (should not have individual hardware IDs)
 GATEWAY_SENSORS: Final = {
-    "tempinf",      # Indoor temperature
-    "humidityin",   # Indoor humidity
-    "baromabsin",   # Absolute pressure
-    "baromrelin",   # Relative pressure
-    "3",            # Feels like temperature (gateway sensor)
-    "4",            # Apparent temperature (gateway sensor)
-    "5",            # Vapor Pressure Deficit (gateway sensor)
+    "tempinf",  # Indoor temperature
+    "humidityin",  # Indoor humidity
+    "baromabsin",  # Absolute pressure
+    "baromrelin",  # Relative pressure
+    "3",  # Feels like temperature (gateway sensor)
+    "4",  # Apparent temperature (gateway sensor)
+    "5",  # Vapor Pressure Deficit (gateway sensor)
 }
 
 
 def _generate_channel_sensors(
-    base_key: str,
-    name_template: str,
-    sensor_def: Dict[str, Any],
-    max_channels: int
+    base_key: str, name_template: str, sensor_def: Dict[str, Any], max_channels: int
 ) -> Dict[str, Dict[str, Any]]:
     """Generate numbered channel sensors dynamically.
 
@@ -88,17 +86,17 @@ SENSOR_TYPES: Final = {
     "tempinf": {
         "name": "Indoor Temperature",
         "unit": "°C",
-        "device_class": "temperature"
+        "device_class": "temperature",
     },
     "tempf": {
         "name": "Outdoor Temperature",
         "unit": "°F",
-        "device_class": "temperature"
+        "device_class": "temperature",
     },
     "3": {
         "name": "Feels Like Temperature",
         "unit": "°C",
-        "device_class": "temperature"
+        "device_class": "temperature",
     },
     "4": {
         "name": "Apparent Temperature",
@@ -106,353 +104,274 @@ SENSOR_TYPES: Final = {
         "device_class": "temperature",
         "state_class": "measurement",
     },
-    "5": {
-        "name": "Vapor Pressure Deficit",
-        "unit": "kPa",
-        "device_class": "pressure"
-    },
-
+    "5": {"name": "Vapor Pressure Deficit", "unit": "kPa", "device_class": "pressure"},
     # Humidity sensors
-    "humidityin": {
-        "name": "Indoor Humidity",
-        "unit": "%",
-        "device_class": "humidity"
-    },
-    "humidity": {
-        "name": "Outdoor Humidity",
-        "unit": "%",
-        "device_class": "humidity"
-    },
-
+    "humidityin": {"name": "Indoor Humidity", "unit": "%", "device_class": "humidity"},
+    "humidity": {"name": "Outdoor Humidity", "unit": "%", "device_class": "humidity"},
     # Pressure sensors
     "baromrelin": {
         "name": "Relative Pressure",
         "unit": "hPa",
-        "device_class": "atmospheric_pressure"
+        "device_class": "atmospheric_pressure",
     },
     "baromabsin": {
         "name": "Absolute Pressure",
         "unit": "hPa",
-        "device_class": "atmospheric_pressure"
+        "device_class": "atmospheric_pressure",
     },
-
     # Wind sensors
-    "windspeedmph": {
-        "name": "Wind Speed",
-        "unit": "mph",
-        "device_class": "wind_speed"
-    },
+    "windspeedmph": {"name": "Wind Speed", "unit": "mph", "device_class": "wind_speed"},
     "windspdmph_avg10m": {
         "name": "Wind Speed 10min Avg",
         "unit": "mph",
-        "device_class": "wind_speed"
+        "device_class": "wind_speed",
     },
-    "windgustmph": {
-        "name": "Wind Gust",
-        "unit": "mph",
-        "device_class": "wind_speed"
-    },
+    "windgustmph": {"name": "Wind Gust", "unit": "mph", "device_class": "wind_speed"},
     "maxdailygust": {
         "name": "Max Daily Gust",
         "unit": "mph",
-        "device_class": "wind_speed"
+        "device_class": "wind_speed",
     },
-    "winddir": {
-        "name": "Wind Direction",
-        "unit": "°",
-        "icon": "mdi:compass"
-    },
+    "winddir": {"name": "Wind Direction", "unit": "°", "icon": "mdi:compass"},
     "winddir_avg10m": {
         "name": "Wind Direction 10min Avg",
         "unit": "°",
-        "icon": "mdi:compass"
+        "icon": "mdi:compass",
     },
-
     # Rain sensors
     "rainratein": {
         "name": "Rain Rate",
         "unit": "in/hr",
         "device_class": "precipitation_intensity",
-        "state_class": "measurement"
+        "state_class": "measurement",
     },
     "eventrainin": {
         "name": "Event Rain",
         "unit": "in",
         "device_class": "precipitation",
-        "state_class": "total"
+        "state_class": "total",
     },
     "hourlyrainin": {
         "name": "Hourly Rain",
         "unit": "in",
         "device_class": "precipitation",
-        "state_class": "total_increasing"
+        "state_class": "total_increasing",
     },
     "dailyrainin": {
         "name": "Daily Rain",
         "unit": "in",
         "device_class": "precipitation",
-        "state_class": "total_increasing"
+        "state_class": "total_increasing",
     },
     "weeklyrainin": {
         "name": "Weekly Rain",
         "unit": "in",
         "device_class": "precipitation",
-        "state_class": "total_increasing"
+        "state_class": "total_increasing",
     },
     "monthlyrainin": {
         "name": "Monthly Rain",
         "unit": "in",
         "device_class": "precipitation",
-        "state_class": "total_increasing"
+        "state_class": "total_increasing",
     },
     "yearlyrainin": {
         "name": "Yearly Rain",
         "unit": "in",
         "device_class": "precipitation",
-        "state_class": "total_increasing"
+        "state_class": "total_increasing",
     },
     "totalrainin": {
         "name": "Total Rain",
         "unit": "in",
         "device_class": "precipitation",
-        "state_class": "total_increasing"
+        "state_class": "total_increasing",
     },
-
     # Solar and UV sensors
     "solarradiation": {
         "name": "Solar Radiation",
         "unit": "W/m²",
-        "device_class": "irradiance"
+        "device_class": "irradiance",
     },
     "solar_lux": {
         "name": "Solar Illuminance",
         "unit": "lx",
         "device_class": "illuminance",
-        "state_class": "measurement"
+        "state_class": "measurement",
     },
-    "uv": {
-        "name": "UV Index",
-        "unit": "UV Index",
-        "icon": "mdi:weather-sunny-alert"
-    },
-
+    "uv": {"name": "UV Index", "unit": "UV Index", "icon": "mdi:weather-sunny-alert"},
     # Lightning sensor
     "lightning_num": {
         "name": "Lightning Strikes",
         "unit": "strikes",
-        "icon": "mdi:flash"
+        "icon": "mdi:flash",
     },
-    "lightning_time": {
-        "name": "Last Lightning",
-        "device_class": "timestamp"
-    },
+    "lightning_time": {"name": "Last Lightning", "device_class": "timestamp"},
     "lightning": {
         "name": "Lightning Distance",
         "unit": "km",
-        "device_class": "distance"
+        "device_class": "distance",
     },
     "lightning_mi": {
         "name": "Lightning Distance",
         "unit": "mi",
-        "device_class": "distance"
+        "device_class": "distance",
     },
-
     # WH45 combo sensor (CO2 + PM2.5 + PM10 + temp/humidity)
     "tf_co2": {
         "name": "CO2 Sensor Temperature",
         "unit": "°F",
-        "device_class": "temperature"
+        "device_class": "temperature",
     },
     "tf_co2c": {
         "name": "CO2 Sensor Temperature",
         "unit": "°C",
-        "device_class": "temperature"
+        "device_class": "temperature",
     },
     "humi_co2": {
         "name": "CO2 Sensor Humidity",
         "unit": "%",
-        "device_class": "humidity"
+        "device_class": "humidity",
     },
-    "pm25_co2": {
-        "name": "PM2.5",
-        "unit": "µg/m³",
-        "device_class": "pm25"
-    },
-    "pm25_24h_co2": {
-        "name": "PM2.5 24h Avg",
-        "unit": "µg/m³",
-        "device_class": "pm25"
-    },
-    "pm10_co2": {
-        "name": "PM10",
-        "unit": "µg/m³",
-        "device_class": "pm10"
-    },
-    "pm10_24h_co2": {
-        "name": "PM10 24h Avg",
-        "unit": "µg/m³",
-        "device_class": "pm10"
-    },
-    "co2": {
-        "name": "CO2",
-        "unit": "ppm",
-        "device_class": "carbon_dioxide"
-    },
-    "co2_24h": {
-        "name": "CO2 24h Avg",
-        "unit": "ppm",
-        "device_class": "carbon_dioxide"
-    },
-    
+    "pm25_co2": {"name": "PM2.5", "unit": "µg/m³", "device_class": "pm25"},
+    "pm25_24h_co2": {"name": "PM2.5 24h Avg", "unit": "µg/m³", "device_class": "pm25"},
+    "pm10_co2": {"name": "PM10", "unit": "µg/m³", "device_class": "pm10"},
+    "pm10_24h_co2": {"name": "PM10 24h Avg", "unit": "µg/m³", "device_class": "pm10"},
+    "co2": {"name": "CO2", "unit": "ppm", "device_class": "carbon_dioxide"},
+    "co2_24h": {"name": "CO2 24h Avg", "unit": "ppm", "device_class": "carbon_dioxide"},
     # WH69 7-in-1 Weather Station hex ID sensors
     "0x02": {
         "name": "Outdoor Temperature",
         "unit": "°C",
-        "device_class": "temperature"
+        "device_class": "temperature",
     },
     "0x03": {
-        "name": "Dewpoint Temperature", 
+        "name": "Dewpoint Temperature",
         "unit": "°C",
-        "device_class": "temperature"
+        "device_class": "temperature",
     },
-    "0x07": {
-        "name": "Outdoor Humidity",
-        "unit": "%",
-        "device_class": "humidity"
-    },
-    "0x0B": {
-        "name": "Wind Speed",
-        "unit": "m/s",
-        "device_class": "wind_speed"
-    },
-    "0x0C": {
-        "name": "Wind Gust",
-        "unit": "m/s", 
-        "device_class": "wind_speed"
-    },
-    "0x19": {
-        "name": "Max Daily Gust",
-        "unit": "m/s",
-        "device_class": "wind_speed"
-    },
-    "0x0A": {
-        "name": "Wind Direction",
-        "unit": "°",
-        "icon": "mdi:compass"
-    },
-    "0x6D": {
-        "name": "Wind Direction Avg",
-        "unit": "°", 
-        "icon": "mdi:compass"
-    },
-    "0x15": {
-        "name": "Solar Radiation",
-        "unit": "W/m²",
-        "device_class": "irradiance"
-    },
-    "0x17": {
-        "name": "UV Index",
-        "unit": "UV Index",
-        "icon": "mdi:weather-sunny-alert"
-    },
+    "0x07": {"name": "Outdoor Humidity", "unit": "%", "device_class": "humidity"},
+    "0x0B": {"name": "Wind Speed", "unit": "m/s", "device_class": "wind_speed"},
+    "0x0C": {"name": "Wind Gust", "unit": "m/s", "device_class": "wind_speed"},
+    "0x19": {"name": "Max Daily Gust", "unit": "m/s", "device_class": "wind_speed"},
+    "0x0A": {"name": "Wind Direction", "unit": "°", "icon": "mdi:compass"},
+    "0x6D": {"name": "Wind Direction Avg", "unit": "°", "icon": "mdi:compass"},
+    "0x15": {"name": "Solar Radiation", "unit": "W/m²", "device_class": "irradiance"},
+    "0x17": {"name": "UV Index", "unit": "UV Index", "icon": "mdi:weather-sunny-alert"},
     "0x0D": {
         "name": "Rain Event",
         "unit": "mm",
         "device_class": "precipitation",
-        "state_class": "total"
+        "state_class": "total",
     },
     "0x0E": {
-        "name": "Rain Rate", 
+        "name": "Rain Rate",
         "unit": "mm/Hr",
         "device_class": "precipitation_intensity",
-        "state_class": "measurement"
+        "state_class": "measurement",
     },
     "0x7C": {
         "name": "24-Hour Rain",
         "unit": "mm",
         "device_class": "precipitation",
-        "state_class": "total_increasing"
+        "state_class": "total_increasing",
     },
     "0x10": {
         "name": "Hourly Rain",
         "unit": "mm",
         "device_class": "precipitation",
-        "state_class": "total_increasing"
+        "state_class": "total_increasing",
     },
     "0x11": {
         "name": "Weekly Rain",
         "unit": "mm",
         "device_class": "precipitation",
-        "state_class": "total_increasing"
+        "state_class": "total_increasing",
     },
     "0x12": {
         "name": "Monthly Rain",
         "unit": "mm",
         "device_class": "precipitation",
-        "state_class": "total_increasing"
+        "state_class": "total_increasing",
     },
     "0x13": {
         "name": "Yearly Rain",
         "unit": "mm",
         "device_class": "precipitation",
-        "state_class": "total_increasing"
+        "state_class": "total_increasing",
     },
 }
 
 # Add dynamically generated channel sensors
-SENSOR_TYPES.update(_generate_channel_sensors(
-    "tempf", "Temperature CH{ch}",
-    {"unit": "°F", "device_class": "temperature"}, 8
-))
-SENSOR_TYPES.update(_generate_channel_sensors(
-    "humidity", "Humidity CH{ch}",
-    {"unit": "%", "device_class": "humidity"}, 8
-))
-SENSOR_TYPES.update(_generate_channel_sensors(
-    "soilmoisture", "Soil Moisture CH{ch}",
-    {"unit": "%", "device_class": "moisture"}, 16
-))
-SENSOR_TYPES.update(_generate_channel_sensors(
-    "pm25_ch", "PM2.5 CH{ch}",
-    {"unit": "µg/m³", "device_class": "pm25"}, 4
-))
-SENSOR_TYPES.update(_generate_channel_sensors(
-    "pm25_avg_24h_ch", "PM2.5 24h Avg CH{ch}",
-    {"unit": "µg/m³", "device_class": "pm25"}, 4
-))
-SENSOR_TYPES.update(_generate_channel_sensors(
-    "leak_ch", "Leak Sensor CH{ch}",
-    {"device_class": "moisture"}, 4
-))
-SENSOR_TYPES.update(_generate_channel_sensors(
-    "leafwetness_ch", "Leaf Wetness CH{ch}",
-    {"unit": "%", "device_class": "moisture"}, 8
-))
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "tempf", "Temperature CH{ch}", {"unit": "°F", "device_class": "temperature"}, 8
+    )
+)
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "humidity", "Humidity CH{ch}", {"unit": "%", "device_class": "humidity"}, 8
+    )
+)
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "soilmoisture",
+        "Soil Moisture CH{ch}",
+        {"unit": "%", "device_class": "moisture"},
+        16,
+    )
+)
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "pm25_ch", "PM2.5 CH{ch}", {"unit": "µg/m³", "device_class": "pm25"}, 4
+    )
+)
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "pm25_avg_24h_ch",
+        "PM2.5 24h Avg CH{ch}",
+        {"unit": "µg/m³", "device_class": "pm25"},
+        4,
+    )
+)
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "leak_ch", "Leak Sensor CH{ch}", {"device_class": "moisture"}, 4
+    )
+)
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "leafwetness_ch",
+        "Leaf Wetness CH{ch}",
+        {"unit": "%", "device_class": "moisture"},
+        8,
+    )
+)
 
 # Add temperature-only sensors (WH34)
-SENSOR_TYPES.update(_generate_channel_sensors(
-    "tf_ch", "Temperature CH{ch}",
-    {"unit": "°F", "device_class": "temperature"}, 8
-))
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "tf_ch", "Temperature CH{ch}", {"unit": "°F", "device_class": "temperature"}, 8
+    )
+)
 
 # Add temperature-only sensors Celsius (WH34)
-SENSOR_TYPES.update(_generate_channel_sensors(
-    "tf_ch", "Temperature CH{ch}",
-    {"unit": "°C", "device_class": "temperature"}, 8
-))
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "tf_ch", "Temperature CH{ch}", {"unit": "°C", "device_class": "temperature"}, 8
+    )
+)
 
 # Add dewpoint sensors (calculated from temp/humidity)
-SENSOR_TYPES.update(_generate_channel_sensors(
-    "dewpoint", "Dewpoint CH{ch}",
-    {"unit": "°F", "device_class": "temperature"}, 8  
-))
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "dewpoint", "Dewpoint CH{ch}", {"unit": "°F", "device_class": "temperature"}, 8
+    )
+)
 
 
 def _generate_battery_sensors(
-    base_key: str,
-    name_template: str,
-    sensor_key_template: str,
-    max_channels: int
+    base_key: str, name_template: str, sensor_key_template: str, max_channels: int
 ) -> Dict[str, Dict[str, str]]:
     """Generate numbered battery sensors dynamically.
 
@@ -477,84 +396,51 @@ def _generate_battery_sensors(
 # Battery sensors (companion to main sensors)
 BATTERY_SENSORS: Final = {
     # Fixed battery sensors
-    "wh57batt": {
-        "name": "Lightning Sensor Battery",
-        "sensor_key": "lightning"
-    },
-    "wh40batt": {
-        "name": "Rain Sensor Battery",
-        "sensor_key": "rainratein"
-    },
-    "wh68batt": {
-        "name": "Weather Station Battery",
-        "sensor_key": "tempf"
-    },
-    "wh25batt": {
-        "name": "Indoor Station Battery",
-        "sensor_key": "tempinf"
-    },
-    "wh26batt": {
-        "name": "Indoor Sensor Battery", 
-        "sensor_key": "tempinf"
-    },
-    "co2_batt": {
-        "name": "CO2 Combo Sensor Battery",
-        "sensor_key": "co2"
-    },
-    "wh80batt": {
-        "name": "WH80 Weather Station Battery",
-        "sensor_key": "0x02"
-    },
-    "wh69batt": {
-        "name": "WH69 Weather Station Battery",
-        "sensor_key": "0x02"
-    },
-    "ws90batt": {
-        "name": "WS90 Weather Station Battery",
-        "sensor_key": "0x02"
-    },
-    "wh90batt": {
-        "name": "WH90 Weather Station Battery",
-        "sensor_key": "0x02"
-    },
-    "wh77batt": {
-        "name": "WH77 Multi-Sensor Station Battery",
-        "sensor_key": "0x02"
-    },
+    "wh57batt": {"name": "Lightning Sensor Battery", "sensor_key": "lightning"},
+    "wh40batt": {"name": "Rain Sensor Battery", "sensor_key": "rainratein"},
+    "wh68batt": {"name": "Weather Station Battery", "sensor_key": "tempf"},
+    "wh25batt": {"name": "Indoor Station Battery", "sensor_key": "tempinf"},
+    "wh26batt": {"name": "Indoor Sensor Battery", "sensor_key": "tempinf"},
+    "co2_batt": {"name": "CO2 Combo Sensor Battery", "sensor_key": "co2"},
+    "wh80batt": {"name": "WH80 Weather Station Battery", "sensor_key": "0x02"},
+    "wh69batt": {"name": "WH69 Weather Station Battery", "sensor_key": "0x02"},
+    "ws90batt": {"name": "WS90 Weather Station Battery", "sensor_key": "0x02"},
+    "wh90batt": {"name": "WH90 Weather Station Battery", "sensor_key": "0x02"},
+    "wh77batt": {"name": "WH77 Multi-Sensor Station Battery", "sensor_key": "0x02"},
 }
 
 # Add dynamically generated battery sensors
-BATTERY_SENSORS.update(_generate_battery_sensors(
-    "soilbatt", "Soil Moisture CH{ch} Battery", "soilmoisture{ch}", 16
-))
-BATTERY_SENSORS.update(_generate_battery_sensors(
-    "batt", "Temperature/Humidity CH{ch} Battery", "temp{ch}f", 8
-))
-BATTERY_SENSORS.update(_generate_battery_sensors(
-    "pm25batt", "PM2.5 CH{ch} Battery", "pm25_ch{ch}", 4
-))
-BATTERY_SENSORS.update(_generate_battery_sensors(
-    "leakbatt", "Leak Sensor CH{ch} Battery", "leak_ch{ch}", 4
-))
-BATTERY_SENSORS.update(_generate_battery_sensors(
-    "tf_batt", "Temperature CH{ch} Battery", "tf_ch{ch}", 8
-))
-BATTERY_SENSORS.update(_generate_battery_sensors(
-    "leaf_batt", "Leaf Wetness CH{ch} Battery", "leafwetness_ch{ch}", 8
-))
+BATTERY_SENSORS.update(
+    _generate_battery_sensors(
+        "soilbatt", "Soil Moisture CH{ch} Battery", "soilmoisture{ch}", 16
+    )
+)
+BATTERY_SENSORS.update(
+    _generate_battery_sensors(
+        "batt", "Temperature/Humidity CH{ch} Battery", "temp{ch}f", 8
+    )
+)
+BATTERY_SENSORS.update(
+    _generate_battery_sensors("pm25batt", "PM2.5 CH{ch} Battery", "pm25_ch{ch}", 4)
+)
+BATTERY_SENSORS.update(
+    _generate_battery_sensors(
+        "leakbatt", "Leak Sensor CH{ch} Battery", "leak_ch{ch}", 4
+    )
+)
+BATTERY_SENSORS.update(
+    _generate_battery_sensors("tf_batt", "Temperature CH{ch} Battery", "tf_ch{ch}", 8)
+)
+BATTERY_SENSORS.update(
+    _generate_battery_sensors(
+        "leaf_batt", "Leaf Wetness CH{ch} Battery", "leafwetness_ch{ch}", 8
+    )
+)
 
 # System sensors
 SYSTEM_SENSORS: Final = {
-    "runtime": {
-        "name": "Gateway Uptime",
-        "unit": "days",
-        "device_class": "duration"
-    },
-    "heap": {
-        "name": "Gateway Heap Memory",
-        "unit": "KB",
-        "device_class": "data_size"
-    },
+    "runtime": {"name": "Gateway Uptime", "unit": "days", "device_class": "duration"},
+    "heap": {"name": "Gateway Heap Memory", "unit": "KB", "device_class": "data_size"},
 }
 
 # Signal strength sensors

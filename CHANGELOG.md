@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.31] - 2026-02-26
+
+### Fixed
+- **WH57 Lightning Strikes and Last Lightning entities missing**: All three lightning sensor keys (`lightning_num`, `lightning_time`, `lightning`) were generating the same entity ID (`sensor.ecowitt_lightning_*`) due to a substring collision in the entity ID generator. The coordinator added all three to its sensor list but only the distance entity survived — strikes and timestamp were silently overwritten. Fixed by adding specific patterns for `lightning_num` (`lightning_strikes`) and `lightning_time` (`last_lightning`) before the generic `lightning` pattern. The distance entity ID is unchanged (`sensor.ecowitt_lightning_*`). Reported by @chrisgillings in issue #19.
+- **WH57 Last Lightning timestamp invalid in HA**: The gateway returns the last-strike datetime as a naive ISO 8601 string (`"2026-02-22T18:00:36"`) without timezone info. Home Assistant's `timestamp` device class requires a timezone-aware `datetime` object. Fixed by converting the string to a UTC-aware `datetime` in sensor entity setup.
+
 ## [1.5.30] - 2026-02-25
 
 ### Fixed

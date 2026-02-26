@@ -1,4 +1,5 @@
 """Test the Ecowitt Local config flow."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -9,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from custom_components.ecowitt_local.config_flow import CannotConnect, InvalidAuth
-from custom_components.ecowitt_local.const import DOMAIN, CONF_HOST, CONF_PASSWORD
+from custom_components.ecowitt_local.const import CONF_HOST, CONF_PASSWORD, DOMAIN
 
 
 async def test_form(hass: HomeAssistant, mock_ecowitt_api) -> None:
@@ -122,8 +123,9 @@ async def test_options_flow_no_config_entry_setter_error(
 
     # Verify config_entry is accessible via the HA-managed property
     from custom_components.ecowitt_local.config_flow import OptionsFlowHandler
+
     handler = OptionsFlowHandler()
-    assert not hasattr(handler, '__dict__') or 'config_entry' not in handler.__dict__
+    assert not hasattr(handler, "__dict__") or "config_entry" not in handler.__dict__
 
 
 async def test_options_flow_reads_from_options_not_data(
@@ -158,12 +160,12 @@ async def test_options_flow_reads_from_options_not_data(
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM
     schema_keys = {str(k): k for k in result["data_schema"].schema}
-    assert schema_keys["scan_interval"].default() == 120, (
-        "Options form should show scan_interval=120 from .options, not 60 from .data"
-    )
-    assert schema_keys["include_inactive"].default() is True, (
-        "Options form should show include_inactive=True from .options, not False from .data"
-    )
+    assert (
+        schema_keys["scan_interval"].default() == 120
+    ), "Options form should show scan_interval=120 from .options, not 60 from .data"
+    assert (
+        schema_keys["include_inactive"].default() is True
+    ), "Options form should show include_inactive=True from .options, not False from .data"
 
 
 async def test_complete_flow(hass: HomeAssistant, mock_ecowitt_api) -> None:

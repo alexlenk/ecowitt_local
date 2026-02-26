@@ -1,25 +1,32 @@
 """Config flow for Ecowitt Local integration."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any, Dict, Optional
 
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-import homeassistant.helpers.config_validation as cv
 
-from .api import EcowittLocalAPI, AuthenticationError, ConnectionError as APIConnectionError
+from .api import (
+    AuthenticationError,
+)
+from .api import ConnectionError as APIConnectionError
+from .api import (
+    EcowittLocalAPI,
+)
 from .const import (
-    DOMAIN,
-    CONF_SCAN_INTERVAL,
-    CONF_MAPPING_INTERVAL,
     CONF_INCLUDE_INACTIVE,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_MAPPING_INTERVAL,
+    CONF_MAPPING_INTERVAL,
+    CONF_SCAN_INTERVAL,
     DEFAULT_INCLUDE_INACTIVE,
+    DEFAULT_MAPPING_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     ERROR_CANNOT_CONNECT,
     ERROR_INVALID_AUTH,
     ERROR_UNKNOWN,
@@ -27,20 +34,24 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): str,
-    vol.Optional(CONF_PASSWORD, default=""): str,
-})
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Optional(CONF_PASSWORD, default=""): str,
+    }
+)
 
-STEP_OPTIONS_DATA_SCHEMA = vol.Schema({
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-        int, vol.Range(min=30, max=300)
-    ),
-    vol.Optional(CONF_MAPPING_INTERVAL, default=DEFAULT_MAPPING_INTERVAL): vol.All(
-        int, vol.Range(min=300, max=3600)
-    ),
-    vol.Optional(CONF_INCLUDE_INACTIVE, default=DEFAULT_INCLUDE_INACTIVE): bool,
-})
+STEP_OPTIONS_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
+            int, vol.Range(min=30, max=300)
+        ),
+        vol.Optional(CONF_MAPPING_INTERVAL, default=DEFAULT_MAPPING_INTERVAL): vol.All(
+            int, vol.Range(min=300, max=3600)
+        ),
+        vol.Optional(CONF_INCLUDE_INACTIVE, default=DEFAULT_INCLUDE_INACTIVE): bool,
+    }
+)
 
 
 async def validate_input(hass: HomeAssistant, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -52,19 +63,19 @@ async def validate_input(hass: HomeAssistant, data: Dict[str, Any]) -> Dict[str,
     password = data.get(CONF_PASSWORD, "")
 
     api = EcowittLocalAPI(host, password)
-    
+
     try:
         # Test connection and authentication
         await api.test_connection()
-        
+
         # Get basic info to validate the device
         version_info = await api.get_version()
-        
+
         # Extract gateway information
         gateway_id = version_info.get("stationtype", "unknown")
         model = version_info.get("stationtype", "Unknown")
         firmware_version = version_info.get("version", "Unknown")
-        
+
         return {
             "title": f"Ecowitt Gateway ({host})",
             "gateway_id": gateway_id,
@@ -72,7 +83,7 @@ async def validate_input(hass: HomeAssistant, data: Dict[str, Any]) -> Dict[str,
             "firmware_version": firmware_version,
             "host": host,
         }
-        
+
     except AuthenticationError:
         raise InvalidAuth
     except APIConnectionError:
@@ -90,7 +101,7 @@ class ConfigFlow(config_entries.ConfigFlow):
 
     VERSION = 1
     MINOR_VERSION = 2
-    
+
     def __init__(self) -> None:
         """Initialize the config flow."""
         super().__init__()
@@ -101,7 +112,7 @@ class ConfigFlow(config_entries.ConfigFlow):
     ) -> FlowResult:
         """Handle the initial step."""
         errors: Optional[Dict[str, str]] = None
-        
+
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
@@ -116,13 +127,13 @@ class ConfigFlow(config_entries.ConfigFlow):
                 # Check if already configured
                 await self.async_set_unique_id(f"{info['gateway_id']}_{info['host']}")
                 self._abort_if_unique_id_configured()
-                
+
                 # Store the validated info
                 if self._discovered_info is None:
                     self._discovered_info = {}
                 self._discovered_info.update(user_input)
                 self._discovered_info.update(info)
-                
+
                 # Proceed to options step
                 return await self.async_step_options()
 
@@ -146,7 +157,7 @@ class ConfigFlow(config_entries.ConfigFlow):
             final_data = {}
             final_data.update(self._discovered_info)
             final_data.update(user_input)
-            
+
             return self.async_create_entry(
                 title=self._discovered_info.get("title", "Ecowitt Gateway"),
                 data=final_data,
@@ -187,21 +198,29 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         # Get current values — check .options first, fall back to .data, then defaults
-        current_scan_interval = self._get_option(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        current_mapping_interval = self._get_option(CONF_MAPPING_INTERVAL, DEFAULT_MAPPING_INTERVAL)
-        current_include_inactive = self._get_option(CONF_INCLUDE_INACTIVE, DEFAULT_INCLUDE_INACTIVE)
+        current_scan_interval = self._get_option(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
+        current_mapping_interval = self._get_option(
+            CONF_MAPPING_INTERVAL, DEFAULT_MAPPING_INTERVAL
+        )
+        current_include_inactive = self._get_option(
+            CONF_INCLUDE_INACTIVE, DEFAULT_INCLUDE_INACTIVE
+        )
 
-        options_schema = vol.Schema({
-            vol.Optional(
-                CONF_SCAN_INTERVAL, default=current_scan_interval
-            ): vol.All(int, vol.Range(min=30, max=300)),
-            vol.Optional(
-                CONF_MAPPING_INTERVAL, default=current_mapping_interval
-            ): vol.All(int, vol.Range(min=300, max=3600)),
-            vol.Optional(
-                CONF_INCLUDE_INACTIVE, default=current_include_inactive
-            ): bool,
-        })
+        options_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=current_scan_interval
+                ): vol.All(int, vol.Range(min=30, max=300)),
+                vol.Optional(
+                    CONF_MAPPING_INTERVAL, default=current_mapping_interval
+                ): vol.All(int, vol.Range(min=300, max=3600)),
+                vol.Optional(
+                    CONF_INCLUDE_INACTIVE, default=current_include_inactive
+                ): bool,
+            }
+        )
 
         return self.async_show_form(
             step_id="init",

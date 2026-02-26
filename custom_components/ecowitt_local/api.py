@@ -1,4 +1,5 @@
 """Ecowitt Local API client for gateway communication."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,7 +9,7 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
 
 import aiohttp
-from aiohttp import ClientSession, ClientTimeout, ClientError
+from aiohttp import ClientError, ClientSession, ClientTimeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,14 +118,20 @@ class EcowittLocalAPI:
                 elif response.status in (401, 403):
                     raise AuthenticationError("Invalid password")
                 else:
-                    raise ConnectionError(f"Authentication failed: HTTP {response.status}")
+                    raise ConnectionError(
+                        f"Authentication failed: HTTP {response.status}"
+                    )
 
         except asyncio.TimeoutError as err:
             raise ConnectionError("Timeout during authentication") from err
         except ClientError as err:
-            raise ConnectionError(f"Network error during authentication: {err}") from err
+            raise ConnectionError(
+                f"Network error during authentication: {err}"
+            ) from err
 
-    async def _make_request(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def _make_request(
+        self, endpoint: str, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Make authenticated request to API endpoint.
 
         Args:
@@ -160,29 +167,38 @@ class EcowittLocalAPI:
                         response = retry_response
 
                 if response.status != 200:
-                    raise ConnectionError(f"HTTP {response.status}: {await response.text()}")
+                    raise ConnectionError(
+                        f"HTTP {response.status}: {await response.text()}"
+                    )
 
                 try:
                     # Check content type first
-                    content_type = response.headers.get('content-type', '').lower()
+                    content_type = response.headers.get("content-type", "").lower()
 
-                    if 'application/json' in content_type:
+                    if "application/json" in content_type:
                         # Standard JSON response
                         response_data: Dict[str, Any] = await response.json()
                         return response_data
-                    elif 'text/html' in content_type or 'text/plain' in content_type:
+                    elif "text/html" in content_type or "text/plain" in content_type:
                         # Gateway returned HTML/text instead of JSON, try to parse as JSON anyway
                         text_content = await response.text()
                         try:
                             import json
+
                             response_data = json.loads(text_content)
                             return response_data
                         except json.JSONDecodeError:
                             # If it's not valid JSON, check if it looks like JSON-ish content
-                            if text_content.strip().startswith('{') and text_content.strip().endswith('}'):
-                                raise DataError(f"Gateway returned malformed JSON with content-type '{content_type}': {text_content[:200]}...")
+                            if text_content.strip().startswith(
+                                "{"
+                            ) and text_content.strip().endswith("}"):
+                                raise DataError(
+                                    f"Gateway returned malformed JSON with content-type '{content_type}': {text_content[:200]}..."
+                                )
                             else:
-                                raise DataError(f"Gateway returned non-JSON content with content-type '{content_type}': {text_content[:200]}...")
+                                raise DataError(
+                                    f"Gateway returned non-JSON content with content-type '{content_type}': {text_content[:200]}..."
+                                )
                     else:
                         # Unknown content type, try JSON parsing anyway (skip content-type check)
                         response_data = await response.json(content_type=None)
@@ -192,7 +208,9 @@ class EcowittLocalAPI:
                     # Re-raise DataError as-is
                     raise
                 except Exception as err:
-                    raise DataError(f"Invalid JSON response: {response.status}, message='{err}'") from err
+                    raise DataError(
+                        f"Invalid JSON response: {response.status}, message='{err}'"
+                    ) from err
 
         except asyncio.TimeoutError as err:
             raise ConnectionError("Request timeout") from err
@@ -239,11 +257,14 @@ class EcowittLocalAPI:
             # Wrapped in sensor object
             sensor_list = data["sensor"]
         else:
-            raise DataError("Invalid sensor mapping response: expected array or sensor object")
+            raise DataError(
+                "Invalid sensor mapping response: expected array or sensor object"
+            )
 
         # Filter out sensors with FFFFFFFF IDs (not connected)
         active_sensors = [
-            sensor for sensor in sensor_list
+            sensor
+            for sensor in sensor_list
             if sensor.get("id").upper() not in ("FFFFFFFE", "FFFFFFFF", "00000000")
         ]
 

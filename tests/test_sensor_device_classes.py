@@ -1,10 +1,12 @@
 """Test sensor device class functionality."""
+
 from __future__ import annotations
 
-import pytest
-from homeassistant.core import HomeAssistant
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from unittest.mock import Mock
+
+import pytest
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.core import HomeAssistant
 
 from custom_components.ecowitt_local.sensor import EcowittLocalSensor
 
@@ -36,15 +38,15 @@ async def test_temperature_sensor_device_class(hass: HomeAssistant, mock_coordin
         "category": "sensor",
         "name": "Outdoor Temperature",
         "device_class": "temperature",
-        "state": 72.5  # This is where native_value comes from
+        "state": 72.5,  # This is where native_value comes from
     }
-    
+
     sensor = EcowittLocalSensor(
         coordinator=mock_coordinator,
         entity_id="sensor.ecowitt_outdoor_temperature",
-        sensor_info=sensor_info
+        sensor_info=sensor_info,
     )
-    
+
     # Test that device class is set correctly
     assert sensor.device_class == SensorDeviceClass.TEMPERATURE
     # Test native value
@@ -62,15 +64,15 @@ async def test_battery_sensor_device_class(hass: HomeAssistant, mock_coordinator
         "category": "battery",
         "name": "Soil Moisture Battery",
         "device_class": "battery",
-        "state": 85
+        "state": 85,
     }
-    
+
     sensor = EcowittLocalSensor(
         coordinator=mock_coordinator,
         entity_id="sensor.ecowitt_soil_moisture_battery_d8174",
-        sensor_info=sensor_info
+        sensor_info=sensor_info,
     )
-    
+
     # Test that device class is set correctly
     assert sensor.device_class == SensorDeviceClass.BATTERY
     # Test native value
@@ -88,15 +90,15 @@ async def test_soil_moisture_sensor_device_class(hass: HomeAssistant, mock_coord
         "category": "sensor",
         "name": "Soil Moisture CH1",
         "device_class": "moisture",
-        "state": 50
+        "state": 50,
     }
-    
+
     sensor = EcowittLocalSensor(
         coordinator=mock_coordinator,
         entity_id="sensor.ecowitt_soil_moisture_d8174",
-        sensor_info=sensor_info
+        sensor_info=sensor_info,
     )
-    
+
     # Test that device class is set correctly
     assert sensor.device_class == SensorDeviceClass.MOISTURE
     # Test native value
@@ -114,15 +116,15 @@ async def test_pm25_sensor_device_class(hass: HomeAssistant, mock_coordinator):
         "category": "sensor",
         "name": "PM2.5 Air Quality CH1",
         "device_class": "pm25",
-        "state": 15.2
+        "state": 15.2,
     }
-    
+
     sensor = EcowittLocalSensor(
         coordinator=mock_coordinator,
         entity_id="sensor.ecowitt_pm25_ef891",
-        sensor_info=sensor_info
+        sensor_info=sensor_info,
     )
-    
+
     # Test that device class is set correctly
     assert sensor.device_class == SensorDeviceClass.PM25
     # Test native value
@@ -138,15 +140,15 @@ async def test_unknown_device_class_handling(hass: HomeAssistant, mock_coordinat
         "category": "sensor",
         "name": "Unknown Sensor",
         "device_class": "invalid_device_class",
-        "state": 42.0
+        "state": 42.0,
     }
-    
+
     sensor = EcowittLocalSensor(
         coordinator=mock_coordinator,
         entity_id="sensor.ecowitt_unknown",
-        sensor_info=sensor_info
+        sensor_info=sensor_info,
     )
-    
+
     # Should handle invalid device class gracefully
     assert sensor.device_class is None
     # Test native value still works
@@ -162,18 +164,18 @@ async def test_sensor_with_none_value(hass: HomeAssistant, mock_coordinator):
         "category": "sensor",
         "name": "Null Sensor",
         "device_class": None,
-        "state": None
+        "state": None,
     }
-    
+
     sensor = EcowittLocalSensor(
         coordinator=mock_coordinator,
         entity_id="sensor.ecowitt_null",
-        sensor_info=sensor_info
+        sensor_info=sensor_info,
     )
-    
+
     # Test native value is None
     assert sensor.native_value is None
-    # No state class for None values  
+    # No state class for None values
     assert sensor.state_class is None
 
 
@@ -185,16 +187,16 @@ async def test_sensor_without_device_class(hass: HomeAssistant, mock_coordinator
         "hardware_id": None,
         "category": "sensor",
         "name": "Temperature",
-        "state": 72.5
+        "state": 72.5,
         # No device_class specified
     }
-    
+
     sensor = EcowittLocalSensor(
         coordinator=mock_coordinator,
         entity_id="sensor.ecowitt_temp",
-        sensor_info=sensor_info
+        sensor_info=sensor_info,
     )
-    
+
     # Should not have device class if not specified
     assert sensor.device_class is None
     # But still work with native value

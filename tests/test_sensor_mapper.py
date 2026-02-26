@@ -1,4 +1,5 @@
 """Test the Ecowitt Local sensor mapper."""
+
 from __future__ import annotations
 
 import pytest
@@ -34,7 +35,7 @@ def mock_sensor_mappings():
             "id": "EF891",
             "img": "WH41",
             "name": "PM2.5 air quality sensor CH1",
-            "batt": "92", 
+            "batt": "92",
             "signal": "4",
         },
         {
@@ -50,13 +51,13 @@ def mock_sensor_mappings():
 def test_update_mapping(sensor_mapper: SensorMapper, mock_sensor_mappings):
     """Test updating sensor mapping."""
     sensor_mapper.update_mapping(mock_sensor_mappings)
-    
+
     # Test hardware ID retrieval
     assert sensor_mapper.get_hardware_id("soilmoisture1") == "D8174"
     assert sensor_mapper.get_hardware_id("soilmoisture2") == "D8648"
     assert sensor_mapper.get_hardware_id("pm25_ch1") == "EF891"
     assert sensor_mapper.get_hardware_id("temp1f") == "A7C42"
-    
+
     # Test sensor info retrieval
     soil_info = sensor_mapper.get_sensor_info("D8174")
     assert soil_info["hardware_id"] == "D8174"
@@ -71,22 +72,22 @@ def test_generate_live_data_keys(sensor_mapper: SensorMapper):
     keys = sensor_mapper._generate_live_data_keys("WH51", "1")
     assert "soilmoisture1" in keys
     assert "soilbatt1" in keys
-    
-    # Test temperature/humidity sensor  
+
+    # Test temperature/humidity sensor
     keys = sensor_mapper._generate_live_data_keys("WH31", "1")
     assert "temp1f" in keys
     assert "humidity1" in keys
     assert "batt1" in keys
-    
+
     # Test PM2.5 sensor
     keys = sensor_mapper._generate_live_data_keys("WH41", "1")
     assert "pm25_ch1" in keys
     assert "pm25batt1" in keys
-    
+
     # Test invalid inputs
     keys = sensor_mapper._generate_live_data_keys("", "1")
     assert len(keys) == 0
-    
+
     keys = sensor_mapper._generate_live_data_keys("WH51", "")
     assert len(keys) == 0
 
@@ -94,16 +95,16 @@ def test_generate_live_data_keys(sensor_mapper: SensorMapper):
 def test_generate_entity_id(sensor_mapper: SensorMapper, mock_sensor_mappings):
     """Test generating entity IDs."""
     sensor_mapper.update_mapping(mock_sensor_mappings)
-    
+
     # Test with hardware ID
     entity_id, name = sensor_mapper.generate_entity_id("soilmoisture1", "D8174")
     assert entity_id == "sensor.ecowitt_soil_moisture_d8174"
     assert "Soil Moisture" in name
-    
+
     # Test without hardware ID
     entity_id, name = sensor_mapper.generate_entity_id("tempf", None, "outdoor")
     assert entity_id == "sensor.ecowitt_temperature_outdoor"
-    
+
     # Test battery sensor
     entity_id, name = sensor_mapper.generate_entity_id("soilbatt1", "D8174")
     assert entity_id == "sensor.ecowitt_soil_moisture_battery_d8174"
@@ -114,7 +115,9 @@ def test_extract_sensor_type_from_key(sensor_mapper: SensorMapper):
     """Test extracting sensor type from key."""
     assert sensor_mapper._extract_sensor_type_from_key("tempf") == "temperature"
     assert sensor_mapper._extract_sensor_type_from_key("humidity1") == "humidity"
-    assert sensor_mapper._extract_sensor_type_from_key("soilmoisture1") == "soil_moisture"
+    assert (
+        sensor_mapper._extract_sensor_type_from_key("soilmoisture1") == "soil_moisture"
+    )
     assert sensor_mapper._extract_sensor_type_from_key("pm25_ch1") == "pm25"
     assert sensor_mapper._extract_sensor_type_from_key("windspeedmph") == "wind"
     assert sensor_mapper._extract_sensor_type_from_key("baromrelin") == "pressure"
@@ -134,7 +137,7 @@ def test_extract_identifier_from_key(sensor_mapper: SensorMapper):
 def test_get_mapping_stats(sensor_mapper: SensorMapper, mock_sensor_mappings):
     """Test getting mapping statistics."""
     sensor_mapper.update_mapping(mock_sensor_mappings)
-    
+
     stats = sensor_mapper.get_mapping_stats()
     assert stats["total_sensors"] == 4
     assert stats["mapped_keys"] > 0
@@ -144,7 +147,7 @@ def test_get_mapping_stats(sensor_mapper: SensorMapper, mock_sensor_mappings):
 def test_get_all_hardware_ids(sensor_mapper: SensorMapper, mock_sensor_mappings):
     """Test getting all hardware IDs."""
     sensor_mapper.update_mapping(mock_sensor_mappings)
-    
+
     hardware_ids = sensor_mapper.get_all_hardware_ids()
     assert "D8174" in hardware_ids
     assert "D8648" in hardware_ids
@@ -156,11 +159,11 @@ def test_get_all_hardware_ids(sensor_mapper: SensorMapper, mock_sensor_mappings)
 def test_empty_mapping(sensor_mapper: SensorMapper):
     """Test behavior with empty mapping."""
     sensor_mapper.update_mapping([])
-    
+
     assert sensor_mapper.get_hardware_id("soilmoisture1") is None
     assert sensor_mapper.get_sensor_info("D8174") is None
     assert len(sensor_mapper.get_all_hardware_ids()) == 0
-    
+
     stats = sensor_mapper.get_mapping_stats()
     assert stats["total_sensors"] == 0
     assert stats["mapped_keys"] == 0
@@ -173,9 +176,9 @@ def test_invalid_sensor_data(sensor_mapper: SensorMapper):
         {"type": "WH51", "channel": "1"},  # Missing ID
         {"id": "D8174"},  # Missing type and channel
     ]
-    
+
     sensor_mapper.update_mapping(invalid_mappings)
-    
+
     # Should handle gracefully without crashing
     stats = sensor_mapper.get_mapping_stats()
     assert stats["total_sensors"] >= 0
@@ -263,7 +266,7 @@ def test_wh90_still_maps_rain_after_wh80_addition():
 def test_wh69_sensor_mapping():
     """Test WH69 7-in-1 weather station sensor mapping."""
     mapper = SensorMapper()
-    
+
     # WH69 sensor data based on user issue #3
     wh69_sensors = [
         {
@@ -274,9 +277,9 @@ def test_wh69_sensor_mapping():
             "signal": "4",
         }
     ]
-    
+
     mapper.update_mapping(wh69_sensors)
-    
+
     # Check hardware ID mapping
     assert mapper.get_hardware_id("0x02") == "BB"  # Temperature
     assert mapper.get_hardware_id("0x07") == "BB"  # Humidity
@@ -284,13 +287,13 @@ def test_wh69_sensor_mapping():
     assert mapper.get_hardware_id("0x15") == "BB"  # Solar radiation
     assert mapper.get_hardware_id("0x17") == "BB"  # UV index
     assert mapper.get_hardware_id("wh69batt") == "BB"  # Battery
-    
+
     # Check sensor info
     sensor_info = mapper.get_sensor_info("BB")
     assert sensor_info is not None
     assert sensor_info["sensor_type"] == "WH69"
     assert sensor_info["hardware_id"] == "BB"
-    
+
     # Test entity ID generation for WH69 hex sensors
     entity_id, friendly_name = mapper.generate_entity_id("0x02", "BB")
     assert "bb" in entity_id.lower()
