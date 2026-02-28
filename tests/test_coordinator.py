@@ -1905,6 +1905,59 @@ async def test_coordinator_ch_pm25_processing(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_rain_uses_wh69batt_when_wh69_mapped(coordinator):
+    """Test that rain array battery uses wh69batt when a WH69 is registered (issue #95)."""
+    # Register a WH69 hardware_id so get_hardware_id("wh69batt") returns a value
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "AABBCC",
+                "img": "wh69",
+                "type": "1",
+                "name": "WH69",
+                "batt": "3",
+                "signal": "4",
+            }
+        ]
+    )
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "rain": [{"id": "0x13", "val": "100.0 mm", "battery": "0"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    # Battery key should be wh69batt (mapped to AABBCC hardware_id), not wh40batt
+    wh69_battery_found = any(
+        sensors[k].get("sensor_key") == "wh69batt" for k in sensors
+    )
+    assert wh69_battery_found, "wh69batt should be used when WH69 is registered"
+
+    wh40_battery_found = any(
+        sensors[k].get("sensor_key") == "wh40batt" for k in sensors
+    )
+    assert not wh40_battery_found, "wh40batt should NOT be used when WH69 is registered"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_rain_uses_wh40batt_when_no_wh69(coordinator):
+    """Test that rain array battery falls back to wh40batt when no WH69 is registered."""
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "rain": [{"id": "0x13", "val": "100.0 mm", "battery": "0"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wh40_battery_found = any(
+        sensors[k].get("sensor_key") == "wh40batt" for k in sensors
+    )
+    assert wh40_battery_found, "wh40batt should be used when no WH69 is registered"
+
+
+@pytest.mark.asyncio
 async def test_coordinator_ch_pm25_empty_handling(coordinator):
     """Test coordinator handles empty or missing ch_pm25 gracefully."""
     for ch_pm25_val in [[], None]:

@@ -517,6 +517,8 @@ class SensorMapper:
             return "lightning_battery"
         elif "wh40" in battery_key:
             return "rain_battery"
+        elif "wh69" in battery_key:
+            return "wh69_weather_station_battery"
         elif "wh68" in battery_key:
             return "weather_station_battery"
         elif "ws90" in battery_key:
