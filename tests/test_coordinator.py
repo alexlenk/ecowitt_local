@@ -1003,6 +1003,34 @@ async def test_coordinator_rain_array_processing(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_rain_array_battery_binary_encoding(coordinator):
+    """Test WH40/WH69 rain battery uses binary encoding: 0=100%, 1=10% (issue #95)."""
+    coordinator._include_inactive = True
+
+    # battery "0" = new/full = 100%
+    raw_data = {
+        "rain": [{"id": "0x13", "val": "29.5 mm", "battery": "0"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+    battery_sensors = [k for k in sensors if "rain_battery" in k]
+    assert (
+        len(battery_sensors) == 1
+    ), "rain battery should be created from rain 0x13 battery"
+    assert sensors[battery_sensors[0]]["state"] == "100", "binary 0 should give 100%"
+
+    # battery "1" = low = 10%
+    raw_data = {
+        "rain": [{"id": "0x13", "val": "29.5 mm", "battery": "1"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+    battery_sensors = [k for k in sensors if "rain_battery" in k]
+    assert len(battery_sensors) == 1
+    assert sensors[battery_sensors[0]]["state"] == "10", "binary 1 should give 10%"
+
+
+@pytest.mark.asyncio
 async def test_coordinator_rain_array_empty_handling(coordinator):
     """Test coordinator handles empty or missing 'rain' array gracefully (issue #59)."""
     for rain_val in [[], None, {}]:

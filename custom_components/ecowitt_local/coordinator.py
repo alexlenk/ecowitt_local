@@ -210,13 +210,10 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     and item.get("val") is not None
                 ):
                     all_sensor_items.append({"id": item["id"], "val": item["val"]})
-                    # Extract WH40 battery from the 0x13 (yearly rain) item which carries it
+                    # Extract WH40/WH69 battery from the 0x13 (yearly rain) item which carries it.
+                    # Battery uses binary encoding: "0" = full (100%), "1" = low (10%).
                     if item.get("id") == "0x13" and item.get("battery"):
-                        battery_pct = (
-                            str(int(item["battery"]) * 20)
-                            if str(item["battery"]).isdigit()
-                            else item["battery"]
-                        )
+                        battery_pct = "100" if item["battery"] == "0" else "10"
                         all_sensor_items.append({"id": "wh40batt", "val": battery_pct})
                         _LOGGER.debug(
                             "Added WH40 battery: wh40batt = %s%%", battery_pct

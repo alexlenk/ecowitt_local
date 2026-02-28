@@ -1149,7 +1149,7 @@ async def test_coordinator_wh40_battery_from_rain_array(coordinator):
         "common_list": [],
         "rain": [
             {"id": "0x0E", "val": "0.0 mm/Hr"},
-            {"id": "0x13", "val": "192.6 mm", "battery": "4", "voltage": "1.4"},
+            {"id": "0x13", "val": "192.6 mm", "battery": "0", "voltage": "1.4"},
         ],
     }
     coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
@@ -1162,12 +1162,12 @@ async def test_coordinator_wh40_battery_from_rain_array(coordinator):
     result = await coordinator._async_update_data()
     sensors = result["sensors"]
 
-    # wh40batt should be created with 4 × 20 = 80%
+    # wh40batt uses binary encoding: "0" = full (100%), "1" = low (10%)
     batt = next(
         (s for s in sensors.values() if s.get("sensor_key") == "wh40batt"), None
     )
     assert batt is not None
-    assert batt["state"] == "80"
+    assert batt["state"] == "100"
 
 
 @pytest.mark.asyncio

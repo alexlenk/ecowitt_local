@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.34] - 2026-02-28
+
+### Fixed
+- **WH40/WH69 rain sensor battery shows 0% when battery is new**: The `0x13` (Yearly Rain) item in the `rain` array carries the rain sensor's battery level. The integration was treating it as a 0–5 scale (`× 20`), causing a new battery to show 0%. Confirmed by @mjb1416 (GW1200A + WH69, issue #95): `"battery": "0"` with a new battery. The encoding is binary — `"0"` = full (100%), `"1"` = low (10%) — matching the same encoding already used for the `ch_aisle` battery (fixed in v1.5.28). Updated to use correct binary conversion.
+
 ## [1.5.33] - 2026-02-28
 
 ### Fixed

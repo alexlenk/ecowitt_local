@@ -52,7 +52,7 @@ This same `* 20` logic was designed for WH51 soil moisture sensors which use a
 - [x] **REQ-015-1:** WH31/WH69 ch_aisle battery `"0"` must display as battery OK (100%) — fixed v1.5.28
 - [x] **REQ-015-2:** WH31/WH69 ch_aisle battery `"1"` must display as battery Low (10% or similar) — fixed v1.5.28
 - [x] **REQ-015-3:** No regression for WH51 soil sensors which correctly use `* 20` scale — verified
-- [ ] **REQ-015-4:** Same fix applies to `0x13` rain battery field if it uses binary encoding — unconfirmed
+- [x] **REQ-015-4:** Same fix applies to `0x13` rain battery field if it uses binary encoding — confirmed by @mjb1416 (issue #95, GW1200A + WH69): `"0"` with new battery → fixed v1.5.34
 
 ---
 
@@ -89,7 +89,7 @@ Simpler to keep as a numeric sensor with 100%/10% mapping for now.
 ## Tasks
 
 - [x] **TASK-015-1:** Fix ch_aisle battery processing: `"0"` → `"100"`, `"1"` → `"10"` — done in v1.5.28
-- [ ] **TASK-015-2:** Fix `0x13` rain battery if same binary format confirmed — unconfirmed; needs user data
+- [x] **TASK-015-2:** Fix `0x13` rain battery — confirmed binary by @mjb1416 (issue #95); fixed v1.5.34
 - [ ] **TASK-015-3:** Check if WH34 `ch_temp` battery uses same binary format — unconfirmed; needs user data
 - [x] **TASK-015-4:** Update/add tests for binary battery conversion — done in v1.5.28
 - [x] **TASK-015-5:** Release and comment on issue #19 — released v1.5.28
@@ -99,4 +99,4 @@ Simpler to keep as a numeric sensor with 100%/10% mapping for now.
 ## Open Questions
 
 - **OPEN:** Does `ch_temp` (WH34) use the same binary battery format? No WH34 user data received.
-- **OPEN:** Is the `0x13` rain `"battery": "0"` binary, or a different scale? No user data confirming 0x13 battery encoding.
+- **RESOLVED:** `0x13` rain battery IS binary — @mjb1416 (GW1200A + WH69, issue #95) confirmed `"battery": "0"` with a new battery. Fixed in v1.5.34.
