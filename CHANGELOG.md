@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.33] - 2026-02-28
+
+### Fixed
+- **`0x10` rain entity mislabeled as "Hourly Rain" (is Daily Rain)**: The `0x10` hex ID in Ecowitt's local API contains a midnight-reset **daily** rain total, not hourly rain. The integration was displaying it as "Hourly Rain" since v1.5.21. User @nmaster2042 confirmed this via history chart (value accumulates all day, resets at midnight) and comparison with the Ecowitt app (HA showed 7mm, Ecowitt "Hourly" showed 1.1mm, "Daily" showed 7mm). The Ecowitt app's "Hourly" value is not available in the local polling API. Fixed by renaming `0x10` to "Daily Rain" throughout. **⚠️ Breaking change:** Entity ID changes from `sensor.ecowitt_hourly_rain_XXXX` → `sensor.ecowitt_daily_rain_XXXX` — update any automations or dashboards referencing `hourly_rain`.
+
 ## [1.5.32] - 2026-02-26
 
 ### Fixed

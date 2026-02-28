@@ -14,6 +14,7 @@ Kiro-style specs for open GitHub issues. Each spec has: requirements, design, ta
 | [016](016-solar-lux-entity.md) | #84 | Solar illuminance (lux) entity missing | LOW | ✅ Fixed in v1.5.29 — computed lux entity (W/m² × 126.7) |
 | [017](017-battery-level-attribute-bug.md) | #90 | battery_level attribute shows raw bar value | HIGH | ✅ Fixed in v1.5.30 — user confirmed; issue #90 closed |
 | [018](018-wh57-lightning-strikes-missing.md) | #19 | WH57 lightning strikes and timestamp entities missing | HIGH | ✅ Fixed in v1.5.31 — entity_id collision resolved |
+| [019](019-0x10-daily-rain-mislabeled.md) | #5 | 0x10 rain entity mislabeled "Hourly Rain" (is Daily Rain) | MEDIUM | ✅ Fixed in v1.5.33 — renamed to "Daily Rain", entity_id changed |
 
 ## Waiting On
 

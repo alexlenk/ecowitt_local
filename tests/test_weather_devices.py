@@ -318,7 +318,7 @@ class TestWH40RainGauge:
             "0x0D",  # Rain event
             "0x0E",  # Rain rate
             "0x7C",  # 24-hour rain
-            "0x10",  # Hourly rain
+            "0x10",  # Daily rain
             "0x11",  # Weekly rain
             "0x12",  # Monthly rain
             "0x13",  # Yearly rain
@@ -384,7 +384,7 @@ class TestWH40RainGauge:
         # Time-based accumulation sensors (hex IDs from the "rain" array)
         time_sensors = [
             "0x0D",  # Rain event
-            "0x10",  # Hourly rain
+            "0x10",  # Daily rain
             "0x7C",  # 24-hour rain
             "0x11",  # Weekly rain
             "0x12",  # Monthly rain
