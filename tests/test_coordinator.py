@@ -984,12 +984,10 @@ async def test_coordinator_rain_array_processing(coordinator):
     assert len(rain_24h) >= 1, "24-Hour Rain (0x7C) should be created from 'rain' array"
     assert sensors[rain_24h[0]]["state"] == 0.0
 
-    # 0x10/0x11/0x12/0x13 are in hex_to_name → entity IDs use the mapped name (hourly_rain etc.)
-    hourly_rain = [k for k in sensors if "hourly_rain" in k]
-    assert (
-        len(hourly_rain) >= 1
-    ), "Hourly Rain (0x10) should be created from 'rain' array"
-    assert sensors[hourly_rain[0]]["state"] == 0.05
+    # 0x10/0x11/0x12/0x13 are in hex_to_name → entity IDs use the mapped name (daily_rain etc.)
+    daily_rain = [k for k in sensors if "daily_rain" in k]
+    assert len(daily_rain) >= 1, "Daily Rain (0x10) should be created from 'rain' array"
+    assert sensors[daily_rain[0]]["state"] == 0.05
 
     yearly_rain = [k for k in sensors if "yearly_rain" in k]
     assert (
@@ -1034,10 +1032,10 @@ async def test_coordinator_rain_array_does_not_affect_piezo_rain(coordinator):
     sensors = processed["sensors"]
 
     # Both arrays must contribute sensors
-    # 0x10 from rain → entity ID contains "hourly_rain"
+    # 0x10 from rain → entity ID contains "daily_rain"
     assert any(
-        "hourly_rain" in k for k in sensors
-    ), "Hourly Rain from 'rain' array missing"
+        "daily_rain" in k for k in sensors
+    ), "Daily Rain from 'rain' array missing"
     # 0x0D from piezoRain → entity ID contains "0x0d"
     assert any("0x0d" in k for k in sensors), "Rain Rate from 'piezoRain' missing"
     # WS90 battery from piezoRain still extracted

@@ -176,7 +176,7 @@ class SensorMapper:
                     "0x0D",  # Rain event total
                     "0x0E",  # Rain rate
                     "0x7C",  # 24-hour rain
-                    "0x10",  # Hourly rain
+                    "0x10",  # Daily rain
                     "0x11",  # Weekly rain
                     "0x12",  # Monthly rain
                     "0x13",  # Yearly rain
@@ -219,7 +219,7 @@ class SensorMapper:
                     "0x0D",  # Rain event
                     "0x0E",  # Rain rate
                     "0x7C",  # 24-hour rolling rain
-                    "0x10",  # Rain hourly
+                    "0x10",  # Rain daily
                     "0x11",  # Rain weekly
                     "0x12",  # Rain monthly
                     "0x13",  # Rain yearly
@@ -243,7 +243,7 @@ class SensorMapper:
                     "0x0D",  # Rain event
                     "0x0E",  # Rain rate
                     "0x7C",  # 24-hour rolling rain
-                    "0x10",  # Rain hourly
+                    "0x10",  # Rain daily
                     "0x11",  # Rain weekly
                     "0x12",  # Rain monthly
                     "0x13",  # Rain yearly
@@ -291,7 +291,7 @@ class SensorMapper:
                     "0x0D",  # Rain event
                     "0x0E",  # Rain rate
                     "0x7C",  # 24-hour rolling rain
-                    "0x10",  # Rain hourly
+                    "0x10",  # Rain daily
                     "0x11",  # Rain weekly
                     "0x12",  # Rain monthly
                     "0x13",  # Rain yearly
@@ -318,7 +318,7 @@ class SensorMapper:
                     "0x0D",  # Rain event
                     "0x0E",  # Rain rate
                     "0x7C",  # 24-hour rolling rain
-                    "0x10",  # Rain hourly
+                    "0x10",  # Rain daily
                     "0x11",  # Rain weekly
                     "0x12",  # Rain monthly
                     "0x13",  # Rain yearly
@@ -467,7 +467,7 @@ class SensorMapper:
                 "0x0D": "rain_event",
                 "0x0E": "rain_rate",
                 "0x7C": "24h_rain",
-                "0x10": "hourly_rain",
+                "0x10": "daily_rain",
                 "0x11": "weekly_rain",
                 "0x12": "monthly_rain",
                 "0x13": "yearly_rain",
