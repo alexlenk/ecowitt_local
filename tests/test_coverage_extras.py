@@ -679,6 +679,15 @@ def test_sensor_mapper_extract_battery_sensor_type_ws90():
     )
 
 
+def test_sensor_mapper_extract_battery_sensor_type_wh69():
+    """Test _extract_sensor_type_from_battery returns wh69 name (issue #95)."""
+    mapper = SensorMapper()
+    assert (
+        mapper._extract_sensor_type_from_battery("wh69batt")
+        == "wh69_weather_station_battery"
+    )
+
+
 def test_sensor_mapper_extract_identifier_ch_in_middle():
     """Test _extract_identifier_from_key handles ch-in-middle pattern (line 482)."""
     mapper = SensorMapper()

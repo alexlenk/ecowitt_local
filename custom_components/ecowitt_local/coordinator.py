@@ -212,11 +212,19 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     all_sensor_items.append({"id": item["id"], "val": item["val"]})
                     # Extract WH40/WH69 battery from the 0x13 (yearly rain) item which carries it.
                     # Battery uses binary encoding: "0" = full (100%), "1" = low (10%).
+                    # Use wh69batt if a WH69 is registered (links battery to WH69 device),
+                    # otherwise fall back to wh40batt for standalone WH40 rain gauges.
                     if item.get("id") == "0x13" and item.get("battery"):
                         battery_pct = "100" if item["battery"] == "0" else "10"
-                        all_sensor_items.append({"id": "wh40batt", "val": battery_pct})
+                        battery_key = (
+                            "wh69batt"
+                            if self.sensor_mapper.get_hardware_id("wh69batt")
+                            is not None
+                            else "wh40batt"
+                        )
+                        all_sensor_items.append({"id": battery_key, "val": battery_pct})
                         _LOGGER.debug(
-                            "Added WH40 battery: wh40batt = %s%%", battery_pct
+                            "Added rain battery: %s = %s%%", battery_key, battery_pct
                         )
 
         # Extract lightning data (WH57 lightning sensor)
