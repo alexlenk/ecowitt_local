@@ -1031,6 +1031,120 @@ async def test_coordinator_rain_array_battery_binary_encoding(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_rain_array_battery_wh69_detection(coordinator):
+    """Test that rain battery uses wh69batt when a WH69 device is registered."""
+    # Register a WH69 hardware_id so get_hardware_id("wh69batt") returns a value
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "WH69ABC",
+                "img": "wh69",
+                "type": "1",
+                "name": "WH69",
+                "batt": "0",
+                "signal": "4",
+            }
+        ]
+    )
+    coordinator._include_inactive = True
+
+    # GW1200A + WH69 rain data structure
+    raw_data = {
+        "rain": [
+            {"id": "0x0D", "val": "3.3 mm"},
+            {"id": "0x0E", "val": "0.0 mm/Hr"},
+            {"id": "0x7C", "val": "3.3 mm"},
+            {"id": "0x10", "val": "3.1 mm"},
+            {"id": "0x11", "val": "3.6 mm"},
+            {"id": "0x12", "val": "29.5 mm"},
+            {"id": "0x13", "val": "29.5 mm", "battery": "0"},
+        ],
+    }
+
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    # Battery key should be wh69batt (mapped to WH69ABC hardware_id), not wh40batt
+    wh69_battery_found = any(
+        sensors[k].get("sensor_key") == "wh69batt" for k in sensors
+    )
+    assert wh69_battery_found, "wh69batt should be used when WH69 is registered"
+
+    wh40_battery_found = any(
+        sensors[k].get("sensor_key") == "wh40batt" for k in sensors
+    )
+    assert not wh40_battery_found, (
+        "wh40batt should NOT be used when WH69 is registered"
+    )
+
+    # Verify battery value: binary "0" = 100%
+    wh69_batt_sensor = next(
+        s for s in sensors.values() if s.get("sensor_key") == "wh69batt"
+    )
+    assert wh69_batt_sensor["state"] == "100", "binary 0 should give 100%"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_rain_array_battery_wh69_low(coordinator):
+    """Test WH69 rain battery low state (binary 1 = 10%)."""
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "WH69ABC",
+                "img": "wh69",
+                "type": "1",
+                "name": "WH69",
+                "batt": "1",
+                "signal": "3",
+            }
+        ]
+    )
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "rain": [{"id": "0x13", "val": "29.5 mm", "battery": "1"}],
+    }
+
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wh69_batt_sensor = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "wh69batt"), None
+    )
+    assert wh69_batt_sensor is not None, "wh69batt should be created"
+    assert wh69_batt_sensor["state"] == "10", "binary 1 should give 10%"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_rain_array_battery_fallback_wh40(coordinator):
+    """Test that rain battery falls back to wh40batt when no WH69 is registered."""
+    # No WH69 mapping — only a default/empty mapping
+    coordinator.sensor_mapper.update_mapping([])
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "rain": [{"id": "0x13", "val": "29.5 mm", "battery": "0"}],
+    }
+
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wh40_battery_found = any(
+        sensors[k].get("sensor_key") == "wh40batt" for k in sensors
+    )
+    assert wh40_battery_found, (
+        "wh40batt should be used when no WH69 is registered"
+    )
+
+    wh69_battery_found = any(
+        sensors[k].get("sensor_key") == "wh69batt" for k in sensors
+    )
+    assert not wh69_battery_found, (
+        "wh69batt should NOT be present when no WH69 is registered"
+    )
+
+
+@pytest.mark.asyncio
 async def test_coordinator_rain_array_empty_handling(coordinator):
     """Test coordinator handles empty or missing 'rain' array gracefully (issue #59)."""
     for rain_val in [[], None, {}]:
