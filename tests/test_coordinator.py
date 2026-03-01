@@ -1973,3 +1973,143 @@ async def test_coordinator_ch_pm25_empty_handling(coordinator):
 
         result = await coordinator._async_update_data()
         assert result is not None
+
+
+@pytest.mark.asyncio
+async def test_coordinator_co2_array_processing(coordinator):
+    """Test coordinator processing WH45 co2 array data (issue #96)."""
+    # Register WH45 sensor mapping so hardware_id is known
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "2859",
+                "img": "wh45",
+                "type": "39",
+                "name": "PM25 & PM10 & CO2",
+                "batt": "6",
+                "signal": "4",
+            }
+        ]
+    )
+
+    raw_data = {
+        "co2": [
+            {
+                "temp": "29.7",
+                "unit": "C",
+                "humidity": "47%",
+                "PM25": "68.0",
+                "PM25_24H": "15.2",
+                "PM10": "69.4",
+                "PM10_24H": "15.4",
+                "CO2": "511",
+                "CO2_24H": "532",
+                "battery": "6",
+            }
+        ],
+    }
+
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    found = {
+        k: False
+        for k in [
+            "tf_co2c",
+            "humi_co2",
+            "pm25_co2",
+            "pm25_24h_co2",
+            "pm10_co2",
+            "pm10_24h_co2",
+            "co2",
+            "co2_24h",
+            "co2_batt",
+        ]
+    }
+
+    for sensor_data in sensors.values():
+        key = sensor_data.get("sensor_key", "")
+        if key == "tf_co2c":
+            found["tf_co2c"] = True
+            assert sensor_data["state"] == 29.7
+        elif key == "humi_co2":
+            found["humi_co2"] = True
+            assert sensor_data["state"] == 47.0
+        elif key == "pm25_co2":
+            found["pm25_co2"] = True
+            assert sensor_data["state"] == 68.0
+        elif key == "pm25_24h_co2":
+            found["pm25_24h_co2"] = True
+            assert sensor_data["state"] == 15.2
+        elif key == "pm10_co2":
+            found["pm10_co2"] = True
+            assert sensor_data["state"] == 69.4
+        elif key == "pm10_24h_co2":
+            found["pm10_24h_co2"] = True
+            assert sensor_data["state"] == 15.4
+        elif key == "co2":
+            found["co2"] = True
+            assert sensor_data["state"] == 511.0
+        elif key == "co2_24h":
+            found["co2_24h"] = True
+            assert sensor_data["state"] == 532.0
+        elif key == "co2_batt":
+            found["co2_batt"] = True
+            assert sensor_data["state"] == "100"  # 6 * 20 = 120, capped at 100
+
+    for key, was_found in found.items():
+        assert was_found, f"WH45 sensor '{key}' not found in processed data"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_co2_array_fahrenheit(coordinator):
+    """Test WH45 co2 array routes temperature to tf_co2 when unit is Fahrenheit."""
+    raw_data = {
+        "co2": [{"temp": "85.5", "unit": "F", "CO2": "500"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    tf_co2_found = any(s.get("sensor_key") == "tf_co2" for s in sensors.values())
+    tf_co2c_found = any(s.get("sensor_key") == "tf_co2c" for s in sensors.values())
+    assert tf_co2_found, "tf_co2 (Fahrenheit) should be created when unit=F"
+    assert not tf_co2c_found, "tf_co2c (Celsius) should NOT be created when unit=F"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_co2_array_battery_conversion(coordinator):
+    """Test WH45 battery is capped at 100% for value 6 (DC power)."""
+    for battery_val, expected_pct in [
+        ("6", "100"),
+        ("5", "100"),
+        ("3", "60"),
+        ("0", "0"),
+    ]:
+        raw_data = {"co2": [{"CO2": "500", "battery": battery_val}]}
+        processed = await coordinator._process_live_data(raw_data)
+        sensors = processed["sensors"]
+        batt = next(
+            (s for s in sensors.values() if s.get("sensor_key") == "co2_batt"), None
+        )
+        assert batt is not None, f"co2_batt not found for battery={battery_val}"
+        assert (
+            batt["state"] == expected_pct
+        ), f"Expected {expected_pct}% for battery={battery_val}, got {batt['state']}"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_co2_array_empty_handling(coordinator):
+    """Test coordinator handles empty or missing co2 array gracefully."""
+    for co2_val in [[], None]:
+        mock_live_data = {"common_list": []}
+        if co2_val is not None:
+            mock_live_data["co2"] = co2_val
+
+        coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+        coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+        coordinator.api.get_version = AsyncMock(
+            return_value={"stationtype": "GW3000C", "version": "2.1.0"}
+        )
+
+        result = await coordinator._async_update_data()
+        assert result is not None

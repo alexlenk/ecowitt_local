@@ -487,7 +487,8 @@ class SensorMapper:
             "wind": "wind",
             "rain": "rain",
             "soil": "soil_moisture",
-            "pm25_avg_24h": "pm25_24h_avg",  # must precede generic "pm25"
+            "pm25_avg_24h": "pm25_24h_avg",  # must precede "pm25_24h" and generic "pm25"
+            "pm25_24h": "pm25_24h_co2",  # WH45 24h avg (must precede generic "pm25")
             "pm25": "pm25",
             "leak": "leak",
             "lightning_num": "lightning_strikes",  # must precede generic "lightning"
