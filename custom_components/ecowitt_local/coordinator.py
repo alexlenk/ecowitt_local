@@ -212,11 +212,19 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     all_sensor_items.append({"id": item["id"], "val": item["val"]})
                     # Extract WH40/WH69 battery from the 0x13 (yearly rain) item which carries it.
                     # Battery uses binary encoding: "0" = full (100%), "1" = low (10%).
+                    # Use wh69batt if a WH69 is registered (links battery to WH69 device),
+                    # otherwise fall back to wh40batt for standalone WH40 rain gauges.
                     if item.get("id") == "0x13" and item.get("battery"):
                         battery_pct = "100" if item["battery"] == "0" else "10"
-                        all_sensor_items.append({"id": "wh40batt", "val": battery_pct})
+                        battery_key = (
+                            "wh69batt"
+                            if self.sensor_mapper.get_hardware_id("wh69batt")
+                            is not None
+                            else "wh40batt"
+                        )
+                        all_sensor_items.append({"id": battery_key, "val": battery_pct})
                         _LOGGER.debug(
-                            "Added WH40 battery: wh40batt = %s%%", battery_pct
+                            "Added rain battery: %s = %s%%", battery_key, battery_pct
                         )
 
         # Extract lightning data (WH57 lightning sensor)
@@ -548,6 +556,77 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                                 battery_key,
                                 battery_pct,
                             )
+
+        # Extract co2 data (WH45 combo sensor: CO2 + PM2.5 + PM10 + temp/humidity)
+        co2_array = raw_data.get("co2", [])
+        if co2_array:
+            _LOGGER.debug("Found co2 data with %d items", len(co2_array))
+            co2_item = co2_array[0]  # WH45 is a single sensor (no channels)
+            if isinstance(co2_item, dict):
+                temp_val = co2_item.get("temp")
+                temp_unit = co2_item.get("unit", "C")
+                if temp_val:
+                    temp_key = "tf_co2c" if temp_unit == "C" else "tf_co2"
+                    all_sensor_items.append(
+                        {"id": temp_key, "val": temp_val, "unit": temp_unit}
+                    )
+                    _LOGGER.debug(
+                        "Added WH45 temp: %s = %s %s", temp_key, temp_val, temp_unit
+                    )
+
+                humidity_str = co2_item.get("humidity", "")
+                if humidity_str:
+                    humidity_val = str(humidity_str).replace("%", "").strip()
+                    all_sensor_items.append({"id": "humi_co2", "val": humidity_val})
+                    _LOGGER.debug("Added WH45 humidity: humi_co2 = %s", humidity_val)
+
+                pm25_val = co2_item.get("PM25") or co2_item.get("pm25")
+                if pm25_val:
+                    all_sensor_items.append({"id": "pm25_co2", "val": str(pm25_val)})
+                    _LOGGER.debug("Added WH45 PM2.5: pm25_co2 = %s", pm25_val)
+
+                pm25_24h_val = co2_item.get("PM25_24H") or co2_item.get("pm25_24h")
+                if pm25_24h_val:
+                    all_sensor_items.append(
+                        {"id": "pm25_24h_co2", "val": str(pm25_24h_val)}
+                    )
+                    _LOGGER.debug(
+                        "Added WH45 PM2.5 24h avg: pm25_24h_co2 = %s", pm25_24h_val
+                    )
+
+                pm10_val = co2_item.get("PM10") or co2_item.get("pm10")
+                if pm10_val:
+                    all_sensor_items.append({"id": "pm10_co2", "val": str(pm10_val)})
+                    _LOGGER.debug("Added WH45 PM10: pm10_co2 = %s", pm10_val)
+
+                pm10_24h_val = co2_item.get("PM10_24H") or co2_item.get("pm10_24h")
+                if pm10_24h_val:
+                    all_sensor_items.append(
+                        {"id": "pm10_24h_co2", "val": str(pm10_24h_val)}
+                    )
+                    _LOGGER.debug(
+                        "Added WH45 PM10 24h avg: pm10_24h_co2 = %s", pm10_24h_val
+                    )
+
+                co2_val = co2_item.get("CO2") or co2_item.get("CO2_val")
+                if co2_val:
+                    all_sensor_items.append({"id": "co2", "val": str(co2_val)})
+                    _LOGGER.debug("Added WH45 CO2: co2 = %s", co2_val)
+
+                co2_24h_val = co2_item.get("CO2_24H") or co2_item.get("co2_24h_val")
+                if co2_24h_val:
+                    all_sensor_items.append({"id": "co2_24h", "val": str(co2_24h_val)})
+                    _LOGGER.debug("Added WH45 CO2 24h avg: co2_24h = %s", co2_24h_val)
+
+                battery = co2_item.get("battery")
+                if battery and str(battery) != "None":
+                    battery_pct = (
+                        str(min(int(battery) * 20, 100))
+                        if str(battery).isdigit()
+                        else str(battery)
+                    )
+                    all_sensor_items.append({"id": "co2_batt", "val": battery_pct})
+                    _LOGGER.debug("Added WH45 battery: co2_batt = %s%%", battery_pct)
 
         _LOGGER.debug("Total sensor items to process: %d", len(all_sensor_items))
 

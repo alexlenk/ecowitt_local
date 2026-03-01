@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.36] - 2026-03-01
+
+### Fixed
+- **WH45 air quality sensor creates no entities**: The WH45 (CO2 + PM2.5 + PM10 + temperature/humidity combo sensor) was completely missing from the local polling integration. The gateway returns its data in a `co2` JSON array, which was never processed. The coordinator now extracts all WH45 readings from the `co2` array and maps them to the expected sensor keys (`pm25_co2`, `pm10_co2`, `co2`, `co2_24h`, `humi_co2`, `tf_co2`/`tf_co2c`, and battery). Battery level 6 (DC power) is correctly capped at 100%. (issue #96)
+
+## [1.5.35] - 2026-02-28
+
+### Fixed
+- **WH69 rain sensor battery linked to wrong device**: When a WH69 weather station is used as the rain sensor, its battery entity was being assigned to the WH40 rain gauge device instead of the WH69 device. The integration now detects whether a WH69 is registered and uses the correct `wh69batt` key (linking battery to the WH69 device) rather than always defaulting to `wh40batt`. This is the same device-aware battery association pattern used for WS90/WH90 battery in v1.5.32.
+
 ## [1.5.34] - 2026-02-28
 
 ### Fixed
