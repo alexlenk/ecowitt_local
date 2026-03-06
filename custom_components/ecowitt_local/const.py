@@ -348,6 +348,26 @@ SENSOR_TYPES.update(
     )
 )
 
+# Add WH52 soil temperature sensors
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "soiltemp",
+        "Soil Temperature CH{ch}",
+        {"unit": "°C", "device_class": "temperature"},
+        16,
+    )
+)
+
+# Add WH52 soil electrical conductivity sensors
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "soilec",
+        "Soil Conductivity CH{ch}",
+        {"unit": "µS/cm", "device_class": "conductivity"},
+        16,
+    )
+)
+
 # Add temperature-only sensors (WH34)
 SENSOR_TYPES.update(
     _generate_channel_sensors(

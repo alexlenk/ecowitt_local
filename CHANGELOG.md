@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-03-06
+
+### Added
+- **WH52 soil sensor support**: The WH52 (enhanced soil sensor with electrical conductivity) now creates entities for soil moisture, soil temperature, and soil electrical conductivity (EC in µS/cm) from the `ch_ec` data array. Battery is mapped using the same 0–5 bar scale as WH51. (issue #103)
+
 ## [1.5.36] - 2026-03-01
 
 ### Fixed

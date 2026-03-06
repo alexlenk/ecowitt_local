@@ -2113,3 +2113,76 @@ async def test_coordinator_co2_array_empty_handling(coordinator):
 
         result = await coordinator._async_update_data()
         assert result is not None
+
+
+@pytest.mark.asyncio
+async def test_coordinator_ch_ec_processing(coordinator):
+    """Test coordinator processing WH52 ch_ec soil sensor data (issue #103)."""
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "AB12",
+                "img": "wh52",
+                "type": "14",
+                "name": "Soil moisture CH1",
+                "batt": "2",
+                "signal": "4",
+            }
+        ]
+    )
+
+    raw_data = {
+        "ch_ec": [
+            {
+                "channel": "1",
+                "name": "",
+                "battery": "2",
+                "voltage": "1.24",
+                "humidity": "45%",
+                "temp": "24.5",
+                "unit": "C",
+                "ec": "10 uS/cm",
+            }
+        ],
+    }
+
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    found = {k: False for k in ["soilmoisture1", "soiltemp1", "soilec1", "soilbatt1"]}
+
+    for sensor_data in sensors.values():
+        key = sensor_data.get("sensor_key", "")
+        if key == "soilmoisture1":
+            found["soilmoisture1"] = True
+            assert sensor_data["state"] == 45.0
+        elif key == "soiltemp1":
+            found["soiltemp1"] = True
+            assert sensor_data["state"] == 24.5
+        elif key == "soilec1":
+            found["soilec1"] = True
+            assert sensor_data["unit_of_measurement"] == "µS/cm"
+        elif key == "soilbatt1":
+            found["soilbatt1"] = True
+            assert sensor_data["state"] == "40"  # 2 * 20 = 40%
+
+    for key, was_found in found.items():
+        assert was_found, f"WH52 sensor '{key}' not found in processed data"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_ch_ec_empty_handling(coordinator):
+    """Test coordinator handles empty or missing ch_ec gracefully."""
+    for ch_ec_val in [[], None]:
+        mock_live_data = {"common_list": []}
+        if ch_ec_val is not None:
+            mock_live_data["ch_ec"] = ch_ec_val
+
+        coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+        coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+        coordinator.api.get_version = AsyncMock(
+            return_value={"stationtype": "GW3000C", "version": "2.1.0"}
+        )
+
+        result = await coordinator._async_update_data()
+        assert result is not None

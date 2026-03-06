@@ -1250,3 +1250,16 @@ async def test_coordinator_solar_lux_invalid_value_except(coordinator):
     sensors = result["sensors"]
     # The 0x15 entity may or may not be created (inactive value), but no solar_lux
     assert not any(s.get("sensor_key") == "solar_lux" for s in sensors.values())
+
+
+@pytest.mark.asyncio
+async def test_coordinator_ch_ec_no_channel(coordinator):
+    """Test ch_ec item without channel field is skipped (line 312)."""
+    raw_data = {
+        "ch_ec": [{"humidity": "50%", "temp": "20.0", "unit": "C", "ec": "5 uS/cm"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+    assert not any(
+        s.get("sensor_key", "").startswith("soilec") for s in sensors.values()
+    )
