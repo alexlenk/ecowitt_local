@@ -48,7 +48,7 @@ class SensorMapper:
                 channel = self._extract_channel_from_name(name)
                 sensor_type = img.upper()
 
-                if not hardware_id:
+                if not hardware_id or hardware_id.upper() in ("FFFFFFFF", "FFFFFFFE"):
                     continue
 
                 # Store sensor information
