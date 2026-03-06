@@ -300,6 +300,65 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
 
                         # Get signal strength from sensor mapping (we'll add this in processing)
 
+        # Extract ch_ec data (WH52 soil sensor: moisture + temperature + conductivity)
+        ch_ec = raw_data.get("ch_ec", [])
+        if ch_ec:
+            _LOGGER.debug("Found ch_ec data with %d items", len(ch_ec))
+            for item in ch_ec:
+                _LOGGER.debug("ch_ec item: %s", item)
+                if isinstance(item, dict):
+                    channel = item.get("channel")
+                    if not channel:
+                        continue
+
+                    # Soil moisture
+                    humidity_str = item.get("humidity", "")
+                    if humidity_str:
+                        humidity_val = str(humidity_str).replace("%", "").strip()
+                        soil_key = f"soilmoisture{channel}"
+                        all_sensor_items.append({"id": soil_key, "val": humidity_val})
+                        _LOGGER.debug(
+                            "Added WH52 soil moisture: %s = %s%%",
+                            soil_key,
+                            humidity_val,
+                        )
+
+                    # Soil temperature
+                    temp_val = item.get("temp")
+                    temp_unit = item.get("unit", "C")
+                    if temp_val:
+                        temp_key = f"soiltemp{channel}"
+                        all_sensor_items.append(
+                            {"id": temp_key, "val": temp_val, "unit": temp_unit}
+                        )
+                        _LOGGER.debug(
+                            "Added WH52 soil temp: %s = %s %s",
+                            temp_key,
+                            temp_val,
+                            temp_unit,
+                        )
+
+                    # Electrical conductivity
+                    ec_val = item.get("ec", "")
+                    if ec_val:
+                        ec_key = f"soilec{channel}"
+                        all_sensor_items.append({"id": ec_key, "val": str(ec_val)})
+                        _LOGGER.debug("Added WH52 soil EC: %s = %s", ec_key, ec_val)
+
+                    # Battery
+                    battery = item.get("battery")
+                    if battery and str(battery) != "None":
+                        battery_key = f"soilbatt{channel}"
+                        battery_pct = (
+                            str(int(battery) * 20)
+                            if str(battery).isdigit()
+                            else str(battery)
+                        )
+                        all_sensor_items.append({"id": battery_key, "val": battery_pct})
+                        _LOGGER.debug(
+                            "Added WH52 battery: %s = %s%%", battery_key, battery_pct
+                        )
+
         # Extract wh25 data (indoor temp/humidity/pressure)
         wh25_data = raw_data.get("wh25", [])
         if wh25_data and len(wh25_data) > 0:
@@ -1004,6 +1063,9 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         # Illuminance — normalize "Lux"/"lux" to HA standard "lx"
         elif unit_upper == "LUX":
             return "lx"
+        # Electrical conductivity — normalize "uS/cm" to HA standard "µS/cm"
+        elif unit_upper in ("US/CM", "µS/CM"):
+            return "µS/cm"
 
         # Return original if no normalization needed
         return unit
