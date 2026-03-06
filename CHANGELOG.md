@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2026-03-06
+
+### Fixed
+- **Unconnected sensor slots pollute hardware mapping**: The gateway's `get_sensors_info` page 2 lists all possible sensor channel slots, including unconnected ones with placeholder hardware IDs (`FFFFFFFF` / `FFFFFFFE`). These were previously processed and added to the mapping, potentially overwriting valid hardware IDs for connected sensors (e.g. WH51 CH1 with real ID `4108` could be shadowed by CH2–16 all mapped to `FFFFFFFF`). Placeholder IDs are now filtered out during sensor mapping, ensuring only physically connected sensors appear as devices.
+
 ## [1.6.0] - 2026-03-06
 
 ### Added

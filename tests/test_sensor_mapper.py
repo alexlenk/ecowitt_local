@@ -184,6 +184,52 @@ def test_invalid_sensor_data(sensor_mapper: SensorMapper):
     assert stats["total_sensors"] >= 0
 
 
+def test_placeholder_hardware_ids_filtered(sensor_mapper: SensorMapper):
+    """Test that FFFFFFFF and FFFFFFFE placeholder IDs are filtered out.
+
+    Page 2 of sensors_info lists unconnected sensor slots with FFFFFFFF/FFFFFFFE.
+    These should not pollute the hardware mapping.
+    """
+    mappings = [
+        {
+            "id": "4108",
+            "img": "wh51",
+            "name": "Soil moisture CH1",
+            "batt": "1",
+            "signal": "4",
+        },
+        {
+            "id": "FFFFFFFF",
+            "img": "wh51",
+            "name": "Soil moisture CH2",
+            "batt": "1",
+            "signal": "4",
+        },
+        {
+            "id": "FFFFFFFE",
+            "img": "wh51",
+            "name": "Soil moisture CH3",
+            "batt": "1",
+            "signal": "4",
+        },
+    ]
+
+    sensor_mapper.update_mapping(mappings)
+
+    # Only the real sensor should be mapped
+    assert sensor_mapper.get_hardware_id("soilmoisture1") == "4108"
+    assert sensor_mapper.get_sensor_info("4108") is not None
+
+    # Placeholder IDs should be filtered out entirely
+    assert sensor_mapper.get_sensor_info("FFFFFFFF") is None
+    assert sensor_mapper.get_sensor_info("FFFFFFFE") is None
+    assert sensor_mapper.get_hardware_id("soilmoisture2") is None
+    assert sensor_mapper.get_hardware_id("soilmoisture3") is None
+
+    # Only 1 real sensor in the mapping
+    assert len(sensor_mapper.get_all_hardware_ids()) == 1
+
+
 def test_wh80_sensor_mapping():
     """Test WH80/WS80 wind/solar station sensor mapping (issue #23)."""
     mapper = SensorMapper()
