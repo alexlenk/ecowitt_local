@@ -54,7 +54,11 @@ def test_update_mapping(sensor_mapper: SensorMapper, mock_sensor_mappings):
 
     # Test hardware ID retrieval
     assert sensor_mapper.get_hardware_id("soilmoisture1") == "D8174"
+    assert sensor_mapper.get_hardware_id("soiltemp1") == "D8174"
+    assert sensor_mapper.get_hardware_id("soilec1") == "D8174"
     assert sensor_mapper.get_hardware_id("soilmoisture2") == "D8648"
+    assert sensor_mapper.get_hardware_id("soiltemp2") == "D8648"
+    assert sensor_mapper.get_hardware_id("soilec2") == "D8648"
     assert sensor_mapper.get_hardware_id("pm25_ch1") == "EF891"
     assert sensor_mapper.get_hardware_id("temp1f") == "A7C42"
 
@@ -68,9 +72,11 @@ def test_update_mapping(sensor_mapper: SensorMapper, mock_sensor_mappings):
 
 def test_generate_live_data_keys(sensor_mapper: SensorMapper):
     """Test generating live data keys."""
-    # Test soil moisture sensor
+    # Test soil moisture sensor (WH51 also maps soiltemp/soilec for WH52 compatibility)
     keys = sensor_mapper._generate_live_data_keys("WH51", "1")
     assert "soilmoisture1" in keys
+    assert "soiltemp1" in keys
+    assert "soilec1" in keys
     assert "soilbatt1" in keys
 
     # Test temperature/humidity sensor
@@ -218,6 +224,8 @@ def test_placeholder_hardware_ids_filtered(sensor_mapper: SensorMapper):
 
     # Only the real sensor should be mapped
     assert sensor_mapper.get_hardware_id("soilmoisture1") == "4108"
+    assert sensor_mapper.get_hardware_id("soiltemp1") == "4108"
+    assert sensor_mapper.get_hardware_id("soilec1") == "4108"
     assert sensor_mapper.get_sensor_info("4108") is not None
 
     # Placeholder IDs should be filtered out entirely
