@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.2] - 2026-03-06
+
+### Fixed
+- **WH52 soil temperature and conductivity entities appear on gateway instead of WH52 device**: The GW3000 gateway reports the WH52 as `wh51` in `get_sensors_info`, so the hardware ID mapping only included `soilmoisture` and `soilbatt` keys for WH51. The `soiltemp` and `soilec` keys from the `ch_ec` live data array had no hardware ID mapping and fell through to the gateway device. Fixed by including `soiltemp{ch}` and `soilec{ch}` in the WH51 key list — if the connected sensor is a real WH51 (no EC data), these extra keys simply won't exist in live data and no extra entities are created. (issue #103)
+
 ## [1.6.1] - 2026-03-06
 
 ### Fixed

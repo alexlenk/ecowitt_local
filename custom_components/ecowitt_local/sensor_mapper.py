@@ -132,11 +132,13 @@ class SensorMapper:
                     ]
                 )
         elif sensor_type.lower() in ("wh51", "soil"):
-            # Soil moisture sensors
+            # Soil moisture sensors (WH51 and WH52 which reports as wh51 in sensors_info)
             if ch_num:
                 keys.extend(
                     [
                         f"soilmoisture{ch_num}",
+                        f"soiltemp{ch_num}",
+                        f"soilec{ch_num}",
                         f"soilbatt{ch_num}",
                     ]
                 )
