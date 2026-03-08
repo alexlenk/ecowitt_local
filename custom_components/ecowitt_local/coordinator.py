@@ -667,6 +667,34 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         "Added WH45 PM10 24h avg: pm10_24h_co2 = %s", pm10_24h_val
                     )
 
+                pm1_val = co2_item.get("PM1") or co2_item.get("pm1")
+                if pm1_val:
+                    all_sensor_items.append({"id": "pm1_co2", "val": str(pm1_val)})
+                    _LOGGER.debug("Added WH46D PM1.0: pm1_co2 = %s", pm1_val)
+
+                pm1_24h_val = co2_item.get("PM1_24H") or co2_item.get("pm1_24h")
+                if pm1_24h_val:
+                    all_sensor_items.append(
+                        {"id": "pm1_24h_co2", "val": str(pm1_24h_val)}
+                    )
+                    _LOGGER.debug(
+                        "Added WH46D PM1.0 24h avg: pm1_24h_co2 = %s", pm1_24h_val
+                    )
+
+                pm4_val = co2_item.get("PM4") or co2_item.get("pm4")
+                if pm4_val:
+                    all_sensor_items.append({"id": "pm4_co2", "val": str(pm4_val)})
+                    _LOGGER.debug("Added WH46D PM4.0: pm4_co2 = %s", pm4_val)
+
+                pm4_24h_val = co2_item.get("PM4_24H") or co2_item.get("pm4_24h")
+                if pm4_24h_val:
+                    all_sensor_items.append(
+                        {"id": "pm4_24h_co2", "val": str(pm4_24h_val)}
+                    )
+                    _LOGGER.debug(
+                        "Added WH46D PM4.0 24h avg: pm4_24h_co2 = %s", pm4_24h_val
+                    )
+
                 co2_val = co2_item.get("CO2") or co2_item.get("CO2_val")
                 if co2_val:
                     all_sensor_items.append({"id": "co2", "val": str(co2_val)})

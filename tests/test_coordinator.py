@@ -2186,3 +2186,64 @@ async def test_coordinator_ch_ec_empty_handling(coordinator):
 
         result = await coordinator._async_update_data()
         assert result is not None
+
+
+@pytest.mark.asyncio
+async def test_coordinator_co2_array_wh46d_pm1_pm4(coordinator):
+    """Test WH46D PM1.0 and PM4.0 sensors are processed from co2 array (issue #108)."""
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "2B51",
+                "img": "wh45",
+                "type": "39",
+                "name": "PM25 & PM10 & CO2",
+                "batt": "6",
+                "signal": "4",
+            }
+        ]
+    )
+
+    raw_data = {
+        "co2": [
+            {
+                "temp": "17.9",
+                "unit": "C",
+                "humidity": "67%",
+                "PM25": "4.5",
+                "PM25_24H": "5.6",
+                "PM10": "5.4",
+                "PM10_24H": "6.7",
+                "PM1": "3.6",
+                "PM1_24H": "4.5",
+                "PM4": "5.1",
+                "PM4_24H": "6.4",
+                "CO2": "1081",
+                "CO2_24H": "1100",
+                "battery": "6",
+            }
+        ],
+    }
+
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    found = {k: False for k in ["pm1_co2", "pm1_24h_co2", "pm4_co2", "pm4_24h_co2"]}
+
+    for entity_id, sensor_data in sensors.items():
+        key = sensor_data.get("sensor_key", "")
+        if key == "pm1_co2":
+            found["pm1_co2"] = True
+            assert sensor_data["state"] == 3.6
+        elif key == "pm1_24h_co2":
+            found["pm1_24h_co2"] = True
+            assert sensor_data["state"] == 4.5
+        elif key == "pm4_co2":
+            found["pm4_co2"] = True
+            assert sensor_data["state"] == 5.1
+        elif key == "pm4_24h_co2":
+            found["pm4_24h_co2"] = True
+            assert sensor_data["state"] == 6.4
+
+    for key, was_found in found.items():
+        assert was_found, f"WH46D sensor '{key}' not found in processed data"

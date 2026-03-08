@@ -377,8 +377,9 @@ class SensorMapper:
                         f"leaf_batt{ch_num}",
                     ]
                 )
-        elif sensor_type.lower() in ("wh45", "combo", "co2_pm"):
-            # WH45 combo sensor (CO2 + PM2.5 + PM10 + temp/humidity)
+        elif sensor_type.lower() in ("wh45", "wh46", "combo", "co2_pm"):
+            # WH45/WH46D combo sensor (CO2 + PM + temp/humidity)
+            # WH46D adds PM1.0 and PM4.0 on top of WH45 sensors
             keys.extend(
                 [
                     "tf_co2",  # Temperature (F)
@@ -388,6 +389,10 @@ class SensorMapper:
                     "pm25_24h_co2",  # PM2.5 24h average
                     "pm10_co2",  # PM10 current
                     "pm10_24h_co2",  # PM10 24h average
+                    "pm1_co2",  # PM1.0 current (WH46D)
+                    "pm1_24h_co2",  # PM1.0 24h average (WH46D)
+                    "pm4_co2",  # PM4.0 current (WH46D)
+                    "pm4_24h_co2",  # PM4.0 24h average (WH46D)
                     "co2",  # CO2 current
                     "co2_24h",  # CO2 24h average
                     "co2_batt",  # Battery

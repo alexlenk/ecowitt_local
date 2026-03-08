@@ -237,6 +237,10 @@ SENSOR_TYPES: Final = {
     "pm25_24h_co2": {"name": "PM2.5 24h Avg", "unit": "µg/m³", "device_class": "pm25"},
     "pm10_co2": {"name": "PM10", "unit": "µg/m³", "device_class": "pm10"},
     "pm10_24h_co2": {"name": "PM10 24h Avg", "unit": "µg/m³", "device_class": "pm10"},
+    "pm1_co2": {"name": "PM1.0", "unit": "µg/m³", "device_class": "pm1"},
+    "pm1_24h_co2": {"name": "PM1.0 24h Avg", "unit": "µg/m³", "device_class": "pm1"},
+    "pm4_co2": {"name": "PM4.0", "unit": "µg/m³", "device_class": "pm25"},
+    "pm4_24h_co2": {"name": "PM4.0 24h Avg", "unit": "µg/m³", "device_class": "pm25"},
     "co2": {"name": "CO2", "unit": "ppm", "device_class": "carbon_dioxide"},
     "co2_24h": {"name": "CO2 24h Avg", "unit": "ppm", "device_class": "carbon_dioxide"},
     # WH69 7-in-1 Weather Station hex ID sensors
