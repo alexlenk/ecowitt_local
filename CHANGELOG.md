@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.3] - 2026-03-08
+
+### Added
+- **WH46D PM1.0 and PM4.0 sensor support**: The WH46D air quality sensor provides PM1.0 and PM4.0 readings in addition to PM2.5, PM10, CO2, temperature, and humidity. These values were present in the `co2` live data array but not processed. Four new entities are now created: PM1.0, PM1.0 24h Avg, PM4.0, and PM4.0 24h Avg. The WH46D is detected as `wh45` type by the gateway; the integration now handles both WH45 and WH46D from the same `co2` array — WH45 sensors simply won't have PM1/PM4 data so no extra entities appear. (issue #108)
+
 ## [1.6.2] - 2026-03-06
 
 ### Fixed
