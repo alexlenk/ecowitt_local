@@ -16,6 +16,7 @@ from custom_components.ecowitt_local.binary_sensor import (
     OFFLINE_THRESHOLD_MINUTES,
     EcowittGatewayOnlineBinarySensor,
     EcowittSensorOnlineBinarySensor,
+    EcowittStateBinarySensor,
     async_setup_entry,
 )
 from custom_components.ecowitt_local.const import (
@@ -185,28 +186,41 @@ def test_sensor_online_state_no_value(mock_coordinator):
 
 
 def test_sensor_online_state_with_recent_timestamp(mock_coordinator):
-    """Test is_on property with recent timestamp - tests the datetime parsing logic."""
+    """Test is_on property with recent naive timestamp - sensor is online."""
     entity = EcowittSensorOnlineBinarySensor(
         mock_coordinator, "D8174", {"sensor_key": "test"}
     )
 
-    # This tests the datetime parsing code path, even though it has a bug
-    # where timezone-aware and naive datetimes are compared (causing an exception)
+    # Use a naive timestamp (no Z suffix) so comparison with datetime.now() works
+    recent_time = (datetime.now() - timedelta(minutes=5)).isoformat()
+    mock_coordinator.get_all_sensors.return_value = {
+        "sensor.test": {
+            "hardware_id": "D8174",
+            "state": None,
+            "attributes": {"last_update": recent_time},
+        }
+    }
+
+    assert entity.is_on is True
+
+
+def test_sensor_online_state_with_recent_tz_timestamp(mock_coordinator):
+    """Test is_on property with timezone-aware timestamp (Z suffix) - TypeError caught."""
+    entity = EcowittSensorOnlineBinarySensor(
+        mock_coordinator, "D8174", {"sensor_key": "test"}
+    )
+
     mock_coordinator.get_all_sensors.return_value = {
         "sensor.test": {
             "hardware_id": "D8174",
             "state": None,
             "attributes": {
-                # Use a timestamp that would trigger the parsing logic
-                "last_update": (datetime.now() - timedelta(minutes=5)).isoformat()
-                + "Z"
+                "last_update": (datetime.now() - timedelta(minutes=5)).isoformat() + "Z"
             },
         }
     }
 
-    # Due to the datetime comparison bug in the implementation, this returns False
-    # The comparison of timezone-aware vs naive datetime throws an exception
-    # which gets caught and the method returns False
+    # Timezone-aware vs naive comparison raises TypeError → caught → returns False
     result = entity.is_on
     assert result is False
 
@@ -529,3 +543,215 @@ def test_gateway_handle_coordinator_update(mock_coordinator):
     with patch.object(entity, "async_write_ha_state") as mock_write_state:
         entity._handle_coordinator_update()
         mock_write_state.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_async_setup_entry_with_binary_sensor(
+    mock_coordinator, mock_config_entry
+):
+    """Test setup creates EcowittStateBinarySensor for category=binary sensors."""
+    hass = Mock(spec=HomeAssistant)
+    hass.data = {DOMAIN: {"test_entry": mock_coordinator}}
+
+    mock_coordinator.get_all_sensors.return_value = {
+        "ecowitt_rain_state_piezo_abc123": {
+            "hardware_id": "ABC123",
+            "category": "binary",
+            "sensor_key": "srain_piezo",
+            "state": "0",
+            "name": "Rain State Piezo",
+        },
+    }
+
+    async_add_entities = AsyncMock()
+    await async_setup_entry(hass, mock_config_entry, async_add_entities)
+
+    entities = async_add_entities.call_args[0][0]
+    state_entities = [e for e in entities if isinstance(e, EcowittStateBinarySensor)]
+    assert len(state_entities) == 1
+
+
+@pytest.mark.asyncio
+async def test_async_setup_entry_binary_unknown_key_skipped(
+    mock_coordinator, mock_config_entry
+):
+    """Test setup skips category=binary sensors not in BINARY_SENSORS."""
+    hass = Mock(spec=HomeAssistant)
+    hass.data = {DOMAIN: {"test_entry": mock_coordinator}}
+
+    mock_coordinator.get_all_sensors.return_value = {
+        "ecowitt_unknown_binary_abc123": {
+            "hardware_id": "ABC123",
+            "category": "binary",
+            "sensor_key": "unknown_binary_key",
+            "state": "0",
+        },
+    }
+
+    async_add_entities = AsyncMock()
+    await async_setup_entry(hass, mock_config_entry, async_add_entities)
+
+    entities = async_add_entities.call_args[0][0]
+    state_entities = [e for e in entities if isinstance(e, EcowittStateBinarySensor)]
+    assert len(state_entities) == 0
+
+
+def test_state_binary_sensor_init(mock_coordinator):
+    """Test EcowittStateBinarySensor initialization."""
+    sensor_info = {
+        "sensor_key": "srain_piezo",
+        "hardware_id": "ABC123",
+        "name": "Rain State Piezo",
+        "state": "0",
+    }
+    entity = EcowittStateBinarySensor(
+        mock_coordinator, "ecowitt_rain_state_abc123", sensor_info
+    )
+
+    assert entity._sensor_key == "srain_piezo"
+    assert entity._hardware_id == "ABC123"
+    assert entity.unique_id == f"{DOMAIN}_ecowitt_rain_state_abc123"
+    assert entity.entity_id == "binary_sensor.ecowitt_rain_state_abc123"
+    assert entity.device_class == BinarySensorDeviceClass.MOISTURE
+
+
+def test_state_binary_sensor_init_invalid_device_class(mock_coordinator):
+    """Test EcowittStateBinarySensor with an unknown device class string."""
+    from unittest.mock import patch as mpatch
+
+    with mpatch.dict(
+        "custom_components.ecowitt_local.binary_sensor.BINARY_SENSORS",
+        {"srain_piezo": {"name": "Rain State", "device_class": "not_a_real_class"}},
+    ):
+        sensor_info = {
+            "sensor_key": "srain_piezo",
+            "hardware_id": "ABC123",
+            "name": "Rain State Piezo",
+        }
+        entity = EcowittStateBinarySensor(
+            mock_coordinator, "ecowitt_rain_state_abc123", sensor_info
+        )
+        assert entity._attr_device_class is None
+
+
+def test_state_binary_sensor_is_on_true(mock_coordinator):
+    """Test is_on returns True when state is non-zero."""
+    sensor_info = {"sensor_key": "srain_piezo", "hardware_id": "ABC123", "name": ""}
+    entity = EcowittStateBinarySensor(
+        mock_coordinator, "ecowitt_rain_abc123", sensor_info
+    )
+    mock_coordinator.get_all_sensors.return_value = {
+        "ecowitt_rain_abc123": {"state": "1"}
+    }
+    assert entity.is_on is True
+
+
+def test_state_binary_sensor_is_on_false(mock_coordinator):
+    """Test is_on returns False when state is zero."""
+    sensor_info = {"sensor_key": "srain_piezo", "hardware_id": "ABC123", "name": ""}
+    entity = EcowittStateBinarySensor(
+        mock_coordinator, "ecowitt_rain_abc123", sensor_info
+    )
+    mock_coordinator.get_all_sensors.return_value = {
+        "ecowitt_rain_abc123": {"state": "0"}
+    }
+    assert entity.is_on is False
+
+
+def test_state_binary_sensor_is_on_none_missing(mock_coordinator):
+    """Test is_on returns None when entity not in sensor data."""
+    sensor_info = {"sensor_key": "srain_piezo", "hardware_id": "ABC123", "name": ""}
+    entity = EcowittStateBinarySensor(
+        mock_coordinator, "ecowitt_rain_abc123", sensor_info
+    )
+    mock_coordinator.get_all_sensors.return_value = {}
+    assert entity.is_on is None
+
+
+def test_state_binary_sensor_is_on_none_state(mock_coordinator):
+    """Test is_on returns None when state is None."""
+    sensor_info = {"sensor_key": "srain_piezo", "hardware_id": "ABC123", "name": ""}
+    entity = EcowittStateBinarySensor(
+        mock_coordinator, "ecowitt_rain_abc123", sensor_info
+    )
+    mock_coordinator.get_all_sensors.return_value = {
+        "ecowitt_rain_abc123": {"state": None}
+    }
+    assert entity.is_on is None
+
+
+def test_state_binary_sensor_is_on_invalid_state(mock_coordinator):
+    """Test is_on returns None when state cannot be converted to number."""
+    sensor_info = {"sensor_key": "srain_piezo", "hardware_id": "ABC123", "name": ""}
+    entity = EcowittStateBinarySensor(
+        mock_coordinator, "ecowitt_rain_abc123", sensor_info
+    )
+    mock_coordinator.get_all_sensors.return_value = {
+        "ecowitt_rain_abc123": {"state": "notanumber"}
+    }
+    assert entity.is_on is None
+
+
+def test_state_binary_sensor_device_info_with_hardware_id(mock_coordinator):
+    """Test device_info with a real hardware ID uses sensor device."""
+    sensor_info = {"sensor_key": "srain_piezo", "hardware_id": "ABC123", "name": ""}
+    entity = EcowittStateBinarySensor(
+        mock_coordinator, "ecowitt_rain_abc123", sensor_info
+    )
+    device_info = entity.device_info
+
+    assert device_info["identifiers"] == {(DOMAIN, "ABC123")}
+    assert device_info["manufacturer"] == MANUFACTURER
+    assert device_info["via_device"] == (DOMAIN, "test_gateway")
+
+
+def test_state_binary_sensor_device_info_no_sensor_info(mock_coordinator):
+    """Test device_info falls back to gateway when sensor_mapper returns None."""
+    mock_coordinator.sensor_mapper.get_sensor_info.return_value = None
+    sensor_info = {"sensor_key": "srain_piezo", "hardware_id": "ABC123", "name": ""}
+    entity = EcowittStateBinarySensor(
+        mock_coordinator, "ecowitt_rain_abc123", sensor_info
+    )
+    device_info = entity.device_info
+
+    assert device_info["identifiers"] == {(DOMAIN, "test_gateway")}
+
+
+def test_state_binary_sensor_device_info_placeholder_id(mock_coordinator):
+    """Test device_info uses gateway device when hardware_id is placeholder."""
+    sensor_info = {"sensor_key": "srain_piezo", "hardware_id": "FFFFFFFF", "name": ""}
+    entity = EcowittStateBinarySensor(
+        mock_coordinator, "ecowitt_rain_abc123", sensor_info
+    )
+    device_info = entity.device_info
+
+    assert device_info["identifiers"] == {(DOMAIN, "test_gateway")}
+
+
+def test_state_binary_sensor_extra_state_attributes(mock_coordinator):
+    """Test extra_state_attributes returns hardware_id and sensor attributes."""
+    sensor_info = {"sensor_key": "srain_piezo", "hardware_id": "ABC123", "name": ""}
+    entity = EcowittStateBinarySensor(
+        mock_coordinator, "ecowitt_rain_abc123", sensor_info
+    )
+    mock_coordinator.get_all_sensors.return_value = {
+        "ecowitt_rain_abc123": {
+            "state": "0",
+            "attributes": {"sensor_key": "srain_piezo", "last_update": "2024-01-01"},
+        }
+    }
+    attrs = entity.extra_state_attributes
+    assert attrs[ATTR_HARDWARE_ID] == "ABC123"
+    assert attrs["sensor_key"] == "srain_piezo"
+    assert attrs["last_update"] == "2024-01-01"
+
+
+def test_state_binary_sensor_handle_coordinator_update(mock_coordinator):
+    """Test _handle_coordinator_update calls async_write_ha_state."""
+    sensor_info = {"sensor_key": "srain_piezo", "hardware_id": "ABC123", "name": ""}
+    entity = EcowittStateBinarySensor(
+        mock_coordinator, "ecowitt_rain_abc123", sensor_info
+    )
+    with patch.object(entity, "async_write_ha_state") as mock_write:
+        entity._handle_coordinator_update()
+        mock_write.assert_called_once()

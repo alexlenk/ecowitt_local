@@ -24,6 +24,7 @@ from .const import (
     ATTR_LAST_SEEN,
     ATTR_SENSOR_TYPE,
     ATTR_SIGNAL_STRENGTH,
+    BINARY_SENSORS,
     DOMAIN,
     MANUFACTURER,
 )
@@ -77,6 +78,15 @@ async def async_setup_entry(
 
     # Add gateway online status
     entities.append(EcowittGatewayOnlineBinarySensor(coordinator))
+
+    # Create moisture/state binary sensors (e.g. srain_piezo)
+    for entity_id, sensor_info in sensor_data.items():
+        if sensor_info.get("category") == "binary":
+            sensor_key = sensor_info.get("sensor_key", "")
+            if sensor_key in BINARY_SENSORS:
+                entities.append(
+                    EcowittStateBinarySensor(coordinator, entity_id, sensor_info)
+                )
 
     _LOGGER.info("Setting up %d Ecowitt Local binary sensor entities", len(entities))
     async_add_entities(entities, True)
@@ -307,6 +317,109 @@ class EcowittSensorOnlineBinarySensor(
         }
 
         return sensor_type in outdoor_types
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.async_write_ha_state()
+
+
+class EcowittStateBinarySensor(
+    CoordinatorEntity[EcowittLocalDataUpdateCoordinator], BinarySensorEntity
+):
+    """Binary sensor for state-based sensors like srain_piezo."""
+
+    def __init__(
+        self,
+        coordinator: EcowittLocalDataUpdateCoordinator,
+        entity_id: str,
+        sensor_info: Dict[str, Any],
+    ) -> None:
+        """Initialize the binary sensor."""
+        super().__init__(coordinator)
+
+        self._entity_id = entity_id
+        self._sensor_key = sensor_info.get("sensor_key", "")
+        self._hardware_id = sensor_info.get("hardware_id", "")
+
+        sensor_def = BINARY_SENSORS.get(self._sensor_key, {})
+
+        # Set unique ID
+        self._attr_unique_id = f"{DOMAIN}_{entity_id}"
+
+        # Set entity ID and name
+        self.entity_id = f"binary_sensor.{entity_id}"
+        self._attr_name = sensor_info.get(
+            "name", sensor_def.get("name", self._sensor_key)
+        )
+
+        # Set device class
+        dc_str = sensor_def.get("device_class", "")
+        try:
+            self._attr_device_class = BinarySensorDeviceClass(dc_str)
+        except ValueError:
+            self._attr_device_class = None
+
+    @property
+    def is_on(self) -> Optional[bool]:
+        """Return true if the sensor indicates active state."""
+        sensor_data = self.coordinator.get_all_sensors()
+        info = sensor_data.get(self._entity_id)
+        if info is None:
+            return None
+        state = info.get("state")
+        if state is None:
+            return None
+        try:
+            return int(float(str(state))) != 0
+        except (ValueError, TypeError):
+            return None
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        gateway_info = self.coordinator.gateway_info
+        gateway_id = gateway_info.get("gateway_id", "unknown")
+
+        if self._hardware_id and self._hardware_id.upper() not in (
+            "FFFFFFFE",
+            "FFFFFFFF",
+            "00000000",
+        ):
+            sensor_info = self.coordinator.sensor_mapper.get_sensor_info(
+                self._hardware_id
+            )
+            if sensor_info:
+                device_model = sensor_info.get("device_model") or sensor_info.get(
+                    "sensor_type", "Unknown"
+                )
+                return DeviceInfo(
+                    identifiers={(DOMAIN, self._hardware_id)},
+                    name=f"Ecowitt {sensor_info.get('sensor_type', 'Sensor')} {self._hardware_id}",
+                    manufacturer=MANUFACTURER,
+                    model=device_model,
+                    via_device=(DOMAIN, gateway_id),
+                )
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, gateway_id)},
+            name=f"Ecowitt Gateway {gateway_info.get('host', '')}",
+            manufacturer=MANUFACTURER,
+            model=gateway_info.get("model", "Unknown"),
+            sw_version=gateway_info.get("firmware_version", "Unknown"),
+            configuration_url=f"http://{gateway_info.get('host', '')}",
+        )
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        """Return additional state attributes."""
+        sensor_data = self.coordinator.get_all_sensors()
+        info = sensor_data.get(self._entity_id, {})
+        attrs = info.get("attributes", {})
+        return {
+            ATTR_HARDWARE_ID: self._hardware_id,
+            **{k: v for k, v in attrs.items() if k not in ("hardware_id",)},
+        }
 
     @callback
     def _handle_coordinator_update(self) -> None:

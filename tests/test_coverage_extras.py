@@ -635,15 +635,29 @@ def test_sensor_mapper_wh25_keys():
 
 
 def test_sensor_mapper_wh26_keys():
-    """Test WH26/indoor_temp_hum generates expected keys (line 296)."""
+    """Test WH26/wn32/outdoor_temp_hum generates expected keys."""
     mapper = SensorMapper()
     keys = mapper._generate_live_data_keys("wh26", "")
-    assert "tempinf" in keys
-    assert "humidityin" in keys
+    assert "0x02" in keys
+    assert "0x07" in keys
     assert "wh26batt" in keys
 
-    keys2 = mapper._generate_live_data_keys("indoor_temp_hum", "")
-    assert "tempinf" in keys2
+    keys2 = mapper._generate_live_data_keys("wn32", "")
+    assert "0x02" in keys2
+
+    keys3 = mapper._generate_live_data_keys("outdoor_temp_hum", "")
+    assert "0x02" in keys3
+
+
+def test_sensor_mapper_wn38_keys():
+    """Test WN38/bgt generates 0xA1 and 0xA2 keys."""
+    mapper = SensorMapper()
+    keys = mapper._generate_live_data_keys("wn38", "")
+    assert "0xA1" in keys
+    assert "0xA2" in keys
+
+    keys2 = mapper._generate_live_data_keys("bgt", "")
+    assert "0xA1" in keys2
 
 
 def test_sensor_mapper_wh34_with_channel():

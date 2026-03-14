@@ -23,6 +23,7 @@ from .api import (
 )
 from .const import (
     BATTERY_SENSORS,
+    BINARY_SENSORS,
     CONF_INCLUDE_INACTIVE,
     CONF_MAPPING_INTERVAL,
     CONF_SCAN_INTERVAL,
@@ -805,6 +806,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             sensor_info = SENSOR_TYPES.get(sensor_key, {})
             battery_info = BATTERY_SENSORS.get(sensor_key, {})
             system_info = SYSTEM_SENSORS.get(sensor_key, {})
+            binary_info = BINARY_SENSORS.get(sensor_key, {})
 
             # Determine sensor category
             if battery_info:
@@ -818,6 +820,10 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 category = "system"
                 device_class = system_info.get("device_class") or ""
                 unit = system_info.get("unit") or ""
+            elif binary_info:
+                category = "binary"
+                device_class = binary_info.get("device_class") or ""
+                unit = ""
             else:
                 category = "sensor"
                 device_class = sensor_info.get("device_class") or ""
