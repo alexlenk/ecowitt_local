@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.4] - 2026-03-14
+
+### Added
+- **WN38 Black Globe Thermometer support**: The WN38 now creates two sensor entities: Black Globe Temperature (`0xA1`) and WBGT — Wet Bulb Globe Temperature (`0xA2`). Both appear on the gateway device (current firmware reports no hardware ID for WN38). (issue #113)
+
+### Fixed
+- **WH26/WN32 outdoor T&H sensor entities missing**: The WH26/WN32 was incorrectly mapped to indoor sensor keys (`tempinf`, `humidityin`). Fixed to use the correct outdoor hex ID keys (`0x02`, `0x07`) so the sensor's hardware ID is linked to temperature and humidity entities and they appear under their own device. (issue #104)
+- **srain_piezo exposed as binary sensor**: The piezo rain state sensor (`srain_piezo`) is now created as a `moisture` binary sensor (on = raining, off = dry) instead of a numeric 0/1 sensor entity. (issue #110)
+
 ## [1.6.3] - 2026-03-08
 
 ### Added
