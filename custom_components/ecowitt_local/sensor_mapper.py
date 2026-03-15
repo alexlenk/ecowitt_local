@@ -260,7 +260,9 @@ class SensorMapper:
                     "0x11",  # Rain weekly
                     "0x12",  # Rain monthly
                     "0x13",  # Rain yearly
-                    "ws90batt",  # Battery level
+                    "ws90batt",  # Battery level (%)
+                    "ws90_voltage",  # Battery voltage (V)
+                    "ws90cap_volt",  # Capacitor voltage (V)
                 ]
             )
         elif (
@@ -308,7 +310,9 @@ class SensorMapper:
                     "0x11",  # Rain weekly
                     "0x12",  # Rain monthly
                     "0x13",  # Rain yearly
-                    "wh90batt",  # Battery level
+                    "wh90batt",  # Battery level (%)
+                    "wh90_voltage",  # Battery voltage (V)
+                    "wh90cap_volt",  # Capacitor voltage (V)
                 ]
             )
         elif (
@@ -522,6 +526,8 @@ class SensorMapper:
             "lightning_mi": "lightning_distance_mi",  # must precede generic "lightning"
             "lightning": "lightning",
             "batt": "battery",
+            "cap_volt": "capacitor_voltage",  # must precede generic "volt"
+            "volt": "voltage",
             "solar_lux": "solar_lux",  # must precede generic "solar"
             "solar": "solar_radiation",
         }
