@@ -1619,6 +1619,7 @@ async def test_coordinator_extract_model_from_firmware(
         # Test various firmware version patterns
         test_cases = [
             ("GW1100A_V2.4.3", "GW1100A"),  # Standard pattern like user's device
+            ("Version: GW1100A_V2.4.3", "GW1100A"),  # Firmware with "Version: " prefix
             ("GW2000_V1.2.1", "GW2000"),  # Another common model
             ("GW1000_V3.1.0", "GW1000"),  # Older model
             ("GWxxxx_V1.0.0", "GWxxxx"),  # Generic pattern
