@@ -640,6 +640,7 @@ def test_sensor_mapper_wh26_keys():
     keys = mapper._generate_live_data_keys("wh26", "")
     assert "0x02" in keys
     assert "0x07" in keys
+    assert "0x03" in keys  # Dewpoint (battery embedded here)
     assert "wh26batt" in keys
 
     keys2 = mapper._generate_live_data_keys("wn32", "")

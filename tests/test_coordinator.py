@@ -1619,6 +1619,7 @@ async def test_coordinator_extract_model_from_firmware(
         # Test various firmware version patterns
         test_cases = [
             ("GW1100A_V2.4.3", "GW1100A"),  # Standard pattern like user's device
+            ("Version: GW1100A_V2.4.3", "GW1100A"),  # Firmware with "Version: " prefix
             ("GW2000_V1.2.1", "GW2000"),  # Another common model
             ("GW1000_V3.1.0", "GW1000"),  # Older model
             ("GWxxxx_V1.0.0", "GWxxxx"),  # Generic pattern
@@ -2247,3 +2248,78 @@ async def test_coordinator_co2_array_wh46d_pm1_pm4(coordinator):
 
     for key, was_found in found.items():
         assert was_found, f"WH46D sensor '{key}' not found in processed data"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_wh26_battery_extracted_from_0x03(coordinator):
+    """Test WH26/WN32 battery is extracted from common_list 0x03 embedded battery field (issue #104)."""
+    # Register a WH26 so wh26batt has a hardware_id
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "C1",
+                "img": "wh26",
+                "type": "5",
+                "name": "Temp & Humidity",
+                "batt": "0",
+                "signal": "4",
+            }
+        ]
+    )
+    coordinator._include_inactive = True
+
+    # battery "0" = full = 100%
+    raw_data = {
+        "common_list": [
+            {"id": "0x02", "val": "-14.2", "unit": "C"},
+            {"id": "0x07", "val": "65%"},
+            {"id": "0x03", "val": "-19.4", "unit": "C", "battery": "0"},
+        ]
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wh26_battery = next(
+        (sensors[k] for k in sensors if sensors[k].get("sensor_key") == "wh26batt"),
+        None,
+    )
+    assert (
+        wh26_battery is not None
+    ), "wh26batt should be extracted from 0x03 battery field"
+    assert wh26_battery["state"] == "100", "binary 0 should give 100%"
+
+    # battery "1" = low = 10%
+    raw_data2 = {
+        "common_list": [
+            {"id": "0x03", "val": "-19.4", "unit": "C", "battery": "1"},
+        ]
+    }
+    processed2 = await coordinator._process_live_data(raw_data2)
+    sensors2 = processed2["sensors"]
+    wh26_battery2 = next(
+        (sensors2[k] for k in sensors2 if sensors2[k].get("sensor_key") == "wh26batt"),
+        None,
+    )
+    assert wh26_battery2 is not None
+    assert wh26_battery2["state"] == "10", "binary 1 should give 10%"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_wh26_no_battery_without_mapping(coordinator):
+    """Test wh26batt is NOT added when no WH26 is registered (no mapping for wh26batt)."""
+    # No WH26 registered
+    raw_data = {
+        "common_list": [
+            {"id": "0x03", "val": "-19.4", "unit": "C", "battery": "0"},
+        ]
+    }
+    coordinator._include_inactive = True
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+    wh26_battery = next(
+        (sensors[k] for k in sensors if sensors[k].get("sensor_key") == "wh26batt"),
+        None,
+    )
+    assert (
+        wh26_battery is None
+    ), "wh26batt should NOT be created without a registered WH26"

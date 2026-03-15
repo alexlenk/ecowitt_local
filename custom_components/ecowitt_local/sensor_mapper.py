@@ -355,6 +355,7 @@ class SensorMapper:
                 [
                     "0x02",
                     "0x07",
+                    "0x03",  # Dewpoint (battery embedded in this item)
                     "wh26batt",
                 ]
             )

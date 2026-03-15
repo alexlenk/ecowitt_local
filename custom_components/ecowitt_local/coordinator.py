@@ -199,6 +199,16 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         # Extract common_list data (main sensor readings)
         common_list = raw_data.get("common_list", [])
         all_sensor_items.extend(common_list)
+        # WH26/WN32 embeds battery in the 0x03 (dewpoint) common_list item.
+        # Binary encoding: "0" = full (100%), non-"0" = low (10%).
+        for item in common_list:
+            if item.get("id") == "0x03" and item.get("battery") is not None:
+                if self.sensor_mapper.get_hardware_id("wh26batt") is not None:
+                    battery_pct = "100" if item["battery"] == "0" else "10"
+                    all_sensor_items.append({"id": "wh26batt", "val": battery_pct})
+                    _LOGGER.debug(
+                        "Added WH26 battery from 0x03: wh26batt = %s%%", battery_pct
+                    )
 
         # Extract rain data (tipping-bucket rain sensor — WH40, GW1200, GW2000A with WH69)
         rain_list = raw_data.get("rain", [])
@@ -1204,22 +1214,10 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             return "Unknown"
 
         try:
-            # Look for pattern like "GW1100A_V2.4.3" where model is before the first underscore
-            if "_" in firmware_version:
-                model = firmware_version.split("_")[0].strip()
-                if model and model.upper().startswith("GW"):
-                    return model
-
-            # If no underscore, check if the entire string looks like a model
-            if (
-                firmware_version.upper().startswith("GW")
-                and not "." in firmware_version
-            ):
-                return firmware_version.strip()
-
-            # Look for other common patterns (model could be at the start)
-            # Pattern to match gateway models like GW1100A, GW2000, etc.
-            match = re.match(r"^(GW\w+)", firmware_version)
+            # Some gateways prepend "Version: " to the version string (e.g. "Version: GW1100A_V2.4.3")
+            # Search for the GW model anywhere in the string to handle these cases.
+            # The model name ends at the first delimiter: underscore, dot, whitespace, or end of string.
+            match = re.search(r"\b(GW\w+?)(?=[_.\s]|$)", firmware_version)
             if match:
                 return match.group(1)
 
