@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/github/license/alexlenk/ecowitt_local.svg)](https://github.com/alexlenk/ecowitt_local/blob/main/LICENSE)
 [![CI](https://github.com/alexlenk/ecowitt_local/workflows/CI/badge.svg)](https://github.com/alexlenk/ecowitt_local/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/alexlenk/ecowitt_local/graph/badge.svg?token=ENNYU0GH1F)](https://codecov.io/gh/alexlenk/ecowitt_local)
-[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.1%2B-blue.svg)](https://www.home-assistant.io/)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.1%2B-blue.svg)](https://www.home-assistant.io/)
 
 Integrate your Ecowitt weather station with Home Assistant using **local network polling** — no cloud, no webhooks, no exposure of your Home Assistant to the internet.
 
