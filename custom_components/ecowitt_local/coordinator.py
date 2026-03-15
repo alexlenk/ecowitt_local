@@ -199,6 +199,16 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         # Extract common_list data (main sensor readings)
         common_list = raw_data.get("common_list", [])
         all_sensor_items.extend(common_list)
+        # WH26/WN32 embeds battery in the 0x03 (dewpoint) common_list item.
+        # Binary encoding: "0" = full (100%), non-"0" = low (10%).
+        for item in common_list:
+            if item.get("id") == "0x03" and item.get("battery") is not None:
+                if self.sensor_mapper.get_hardware_id("wh26batt") is not None:
+                    battery_pct = "100" if item["battery"] == "0" else "10"
+                    all_sensor_items.append({"id": "wh26batt", "val": battery_pct})
+                    _LOGGER.debug(
+                        "Added WH26 battery from 0x03: wh26batt = %s%%", battery_pct
+                    )
 
         # Extract rain data (tipping-bucket rain sensor — WH40, GW1200, GW2000A with WH69)
         rain_list = raw_data.get("rain", [])

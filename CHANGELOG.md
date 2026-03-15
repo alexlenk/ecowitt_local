@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.5] - 2026-03-15
+
+### Fixed
+- **WH26/WN32 dew point entity missing**: Added dew point (`0x03`) to the WH26/WN32 sensor mapping so a Dewpoint Temperature entity is now created alongside temperature and humidity. (issue #104)
+- **WH26/WN32 battery entity missing**: The WH26/WN32 gateway firmware embeds the battery level inside the dew point (`0x03`) common_list item rather than sending a separate `wh26batt` key. The coordinator now extracts this embedded battery value and creates the battery entity. Uses binary encoding: `0` = 100% (full), non-`0` = 10% (low). (issue #104)
+
+### Changed
+- Updated README to better explain the stable hardware-ID entity system as the primary motivation for this integration, and to include a comparison table with both the built-in HA Ecowitt integration and Ecowitt's official `ha-ecowitt-iot` integration.
+
 ## [1.6.4] - 2026-03-14
 
 ### Added
