@@ -439,12 +439,11 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         if (
                             sensor_id == "0x13"
                         ):  # Total rain - usually the last item with battery info
-                            battery_key = (
-                                "ws90batt"
-                                if self.sensor_mapper.get_hardware_id("ws90batt")
+                            is_ws90 = (
+                                self.sensor_mapper.get_hardware_id("ws90batt")
                                 is not None
-                                else "wh90batt"
                             )
+                            battery_key = "ws90batt" if is_ws90 else "wh90batt"
                             battery_val = (
                                 str(int(item["battery"]) * 20)
                                 if item["battery"].isdigit()
@@ -458,6 +457,30 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                                 battery_key,
                                 battery_val,
                             )
+
+                            # Add battery voltage if present
+                            if item.get("voltage"):
+                                volt_key = "ws90_voltage" if is_ws90 else "wh90_voltage"
+                                all_sensor_items.append(
+                                    {"id": volt_key, "val": item["voltage"]}
+                                )
+                                _LOGGER.debug(
+                                    "Added WS90 battery voltage: %s = %sV",
+                                    volt_key,
+                                    item["voltage"],
+                                )
+
+                            # Add capacitor voltage if present
+                            if item.get("ws90cap_volt"):
+                                cap_key = "ws90cap_volt" if is_ws90 else "wh90cap_volt"
+                                all_sensor_items.append(
+                                    {"id": cap_key, "val": item["ws90cap_volt"]}
+                                )
+                                _LOGGER.debug(
+                                    "Added WS90 capacitor voltage: %s = %sV",
+                                    cap_key,
+                                    item["ws90cap_volt"],
+                                )
 
         # Extract ch_aisle data (WH31 temperature/humidity sensors)
         ch_aisle = raw_data.get("ch_aisle", [])

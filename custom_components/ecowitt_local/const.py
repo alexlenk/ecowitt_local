@@ -404,6 +404,36 @@ SENSOR_TYPES.update(
     )
 )
 
+# WS90/WH90 voltage sensors (capacitor and battery)
+SENSOR_TYPES.update(
+    {
+        "ws90cap_volt": {
+            "name": "WS90 Capacitor Voltage",
+            "unit": "V",
+            "device_class": "voltage",
+            "state_class": "measurement",
+        },
+        "wh90cap_volt": {
+            "name": "WH90 Capacitor Voltage",
+            "unit": "V",
+            "device_class": "voltage",
+            "state_class": "measurement",
+        },
+        "ws90_voltage": {
+            "name": "WS90 Battery Voltage",
+            "unit": "V",
+            "device_class": "voltage",
+            "state_class": "measurement",
+        },
+        "wh90_voltage": {
+            "name": "WH90 Battery Voltage",
+            "unit": "V",
+            "device_class": "voltage",
+            "state_class": "measurement",
+        },
+    }
+)
+
 
 def _generate_battery_sensors(
     base_key: str, name_template: str, sensor_key_template: str, max_channels: int
