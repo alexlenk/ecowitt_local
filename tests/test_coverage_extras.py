@@ -712,6 +712,13 @@ def test_sensor_mapper_extract_identifier_ch_in_middle():
     assert result == "ch1"
 
 
+def test_sensor_mapper_decimal_id_names():
+    """Test _extract_sensor_type_from_key handles decimal IDs '3' and '5'."""
+    mapper = SensorMapper()
+    assert mapper._extract_sensor_type_from_key("3") == "feels_like_temp"
+    assert mapper._extract_sensor_type_from_key("5") == "vpd"
+
+
 # ============================================================================
 # config_flow.py — uncovered branches
 # ============================================================================

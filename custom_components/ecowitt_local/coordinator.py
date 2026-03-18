@@ -226,7 +226,14 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     # Use wh69batt if a WH69 is registered (links battery to WH69 device),
                     # otherwise fall back to wh40batt for standalone WH40 rain gauges.
                     if item.get("id") == "0x13" and item.get("battery"):
-                        battery_pct = "100" if item["battery"] == "0" else "10"
+                        # WH40 uses 0-5 bar scale; WH69 uses binary (0=full, 1=low).
+                        # Detect scale: values > 1 are clearly 0-5 bar scale.
+                        batt_str = str(item["battery"])
+                        batt_val = int(batt_str) if batt_str.isdigit() else -1
+                        if batt_val > 1:
+                            battery_pct = str(batt_val * 20)  # 0-5 bar scale
+                        else:
+                            battery_pct = "100" if batt_str == "0" else "10"  # binary
                         battery_key = (
                             "wh69batt"
                             if self.sensor_mapper.get_hardware_id("wh69batt")
@@ -1005,8 +1012,6 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
 
             channel = hardware_info.get("channel")
             signal = hardware_info.get("signal")
-            if not channel:
-                continue
 
             # Add Signal Strength sensor (regular sensor, same level as battery)
             if signal and signal not in ("--", ""):
@@ -1059,7 +1064,10 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 },
             }
 
-            # Add Channel diagnostic sensor
+            # Add Channel diagnostic sensor (only for multi-channel sensors)
+            if not channel:
+                added_hardware_ids.add(hardware_id)
+                continue
             channel_entity_id = f"sensor.ecowitt_channel_{hardware_id.lower()}"
             sensors_data[channel_entity_id] = {
                 "entity_id": channel_entity_id,

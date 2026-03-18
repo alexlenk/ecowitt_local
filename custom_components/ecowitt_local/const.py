@@ -132,11 +132,17 @@ SENSOR_TYPES: Final = {
         "unit": "mph",
         "device_class": "wind_speed",
     },
-    "winddir": {"name": "Wind Direction", "unit": "°", "icon": "mdi:compass"},
+    "winddir": {
+        "name": "Wind Direction",
+        "unit": "°",
+        "icon": "mdi:compass",
+        "state_class": "measurement_angle",
+    },
     "winddir_avg10m": {
         "name": "Wind Direction 10min Avg",
         "unit": "°",
         "icon": "mdi:compass",
+        "state_class": "measurement_angle",
     },
     # Rain sensors
     "rainratein": {
@@ -258,8 +264,18 @@ SENSOR_TYPES: Final = {
     "0x0B": {"name": "Wind Speed", "unit": "m/s", "device_class": "wind_speed"},
     "0x0C": {"name": "Wind Gust", "unit": "m/s", "device_class": "wind_speed"},
     "0x19": {"name": "Max Daily Gust", "unit": "m/s", "device_class": "wind_speed"},
-    "0x0A": {"name": "Wind Direction", "unit": "°", "icon": "mdi:compass"},
-    "0x6D": {"name": "Wind Direction Avg", "unit": "°", "icon": "mdi:compass"},
+    "0x0A": {
+        "name": "Wind Direction",
+        "unit": "°",
+        "icon": "mdi:compass",
+        "state_class": "measurement_angle",
+    },
+    "0x6D": {
+        "name": "Wind Direction Avg",
+        "unit": "°",
+        "icon": "mdi:compass",
+        "state_class": "measurement_angle",
+    },
     "0x15": {"name": "Solar Radiation", "unit": "W/m²", "device_class": "irradiance"},
     "0x17": {"name": "UV Index", "unit": "UV Index", "icon": "mdi:weather-sunny-alert"},
     "0x0D": {

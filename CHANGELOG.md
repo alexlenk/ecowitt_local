@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.7] - 2026-03-18
+
+### Fixed
+- **Wind direction long-term statistics**: Added `state_class: measurement_angle` to wind direction sensors (`winddir`, `winddir_avg10m`) so Home Assistant can record them in long-term statistics correctly. (issue #126)
+- **Signal strength missing for single-channel sensors**: WH26, WH40, WH57, WH80, and WN38 sensors were not getting a Signal Strength diagnostic entity because the integration incorrectly required a channel number. Fixed so all paired sensors now show signal strength. (issues #122, #125)
+- **WH40 battery percentage wrong**: The WH40 rain gauge uses a 0–5 bar battery scale. The integration was treating it as binary (0/1) encoding, showing 10% when it should show 20–100%. Now correctly converts bar values to percentage (each bar = 20%). (issue #125)
+- **Decimal sensor IDs getting ugly entity names**: Sensors with decimal IDs like `3` (feels-like temperature) and `5` (VPD) were generating entity IDs like `sensor_ch3` instead of `feels_like_temp_…`. Fixed with explicit ID-to-name mapping. (issue #121)
+
 ## [1.6.6] - 2026-03-15
 
 ### Added
