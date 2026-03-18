@@ -476,6 +476,14 @@ class SensorMapper:
 
     def _extract_sensor_type_from_key(self, key: str) -> str:
         """Extract sensor type name from live data key."""
+        # Handle decimal ID sensors used by some gateways (GW3000 etc.)
+        decimal_id_names = {
+            "3": "feels_like_temp",
+            "5": "vpd",
+        }
+        if key in decimal_id_names:
+            return decimal_id_names[key]
+
         # Handle hex ID sensors (0x02, 0x07, etc.) - map to human-readable names
         if key.startswith("0x"):
             # Map hex IDs to human-readable sensor type names

@@ -1029,6 +1029,26 @@ async def test_coordinator_rain_array_battery_binary_encoding(coordinator):
     assert len(battery_sensors) == 1
     assert sensors[battery_sensors[0]]["state"] == "10", "binary 1 should give 10%"
 
+    # battery "5" = WH40 0-5 bar scale = 100%
+    raw_data = {
+        "rain": [{"id": "0x13", "val": "29.5 mm", "battery": "5"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+    battery_sensors = [k for k in sensors if "rain_battery" in k]
+    assert len(battery_sensors) == 1
+    assert sensors[battery_sensors[0]]["state"] == "100", "bar-scale 5 should give 100%"
+
+    # battery "3" = WH40 0-5 bar scale = 60%
+    raw_data = {
+        "rain": [{"id": "0x13", "val": "29.5 mm", "battery": "3"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+    battery_sensors = [k for k in sensors if "rain_battery" in k]
+    assert len(battery_sensors) == 1
+    assert sensors[battery_sensors[0]]["state"] == "60", "bar-scale 3 should give 60%"
+
 
 @pytest.mark.asyncio
 async def test_coordinator_rain_array_empty_handling(coordinator):
