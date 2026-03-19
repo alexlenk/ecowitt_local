@@ -384,7 +384,28 @@ class SensorMapper:
                 )
         elif sensor_type.lower() in ("wn38", "bgt"):
             # WN38 Black Globe Thermometer (BGT + WBGT)
-            keys.extend(["0xA1", "0xA2"])
+            keys.extend(["0xA1", "0xA2", "wn38batt"])
+        elif sensor_type.lower() in ("wh85", "wind & rain"):
+            # WS85 wind & rain sensor — wind in common_list, rain + battery in piezoRain
+            keys.extend(
+                [
+                    "0x0B",  # Wind speed
+                    "0x0C",  # Wind gust
+                    "0x19",  # Max daily gust
+                    "0x0A",  # Wind direction
+                    "0x6D",  # Wind direction avg 10min
+                    "0x0D",  # Rain event
+                    "0x0E",  # Rain rate
+                    "0x7C",  # 24-hour rolling rain
+                    "0x10",  # Rain daily
+                    "0x11",  # Rain weekly
+                    "0x12",  # Rain monthly
+                    "0x13",  # Rain yearly
+                    "ws85batt",  # Battery level (%)
+                    "ws85_voltage",  # Battery voltage (V)
+                    "ws85cap_volt",  # Capacitor voltage (V)
+                ]
+            )
         elif sensor_type.lower() in ("wh45", "wh46", "combo", "co2_pm"):
             # WH45/WH46D combo sensor (CO2 + PM + temp/humidity)
             # WH46D adds PM1.0 and PM4.0 on top of WH45 sensors

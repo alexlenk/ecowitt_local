@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.8] - 2026-03-19
+
+### Added
+- **WS85 wind & rain sensor support**: The WS85 (`wh85` image, "Wind & Rain") is now a fully supported device with wind, rain, battery percentage, battery voltage, and capacitor voltage entities. (issue #20)
+
+### Fixed
+- **WS90/WH90/WS85 voltage sensors now in Diagnostic section**: The battery voltage and capacitor voltage entities for WS90, WH90, and WS85 are now shown in the Diagnostic section alongside the battery percentage. Previously they appeared in the main Sensors section. (issue #119)
+- **WS90/WH90/WS85 voltage display precision**: Battery voltage now defaults to 2 decimal places; capacitor voltage defaults to 1 decimal place. (issue #119)
+- **WH80/WS80 battery entity missing**: The WH80/WS80 outdoor weather station battery level is now created from the sensors_info `batt` field. Previously it was only created if the gateway emitted `wh80batt` in livedata (which most firmware versions don't do). (issue #125)
+- **WN38 battery entity missing**: Same fix — WN38 battery is now created from sensors_info for firmware that doesn't emit it in livedata. (issue #113, #125)
+- **Gateway ID showing "unknown" for GW3000B**: Some gateways (GW3000B, and potentially others) don't include a `stationtype` field in `/get_version`. The gateway ID now falls back to the model name extracted from the firmware version string instead of "unknown". (issue #117)
+
 ## [1.6.7] - 2026-03-18
 
 ### Fixed

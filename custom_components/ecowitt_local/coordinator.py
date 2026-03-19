@@ -440,17 +440,33 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
 
                     # Add battery sensor if present in the item
                     if "battery" in item and item["battery"]:
-                        # For WS90/WH90, battery is associated with the last rain item.
-                        # Use the key that is actually registered in sensor_mapper so the
-                        # entity appears under the correct device (WS90 vs WH90).
+                        # For WS90/WH90/WS85, battery is in the last piezoRain item (0x13).
+                        # Detect which device owns this piezoRain data by checking which
+                        # battery key is registered in sensor_mapper.
                         if (
                             sensor_id == "0x13"
                         ):  # Total rain - usually the last item with battery info
-                            is_ws90 = (
+                            if (
+                                self.sensor_mapper.get_hardware_id("ws85batt")
+                                is not None
+                            ):
+                                battery_key = "ws85batt"
+                                volt_key = "ws85_voltage"
+                                cap_field = "ws85cap_volt"
+                                cap_key = "ws85cap_volt"
+                            elif (
                                 self.sensor_mapper.get_hardware_id("ws90batt")
                                 is not None
-                            )
-                            battery_key = "ws90batt" if is_ws90 else "wh90batt"
+                            ):
+                                battery_key = "ws90batt"
+                                volt_key = "ws90_voltage"
+                                cap_field = "ws90cap_volt"
+                                cap_key = "ws90cap_volt"
+                            else:
+                                battery_key = "wh90batt"
+                                volt_key = "wh90_voltage"
+                                cap_field = "ws90cap_volt"
+                                cap_key = "wh90cap_volt"
                             battery_val = (
                                 str(int(item["battery"]) * 20)
                                 if item["battery"].isdigit()
@@ -460,33 +476,31 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                                 {"id": battery_key, "val": battery_val}
                             )
                             _LOGGER.debug(
-                                "Added WS90 battery sensor: %s = %s%%",
+                                "Added piezo battery sensor: %s = %s%%",
                                 battery_key,
                                 battery_val,
                             )
 
                             # Add battery voltage if present
                             if item.get("voltage"):
-                                volt_key = "ws90_voltage" if is_ws90 else "wh90_voltage"
                                 all_sensor_items.append(
                                     {"id": volt_key, "val": item["voltage"]}
                                 )
                                 _LOGGER.debug(
-                                    "Added WS90 battery voltage: %s = %sV",
+                                    "Added piezo battery voltage: %s = %sV",
                                     volt_key,
                                     item["voltage"],
                                 )
 
-                            # Add capacitor voltage if present
-                            if item.get("ws90cap_volt"):
-                                cap_key = "ws90cap_volt" if is_ws90 else "wh90cap_volt"
+                            # Add capacitor voltage if present (field name varies by device)
+                            if item.get(cap_field):
                                 all_sensor_items.append(
-                                    {"id": cap_key, "val": item["ws90cap_volt"]}
+                                    {"id": cap_key, "val": item[cap_field]}
                                 )
                                 _LOGGER.debug(
-                                    "Added WS90 capacitor voltage: %s = %sV",
+                                    "Added piezo capacitor voltage: %s = %sV",
                                     cap_key,
-                                    item["ws90cap_volt"],
+                                    item[cap_field],
                                 )
 
         # Extract ch_aisle data (WH31 temperature/humidity sensors)
@@ -928,6 +942,10 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 "unit_of_measurement": unit,
                 "device_class": device_class,
                 "state_class": sensor_info.get("state_class") or "",
+                "entity_category": sensor_info.get("entity_category"),
+                "suggested_display_precision": sensor_info.get(
+                    "suggested_display_precision"
+                ),
                 "category": category,
                 "sensor_key": sensor_key,
                 "hardware_id": hardware_id,
@@ -1064,29 +1082,81 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 },
             }
 
-            # Add Channel diagnostic sensor (only for multi-channel sensors)
-            if not channel:
-                added_hardware_ids.add(hardware_id)
-                continue
-            channel_entity_id = f"sensor.ecowitt_channel_{hardware_id.lower()}"
-            sensors_data[channel_entity_id] = {
-                "entity_id": channel_entity_id,
-                "name": "Channel",
-                "state": channel,
-                "unit_of_measurement": None,
-                "device_class": None,
-                "category": "diagnostic",
-                "sensor_key": f"channel_{hardware_id}",
-                "hardware_id": hardware_id,
-                "raw_value": channel,
-                "attributes": {
-                    "sensor_key": f"channel_{hardware_id}",
-                    "last_update": datetime.now().isoformat(),
-                    "hardware_id": hardware_id,
-                    "channel": channel,
-                    "entity_category": "diagnostic",
-                },
+            # Add battery entity from sensors_info for devices that don't emit a battery
+            # key in livedata (e.g. WH80 sends wh80batt via sensors_info only).
+            # Devices that handle battery in livedata (WS90, WH90, WS85, WH26, etc.)
+            # already have battery entities from _process_live_data — skip them.
+            _SENSORS_INFO_BATTERY_KEYS: Dict[str, str] = {
+                "WH80": "wh80batt",
+                "WS80": "wh80batt",
+                "WN38": "wn38batt",
             }
+            sensor_type = hardware_info.get("sensor_type", "")
+            fallback_batt_key = _SENSORS_INFO_BATTERY_KEYS.get(sensor_type.upper())
+            battery_raw = str(hardware_info.get("battery", "")).strip()
+            if fallback_batt_key and battery_raw and battery_raw not in ("", "--"):
+                # Only create if no battery entity for this hardware_id already exists
+                existing = any(
+                    s.get("sensor_key") == fallback_batt_key
+                    and s.get("hardware_id") == hardware_id
+                    for s in sensors_data.values()
+                )
+                if not existing:
+                    battery_pct = (
+                        str(int(battery_raw) * 20)
+                        if battery_raw.isdigit()
+                        else battery_raw
+                    )
+                    batt_entity_id, batt_name = self.sensor_mapper.generate_entity_id(
+                        fallback_batt_key, hardware_id
+                    )
+                    sensors_data[batt_entity_id] = {
+                        "entity_id": batt_entity_id,
+                        "name": batt_name,
+                        "state": battery_pct,
+                        "unit_of_measurement": "%",
+                        "device_class": "battery",
+                        "state_class": "measurement",
+                        "entity_category": None,
+                        "suggested_display_precision": None,
+                        "category": "diagnostic",
+                        "sensor_key": fallback_batt_key,
+                        "hardware_id": hardware_id,
+                        "raw_value": battery_raw,
+                        "attributes": {
+                            "sensor_key": fallback_batt_key,
+                            "last_update": datetime.now().isoformat(),
+                            "hardware_id": hardware_id,
+                        },
+                    }
+                    _LOGGER.debug(
+                        "Added fallback battery from sensors_info: %s = %s%% (hw: %s)",
+                        fallback_batt_key,
+                        battery_pct,
+                        hardware_id,
+                    )
+
+            # Add Channel diagnostic sensor (only for multi-channel sensors)
+            if channel:
+                channel_entity_id = f"sensor.ecowitt_channel_{hardware_id.lower()}"
+                sensors_data[channel_entity_id] = {
+                    "entity_id": channel_entity_id,
+                    "name": "Channel",
+                    "state": channel,
+                    "unit_of_measurement": None,
+                    "device_class": None,
+                    "category": "diagnostic",
+                    "sensor_key": f"channel_{hardware_id}",
+                    "hardware_id": hardware_id,
+                    "raw_value": channel,
+                    "attributes": {
+                        "sensor_key": f"channel_{hardware_id}",
+                        "last_update": datetime.now().isoformat(),
+                        "hardware_id": hardware_id,
+                        "channel": channel,
+                        "entity_category": "diagnostic",
+                    },
+                }
 
             added_hardware_ids.add(hardware_id)
             _LOGGER.debug(
@@ -1215,11 +1285,14 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     # Fallback to stationtype if model extraction fails
                     model = version_info.get("stationtype", "Unknown")
 
+                # Use stationtype if available, else fall back to the model name.
+                # Some gateways (e.g. GW3000B) omit stationtype from /get_version.
+                gateway_id = version_info.get("stationtype") or model or "unknown"
                 self._gateway_info = {
                     "model": model,
                     "firmware_version": firmware_version,
                     "host": self.config_entry.data[CONF_HOST],
-                    "gateway_id": version_info.get("stationtype", "unknown"),
+                    "gateway_id": gateway_id,
                 }
             except Exception as err:
                 _LOGGER.warning("Failed to get gateway info: %s", err)
