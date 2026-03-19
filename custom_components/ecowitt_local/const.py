@@ -81,7 +81,7 @@ def _generate_channel_sensors(
 
 
 # Sensor types and their properties
-SENSOR_TYPES: Final = {
+SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     # Temperature sensors
     "tempinf": {
         "name": "Indoor Temperature",
