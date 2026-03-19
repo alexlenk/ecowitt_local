@@ -12,30 +12,38 @@ This is a Home Assistant custom integration for Ecowitt weather stations that us
 
 ## Development Commands
 
+### Local environment
+The project uses a virtualenv at `.venv/` in the project root.
+- **Python**: Homebrew Python 3.14 at `/opt/homebrew/bin/python3`
+- **Create venv**: `python3 -m venv .venv && .venv/bin/pip install -r requirements_test.txt`
+
 ### Testing
 ```bash
-# Run all tests with coverage
-PYTHONPATH="$PWD" python -m pytest tests/ -v
+# Run all tests with coverage (ALWAYS use .venv, not system python)
+PYTHONPATH="$PWD" .venv/bin/pytest tests/ -v
 
-# Run specific test files
-PYTHONPATH="$PWD" python -m pytest tests/test_sensor.py -v
-PYTHONPATH="$PWD" python -m pytest tests/test_config_flow.py -v
-PYTHONPATH="$PWD" python -m pytest tests/test_init.py -v
-
-# Run tests with coverage report
-PYTHONPATH="$PWD" python -m pytest tests/ --cov=custom_components/ecowitt_local --cov-report=term-missing
+# Run with coverage report
+PYTHONPATH="$PWD" .venv/bin/pytest tests/ --cov=custom_components/ecowitt_local --cov-report=term-missing
 ```
 
-### Code Quality
+**Coverage must be 100%.** If coverage drops, add tests before committing.
+
+### ⚠️ Mandatory pre-commit checklist
+
+Run ALL of these before every commit. CI will fail if any step is skipped.
+
 ```bash
-# Type checking
-mypy custom_components/ecowitt_local/
+# 1. Format
+black custom_components/ecowitt_local/ tests/
 
-# Linting
-flake8 custom_components/ecowitt_local/
+# 2. Sort imports
+isort custom_components/ecowitt_local/ tests/
 
-# Code formatting
-black custom_components/ecowitt_local/
+# 3. Type check (must show "Success: no issues found")
+mypy custom_components/ecowitt_local/ --follow-imports=silent --ignore-missing-imports
+
+# 4. Full test suite with coverage (must be 100%)
+PYTHONPATH="$PWD" .venv/bin/pytest tests/ --cov=custom_components/ecowitt_local --cov-report=term-missing
 ```
 
 ### Development Dependencies
@@ -82,7 +90,7 @@ Authentication errors trigger re-authentication. API failures are logged but don
 
 The codebase uses comprehensive mock data testing for device types not physically available, validated against the `aioecowitt` library's sensor mappings. Physical testing is done with WH51 soil moisture sensors.
 
-Test coverage is maintained at 89% with 96+ automated tests covering device discovery, entity creation, hardware ID mapping, and edge cases.
+Test coverage is maintained at **100%** with 330+ automated tests covering device discovery, entity creation, hardware ID mapping, and edge cases.
 
 ## Configuration
 
@@ -241,12 +249,19 @@ elif sensor_type.lower() in ("wh90", "weather_station_wh90") or "temp & humidity
 ### CI Workflow Monitoring
 
 The CI runs on `claude/**` branches and includes:
-- Full test suite (225+ tests)
-- Coverage reporting (must maintain >89%)  
-- Multiple Python versions (3.11, 3.12)
-- Code quality checks
+- Full test suite (330+ tests)
+- Coverage reporting (must maintain **100%**)
+- Multiple Python versions (3.12, 3.13)
+- black, isort, flake8, mypy checks
+- hassfest and HACS validation
 
-**If CI fails, the implementation is WRONG and must be fixed.**
+**If CI fails, the implementation is WRONG and must be fixed before doing anything else.**
+
+To check CI status after pushing:
+```bash
+gh run list --branch <branch-name> --limit 5
+gh run view <run-id> --log-failed   # if failed
+```
 
 ### Learning from Test Failures & User Reports
 
@@ -266,6 +281,16 @@ Common failure patterns and their meanings:
 ## Issue Management Protocol
 
 **CRITICAL**: When fixing GitHub issues, follow this exact protocol:
+
+### Reading Issues
+
+Always read the full issue body **and all comments**. If an issue contains screenshots or images, always download and view them — they often contain critical data (entity lists, livedata JSON, error messages) not present in the text.
+
+```bash
+# Download and view an image from a GitHub issue
+curl -sL "<image-url>" -o /tmp/issue_image.png
+# Then use the Read tool to view it
+```
 
 ### After Implementing a Fix:
 1. **Create release** with the fix
@@ -303,9 +328,13 @@ Let me know how it works for you. 🚀
 3. **Plan minimal changes**: Single line additions preferred
 4. **Commit and monitor**: Wait for CI results and fix any failures
 
+## Devices — Do NOT Implement
+
+- **WH77**: This is a testing/internal sensor. Do not add support for it under any circumstances, even if a user requests it.
+
 ## Device Addition Checklist (Evidence-Based)
 
-### For New Hex ID Devices (WH77, etc.)
+### For New Hex ID Devices
 - [ ] Add device type detection to `sensor_mapper.py`
 - [ ] Add hex ID list for the device (follow WH69/WS90/WH90 pattern)
 - [ ] Reuse existing hex ID definitions from const.py (DO NOT duplicate metadata)
@@ -533,6 +562,27 @@ The release automation consists of three workflows:
   6. **Result**: HACS detects new version and notifies users
 
 **CRITICAL**: The tag creation in step 3 is what makes HACS work. Without the tag, HACS cannot detect the release.
+
+## Branch Naming
+
+**CRITICAL**: The branch name must always match the version being released.
+
+```
+claude/release-v1.6.8   ← branch name
+"version": "1.6.8"      ← manifest.json version
+## [1.6.8] - ...        ← CHANGELOG entry
+```
+
+Never reuse an old branch name for a new release. If you are releasing v1.6.9, the branch must be `claude/release-v1.6.9` even if the previous work was on `claude/release-v1.6.8`.
+
+## Version Bump Checklist
+
+When changing the version in `manifest.json`, **always** also update:
+
+1. `custom_components/ecowitt_local/manifest.json` — the version number
+2. `CHANGELOG.md` — new section with release notes
+3. `hacs.json` → `homeassistant` field — only if minimum HA version requirements changed
+4. `README.md` → HA version badge — only if `hacs.json` homeassistant version changed
 
 ## Version Numbering
 
