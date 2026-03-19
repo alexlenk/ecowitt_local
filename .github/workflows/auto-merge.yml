@@ -12,39 +12,34 @@ permissions:
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    # Only run after auto-pr succeeds on a claude/release-* branch
-    if: |
-      github.event.workflow_run.conclusion == 'success' &&
-      startsWith(github.event.workflow_run.head_branch, 'claude/release-')
+    # Only run after auto-pr succeeds.
+    # Note: workflow_run always runs in the context of the default branch (main),
+    # so github.event.workflow_run.head_branch is 'main' — we can't filter on it here.
+    # Instead we search for open release PRs directly.
+    if: github.event.workflow_run.conclusion == 'success'
 
     steps:
       - name: Find and merge release PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCH="${{ github.event.workflow_run.head_branch }}"
-          echo "Looking for release PR from branch: $BRANCH"
+          echo "Searching for open release PRs from claude/release-* branches..."
 
           PR_NUMBER=$(gh pr list \
-            --head "$BRANCH" \
             --base main \
             --state open \
-            --json number \
-            --jq '.[0].number // empty' \
+            --json number,headRefName,title \
+            --jq '[.[] | select(.headRefName | startswith("claude/release-")) | select(.title | startswith("Release v"))] | .[0].number // empty' \
             --repo "${{ github.repository }}")
 
           if [ -z "$PR_NUMBER" ]; then
-            echo "⏭️ No open PR found for branch $BRANCH - skipping"
+            echo "⏭️ No open release PR found - skipping"
             exit 0
           fi
 
           PR_TITLE=$(gh pr view "$PR_NUMBER" --json title --jq '.title' --repo "${{ github.repository }}")
-          echo "Found PR #$PR_NUMBER: $PR_TITLE"
-
-          if ! echo "$PR_TITLE" | grep -qE "^Release v"; then
-            echo "⏭️ PR #$PR_NUMBER is not a release PR - skipping"
-            exit 0
-          fi
+          PR_BRANCH=$(gh pr view "$PR_NUMBER" --json headRefName --jq '.headRefName' --repo "${{ github.repository }}")
+          echo "Found PR #$PR_NUMBER: $PR_TITLE (from branch: $PR_BRANCH)"
 
           echo "✅ Merging release PR #$PR_NUMBER"
           gh pr merge "$PR_NUMBER" \
