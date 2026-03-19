@@ -1285,3 +1285,37 @@ async def test_coordinator_ch_ec_no_channel(coordinator):
     assert not any(
         s.get("sensor_key", "").startswith("soilec") for s in sensors.values()
     )
+
+
+def test_sensor_entity_category_from_sensor_info():
+    """Test that entity_category='diagnostic' in sensor_info sets DIAGNOSTIC category (line 122)."""
+    from homeassistant.helpers.entity import EntityCategory
+
+    entity = _make_sensor(
+        {
+            "state": "2.44",
+            "unit_of_measurement": "V",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "hardware_id": "AABBCC",
+            "sensor_key": "ws90_voltage",
+            "category": "sensor",
+            "entity_category": "diagnostic",
+            "suggested_display_precision": 2,
+        }
+    )
+
+    assert entity._attr_entity_category == EntityCategory.DIAGNOSTIC
+    assert entity._attr_suggested_display_precision == 2
+
+
+def test_sensor_mapper_wh85_keys():
+    """Test WH85 sensor type maps to expected hex IDs and battery keys."""
+    mapper = SensorMapper()
+    keys = mapper._generate_live_data_keys("wh85", "")
+    assert "0x0B" in keys, "WH85 should have wind speed"
+    assert "0x0A" in keys, "WH85 should have wind direction"
+    assert "0x13" in keys, "WH85 should have yearly rain"
+    assert "ws85batt" in keys, "WH85 should have ws85batt"
+    assert "ws85_voltage" in keys, "WH85 should have ws85_voltage"
+    assert "ws85cap_volt" in keys, "WH85 should have ws85cap_volt"

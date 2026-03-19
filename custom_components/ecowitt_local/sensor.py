@@ -115,9 +115,16 @@ class EcowittLocalSensor(
                 f"{DOMAIN}_{self.coordinator.config_entry.entry_id}_{self._sensor_key}"
             )
 
-        # Set entity category for diagnostic sensors (including battery and signal)
+        # Set entity category: diagnostic sensors, or sensors with explicit entity_category
         if self._category == "diagnostic":
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        elif sensor_info.get("entity_category") == "diagnostic":
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
+        # Set suggested display precision if provided
+        precision = sensor_info.get("suggested_display_precision")
+        if precision is not None:
+            self._attr_suggested_display_precision = precision
 
         # Set initial attributes
         self._update_attributes(sensor_info)

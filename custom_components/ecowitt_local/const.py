@@ -81,7 +81,7 @@ def _generate_channel_sensors(
 
 
 # Sensor types and their properties
-SENSOR_TYPES: Final = {
+SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     # Temperature sensors
     "tempinf": {
         "name": "Indoor Temperature",
@@ -428,24 +428,48 @@ SENSOR_TYPES.update(
             "unit": "V",
             "device_class": "voltage",
             "state_class": "measurement",
+            "entity_category": "diagnostic",
+            "suggested_display_precision": 1,
         },
         "wh90cap_volt": {
             "name": "WH90 Capacitor Voltage",
             "unit": "V",
             "device_class": "voltage",
             "state_class": "measurement",
+            "entity_category": "diagnostic",
+            "suggested_display_precision": 1,
         },
         "ws90_voltage": {
             "name": "WS90 Battery Voltage",
             "unit": "V",
             "device_class": "voltage",
             "state_class": "measurement",
+            "entity_category": "diagnostic",
+            "suggested_display_precision": 2,
         },
         "wh90_voltage": {
             "name": "WH90 Battery Voltage",
             "unit": "V",
             "device_class": "voltage",
             "state_class": "measurement",
+            "entity_category": "diagnostic",
+            "suggested_display_precision": 2,
+        },
+        "ws85cap_volt": {
+            "name": "WS85 Capacitor Voltage",
+            "unit": "V",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "entity_category": "diagnostic",
+            "suggested_display_precision": 1,
+        },
+        "ws85_voltage": {
+            "name": "WS85 Battery Voltage",
+            "unit": "V",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "entity_category": "diagnostic",
+            "suggested_display_precision": 2,
         },
     }
 )
@@ -488,6 +512,8 @@ BATTERY_SENSORS: Final = {
     "ws90batt": {"name": "WS90 Weather Station Battery", "sensor_key": "0x02"},
     "wh90batt": {"name": "WH90 Weather Station Battery", "sensor_key": "0x02"},
     "wh77batt": {"name": "WH77 Multi-Sensor Station Battery", "sensor_key": "0x02"},
+    "wn38batt": {"name": "WN38 Black Globe Thermometer Battery", "sensor_key": "0xA1"},
+    "ws85batt": {"name": "WS85 Wind & Rain Battery", "sensor_key": "0x0B"},
 }
 
 # Add dynamically generated battery sensors

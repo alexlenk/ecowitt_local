@@ -2343,3 +2343,114 @@ async def test_coordinator_wh26_no_battery_without_mapping(coordinator):
     assert (
         wh26_battery is None
     ), "wh26batt should NOT be created without a registered WH26"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_piezo_rain_uses_ws85batt_when_ws85_mapped(coordinator):
+    """Test that piezoRain battery uses ws85batt when a WS85 is registered."""
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "29D2AA",
+                "img": "wh85",
+                "type": "49",
+                "name": "Wind & Rain",
+                "batt": "2",
+                "signal": "4",
+            }
+        ]
+    )
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "piezoRain": [
+            {
+                "id": "0x13",
+                "val": "136.1 mm",
+                "battery": "2",
+                "voltage": "2.44",
+                "ws85cap_volt": "5.0",
+            },
+        ]
+    }
+
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    ws85_battery = any(sensors[k].get("sensor_key") == "ws85batt" for k in sensors)
+    assert ws85_battery, "ws85batt should be used when WS85 is registered"
+
+    ws85_voltage = any(sensors[k].get("sensor_key") == "ws85_voltage" for k in sensors)
+    assert ws85_voltage, "ws85_voltage should be created when WS85 has voltage data"
+
+    ws85_cap = any(sensors[k].get("sensor_key") == "ws85cap_volt" for k in sensors)
+    assert ws85_cap, "ws85cap_volt should be created when WS85 has capacitor data"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_fallback_battery_from_sensors_info_wh80(coordinator):
+    """Test that WH80 battery is created from sensors_info batt when not in livedata."""
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "9E62BB",
+                "img": "wh80",
+                "type": "5",
+                "name": "WH80",
+                "batt": "3",
+                "signal": "4",
+            }
+        ]
+    )
+    coordinator._include_inactive = True
+
+    # WH80 sends wind/solar data but no wh80batt in livedata
+    raw_data = {
+        "common_list": [
+            {"id": "0x02", "val": "25.0°C"},
+        ]
+    }
+
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wh80_battery = next(
+        (sensors[k] for k in sensors if sensors[k].get("sensor_key") == "wh80batt"),
+        None,
+    )
+    assert wh80_battery is not None, "wh80batt should be created from sensors_info batt"
+    assert wh80_battery["state"] == "60", "bar-scale 3 should give 60%"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_fallback_battery_from_sensors_info_wn38(coordinator):
+    """Test that WN38 battery is created from sensors_info batt when not in livedata."""
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "2859CC",
+                "img": "wn38",
+                "type": "17",
+                "name": "WN38",
+                "batt": "4",
+                "signal": "3",
+            }
+        ]
+    )
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "common_list": [
+            {"id": "0xA1", "val": "32.5°C"},
+        ]
+    }
+
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wn38_battery = next(
+        (sensors[k] for k in sensors if sensors[k].get("sensor_key") == "wn38batt"),
+        None,
+    )
+    assert wn38_battery is not None, "wn38batt should be created from sensors_info batt"
+    assert wn38_battery["state"] == "80", "bar-scale 4 should give 80%"
