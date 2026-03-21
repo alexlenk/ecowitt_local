@@ -634,3 +634,50 @@ async def test_make_request_text_plain_content_type_with_json():
         assert result == {"stationtype": "GW3000", "version": "1.1.0"}
 
     await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_soil_calibration_list_response(api_client):
+    """Test get_soil_calibration with direct list response."""
+    soil_data = [
+        {"id": "0x80C521", "ch": "1", "nowAd": "160", "minVal": "170", "maxVal": "320"},
+        {"id": "0x80C517", "ch": "2", "nowAd": "166", "minVal": "170", "maxVal": "320"},
+    ]
+
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_cli_soilad", payload=soil_data)
+        result = await api_client.get_soil_calibration()
+
+    assert len(result) == 2
+    assert result[0]["nowAd"] == "160"
+    assert result[1]["ch"] == "2"
+    await api_client.close()
+
+
+@pytest.mark.asyncio
+async def test_get_soil_calibration_wrapped_response(api_client):
+    """Test get_soil_calibration with command-wrapped response."""
+    soil_data = {
+        "command": [
+            {"ch": "1", "nowAd": "200"},
+        ]
+    }
+
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_cli_soilad", payload=soil_data)
+        result = await api_client.get_soil_calibration()
+
+    assert len(result) == 1
+    assert result[0]["nowAd"] == "200"
+    await api_client.close()
+
+
+@pytest.mark.asyncio
+async def test_get_soil_calibration_empty_response(api_client):
+    """Test get_soil_calibration with unexpected response format."""
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_cli_soilad", payload={"other": "data"})
+        result = await api_client.get_soil_calibration()
+
+    assert result == []
+    await api_client.close()

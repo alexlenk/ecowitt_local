@@ -25,6 +25,7 @@ API_LIVE_DATA: Final = "/get_livedata_info"
 API_SENSORS: Final = "/get_sensors_info"
 API_VERSION: Final = "/get_version"
 API_UNITS: Final = "/get_units_info"
+API_SOIL_CALIBRATION: Final = "/get_cli_soilad"
 
 # Device information
 MANUFACTURER: Final = "Ecowitt"
@@ -352,6 +353,16 @@ SENSOR_TYPES.update(
         16,
     )
 )
+# Add soil moisture AD (raw analog-to-digital) sensors
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "soilad",
+        "Soil Moisture AD CH{ch}",
+        {"unit": None, "icon": "mdi:sprout", "entity_category": "diagnostic"},
+        16,
+    )
+)
+
 SENSOR_TYPES.update(
     _generate_channel_sensors(
         "pm25_ch", "PM2.5 CH{ch}", {"unit": "µg/m³", "device_class": "pm25"}, 4

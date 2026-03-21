@@ -1319,3 +1319,68 @@ def test_sensor_mapper_wh85_keys():
     assert "ws85batt" in keys, "WH85 should have ws85batt"
     assert "ws85_voltage" in keys, "WH85 should have ws85_voltage"
     assert "ws85cap_volt" in keys, "WH85 should have ws85cap_volt"
+
+
+def test_sensor_mapper_soilad_keys():
+    """Test WH51/WH52 sensor types include soilad keys."""
+    mapper = SensorMapper()
+    keys_wh51 = mapper._generate_live_data_keys("wh51", "1")
+    assert "soilad1" in keys_wh51, "WH51 should have soilad key"
+    assert "soilmoisture1" in keys_wh51, "WH51 should have soilmoisture key"
+
+    keys_wh52 = mapper._generate_live_data_keys("wh52", "3")
+    assert "soilad3" in keys_wh52, "WH52 should have soilad key"
+
+
+def test_sensor_mapper_soilad_entity_type():
+    """Test soilad keys map to soil_moisture_ad sensor type."""
+    mapper = SensorMapper()
+    sensor_type = mapper._extract_sensor_type_from_key("soilad1")
+    assert sensor_type == "soil_moisture_ad"
+
+
+@pytest.mark.asyncio
+async def test_api_get_soil_calibration_list():
+    """Test API get_soil_calibration with list response (covers api.py lines 315-322)."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+
+    soil_data = [
+        {"ch": "1", "nowAd": "160"},
+    ]
+
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_cli_soilad", payload=soil_data)
+        result = await api.get_soil_calibration()
+
+    assert len(result) == 1
+    assert result[0]["nowAd"] == "160"
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_api_get_soil_calibration_wrapped():
+    """Test API get_soil_calibration with command-wrapped response."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+
+    with aioresponses() as m:
+        m.get(
+            "http://192.168.1.100/get_cli_soilad",
+            payload={"command": [{"ch": "1", "nowAd": "200"}]},
+        )
+        result = await api.get_soil_calibration()
+
+    assert len(result) == 1
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_api_get_soil_calibration_empty():
+    """Test API get_soil_calibration with unexpected format."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_cli_soilad", payload={"other": "data"})
+        result = await api.get_soil_calibration()
+
+    assert result == []
+    await api.close()

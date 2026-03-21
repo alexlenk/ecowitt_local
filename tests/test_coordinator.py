@@ -2454,3 +2454,129 @@ async def test_coordinator_fallback_battery_from_sensors_info_wn38(coordinator):
     )
     assert wn38_battery is not None, "wn38batt should be created from sensors_info batt"
     assert wn38_battery["state"] == "80", "bar-scale 4 should give 80%"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_soil_ad_data(coordinator):
+    """Test processing soil AD (analog-to-digital) calibration data."""
+    mock_live_data = {
+        "ch_soil": [
+            {"channel": "1", "humidity": "45%", "battery": "4"},
+        ]
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_soil_calibration = AsyncMock(
+        return_value=[
+            {
+                "id": "0x80C521",
+                "ch": "1",
+                "nowAd": "160",
+                "minVal": "170",
+                "maxVal": "320",
+            },
+            {
+                "id": "0x80C517",
+                "ch": "2",
+                "nowAd": "310",
+                "minVal": "170",
+                "maxVal": "320",
+            },
+        ]
+    )
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    # Check that soil AD sensors were created
+    ad1_found = False
+    ad2_found = False
+    for entity_id, sensor_data in sensors.items():
+        sensor_key = sensor_data.get("sensor_key")
+        if sensor_key == "soilad1":
+            ad1_found = True
+            assert sensor_data["state"] == 160
+        elif sensor_key == "soilad2":
+            ad2_found = True
+            assert sensor_data["state"] == 310
+
+    assert ad1_found, "soilad1 entity should be created"
+    assert ad2_found, "soilad2 entity should be created"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_soil_ad_error_handling(coordinator):
+    """Test that soil AD errors are handled gracefully."""
+    mock_live_data = {
+        "ch_soil": [
+            {"channel": "1", "humidity": "45%", "battery": "4"},
+        ]
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_soil_calibration = AsyncMock(
+        side_effect=Exception("Gateway does not support this endpoint")
+    )
+
+    # Should not raise — error is caught and logged
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    # Soil moisture should still work even if AD fails
+    soil1_found = any(s.get("sensor_key") == "soilmoisture1" for s in sensors.values())
+    assert soil1_found, "soilmoisture1 should still be created when AD fails"
+
+    # No AD sensors should exist
+    ad_found = any(
+        s.get("sensor_key", "").startswith("soilad") for s in sensors.values()
+    )
+    assert not ad_found, "No soilad entities when API call fails"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_soil_ad_empty_response(coordinator):
+    """Test soil AD with empty response from gateway."""
+    mock_live_data = {"common_list": []}
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_soil_calibration = AsyncMock(return_value=[])
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    # No AD sensors should exist
+    ad_found = any(
+        s.get("sensor_key", "").startswith("soilad") for s in sensors.values()
+    )
+    assert not ad_found, "No soilad entities when no calibration data"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_soil_ad_missing_fields(coordinator):
+    """Test soil AD items with missing ch or nowAd fields."""
+    mock_live_data = {"common_list": []}
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_soil_calibration = AsyncMock(
+        return_value=[
+            {"id": "0x80C521", "nowAd": "160"},  # Missing ch
+            {"id": "0x80C517", "ch": "2"},  # Missing nowAd
+            "not_a_dict",  # Not a dict
+            {"id": "0x80C518", "ch": "3", "nowAd": "250"},  # Valid
+        ]
+    )
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    # Only channel 3 should have an AD sensor
+    ad_keys = [
+        s.get("sensor_key")
+        for s in sensors.values()
+        if "soilad" in s.get("sensor_key", "")
+    ]
+    assert ad_keys == ["soilad3"]
