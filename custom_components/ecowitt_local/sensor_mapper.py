@@ -126,6 +126,7 @@ class SensorMapper:
                 keys.extend(
                     [
                         f"soilmoisture{ch_num}",
+                        f"soilad{ch_num}",
                         f"soiltemp{ch_num}",
                         f"soilec{ch_num}",
                         f"soilbatt{ch_num}",
@@ -137,6 +138,7 @@ class SensorMapper:
                 keys.extend(
                     [
                         f"soilmoisture{ch_num}",
+                        f"soilad{ch_num}",
                         f"soiltemp{ch_num}",
                         f"soilec{ch_num}",
                         f"soilbatt{ch_num}",
@@ -545,6 +547,7 @@ class SensorMapper:
             "rain": "rain",
             "soiltemp": "soil_temperature",  # must precede generic "soil"
             "soilec": "soil_conductivity",  # must precede generic "soil"
+            "soilad": "soil_moisture_ad",  # must precede generic "soil"
             "soil": "soil_moisture",
             "pm25_avg_24h": "pm25_24h_avg",  # must precede "pm25_24h" and generic "pm25"
             "pm25_24h": "pm25_24h_co2",  # WH45 24h avg (must precede generic "pm25")

@@ -770,6 +770,26 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     all_sensor_items.append({"id": "co2_batt", "val": battery_pct})
                     _LOGGER.debug("Added WH45 battery: co2_batt = %s%%", battery_pct)
 
+        # Fetch soil AD (analog-to-digital) calibration data from /get_cli_soilad
+        try:
+            soil_cal = await self.api.get_soil_calibration()
+            if soil_cal:
+                _LOGGER.debug(
+                    "Found soil calibration data with %d items", len(soil_cal)
+                )
+                for item in soil_cal:
+                    if isinstance(item, dict):
+                        ch = item.get("ch")
+                        now_ad = item.get("nowAd")
+                        if ch and now_ad is not None:
+                            ad_key = f"soilad{ch}"
+                            all_sensor_items.append({"id": ad_key, "val": str(now_ad)})
+                            _LOGGER.debug(
+                                "Added soil AD sensor: %s = %s", ad_key, now_ad
+                            )
+        except Exception as err:
+            _LOGGER.debug("Could not fetch soil AD data: %s", err)
+
         _LOGGER.debug("Total sensor items to process: %d", len(all_sensor_items))
 
         for item in all_sensor_items:
@@ -943,6 +963,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 "device_class": device_class,
                 "state_class": sensor_info.get("state_class") or "",
                 "entity_category": sensor_info.get("entity_category"),
+                "enabled_default": sensor_info.get("enabled_default"),
                 "suggested_display_precision": sensor_info.get(
                     "suggested_display_precision"
                 ),
