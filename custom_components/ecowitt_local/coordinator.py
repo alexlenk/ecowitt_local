@@ -963,6 +963,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 "device_class": device_class,
                 "state_class": sensor_info.get("state_class") or "",
                 "entity_category": sensor_info.get("entity_category"),
+                "enabled_default": sensor_info.get("enabled_default"),
                 "suggested_display_precision": sensor_info.get(
                     "suggested_display_precision"
                 ),
