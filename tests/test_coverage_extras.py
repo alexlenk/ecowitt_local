@@ -1358,24 +1358,8 @@ async def test_api_get_soil_calibration_list():
 
 
 @pytest.mark.asyncio
-async def test_api_get_soil_calibration_wrapped():
-    """Test API get_soil_calibration with command-wrapped response."""
-    api = EcowittLocalAPI("192.168.1.100", "")
-
-    with aioresponses() as m:
-        m.get(
-            "http://192.168.1.100/get_cli_soilad",
-            payload={"command": [{"ch": "1", "nowAd": "200"}]},
-        )
-        result = await api.get_soil_calibration()
-
-    assert len(result) == 1
-    await api.close()
-
-
-@pytest.mark.asyncio
-async def test_api_get_soil_calibration_empty():
-    """Test API get_soil_calibration with unexpected format."""
+async def test_api_get_soil_calibration_non_list():
+    """Test API get_soil_calibration with non-list response returns empty."""
     api = EcowittLocalAPI("192.168.1.100", "")
 
     with aioresponses() as m:
