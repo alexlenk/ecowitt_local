@@ -117,9 +117,7 @@ async def _async_setup_device_registry(
     # fallback was introduced (v1.6.8). If the real gateway_id is now known, move any
     # entities that are still pointing at the old ghost device to the real one.
     if gateway_id != "unknown":
-        old_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, "unknown")}
-        )
+        old_device = device_registry.async_get_device(identifiers={(DOMAIN, "unknown")})
         if old_device and entry.entry_id in old_device.config_entries:
             entity_registry = er.async_get(hass)
             for entity in er.async_entries_for_device(
