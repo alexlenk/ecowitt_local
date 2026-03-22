@@ -757,6 +757,59 @@ async def test_migration_gateway_sensor_reassignment(
     assert gateway_entity.device_id == gateway_device.id
 
 
+async def test_cleanup_unknown_gateway_device(
+    hass: HomeAssistant, setup_integration, mock_ecowitt_api
+):
+    """Test that stale 'unknown' gateway device is cleaned up on setup."""
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
+
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    config_entry = setup_integration
+
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    gateway_id = coordinator.gateway_info.get("gateway_id", "unknown")
+    assert gateway_id != "unknown", "Test requires a non-unknown gateway_id"
+
+    # Simulate a stale "unknown" ghost device left over from before v1.6.8
+    old_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "unknown")},
+        name="Ecowitt Gateway 192.168.1.100",
+        manufacturer="Ecowitt",
+    )
+    ghost_entity = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id="ecowitt_local_online_ghost",
+        config_entry=config_entry,
+        device_id=old_device.id,
+    )
+
+    # Reload (triggers _async_setup_device_registry again)
+    with patch(
+        "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+        return_value=mock_ecowitt_api,
+    ):
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Old "unknown" device should be gone
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "unknown")}) is None
+    ), "Ghost 'unknown' device should have been removed"
+
+    # The ghost entity should now point to the real gateway device
+    real_gateway = device_registry.async_get_device(identifiers={(DOMAIN, gateway_id)})
+    assert real_gateway is not None
+    updated_entity = entity_registry.async_get(ghost_entity.entity_id)
+    assert updated_entity is not None
+    assert (
+        updated_entity.device_id == real_gateway.id
+    ), "Ghost entity should be moved to real gateway device"
+
+
 async def test_async_remove_entry(hass: HomeAssistant, mock_config_entry):
     """Test async_remove_entry function."""
     from custom_components.ecowitt_local import async_remove_entry
