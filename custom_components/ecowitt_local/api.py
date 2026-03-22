@@ -302,6 +302,21 @@ class EcowittLocalAPI:
         """
         return await self._make_request("/get_version")
 
+    async def get_soil_calibration(self) -> List[Dict[str, Any]]:
+        """Get soil moisture sensor calibration data including AD values.
+
+        Returns:
+            List of soil sensor calibration data with AD values
+
+        Raises:
+            ConnectionError: Network error
+            DataError: Invalid response data
+        """
+        data = await self._make_request("/get_cli_soilad")
+        if isinstance(data, list):
+            return data
+        return []
+
     async def get_units(self) -> Dict[str, Any]:
         """Get unit settings from the gateway.
 
