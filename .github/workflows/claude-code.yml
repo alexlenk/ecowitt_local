@@ -24,12 +24,15 @@ jobs:
     # Only run for:
     # - issues events (always)
     # - workflow_dispatch (always)
-    # - issue_comment: only on actual issues (not PRs), and only from non-bot users
+    # - issue_comment: only when alexlenk comments on an issue (not a PR)
+    #   External users have read-only permissions so claude-code-action rejects them.
+    #   To process data posted by an external user, alexlenk can comment on the issue
+    #   to trigger the agent (it will read all comments including the external user's data).
     if: |
       github.event_name == 'issues' ||
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'issue_comment' &&
-       github.event.comment.user.type != 'Bot' &&
+       github.actor == 'alexlenk' &&
        !github.event.issue.pull_request)
 
     steps:
