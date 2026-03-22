@@ -21,11 +21,16 @@ permissions:
 jobs:
   claude:
     runs-on: ubuntu-latest
-    # Skip comments made by bots (including the agent itself) to avoid loops
+    # Only run for:
+    # - issues events (always)
+    # - workflow_dispatch (always)
+    # - issue_comment: only on actual issues (not PRs), and only from non-bot users
     if: |
-      github.event_name != 'issue_comment' ||
-      (github.event.comment.user.type != 'Bot' &&
-       github.event.issue.pull_request == null)
+      github.event_name == 'issues' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.comment.user.type != 'Bot' &&
+       !github.event.issue.pull_request)
 
     steps:
       - name: Checkout repository
