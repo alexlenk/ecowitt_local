@@ -3,6 +3,8 @@ name: Claude Code
 on:
   issues:
     types: [opened, reopened]
+  issue_comment:
+    types: [created]
   workflow_dispatch:
     inputs:
       issue_number:
@@ -19,14 +21,13 @@ permissions:
 jobs:
   claude:
     runs-on: ubuntu-latest
-    # Triggers:
-    # - issues: fired directly by GitHub on open/reopen
-    # - workflow_dispatch: fired by issue-comment-router.yml when anyone comments on an issue
-    #   (routing via workflow_dispatch means github.actor is github-actions[bot] with write
-    #   access, bypassing the read-only check that would fail for external contributors)
+    # Skip bot comments and PR comments
     if: |
       github.event_name == 'issues' ||
-      github.event_name == 'workflow_dispatch'
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.comment.user.type != 'Bot' &&
+       !github.event.issue.pull_request)
 
     steps:
       - name: Checkout repository
@@ -49,6 +50,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          allowed_non_write_users: "*"
           claude_args: "--model claude-sonnet-4-6 --max-turns 80"
           prompt: |
             Read AGENT_SYSTEM_PROMPT.md — this is your complete behavioral guide for this repository.
