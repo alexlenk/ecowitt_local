@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.9] - 2026-03-22
+
+### Added
+- **Soil moisture AD (raw analog-to-digital) sensors**: `soilad1`–`soilad16` entities are now available for WH51/WH52 soil moisture sensors via the `/get_cli_soilad` endpoint. These are disabled by default and expose the raw ADC reading (typically ~70 for dry, ~500 for wet), enabling custom calibration curves in Home Assistant. (PR #130 by @elderapo)
+
 ## [1.6.8] - 2026-03-19
 
 ### Added

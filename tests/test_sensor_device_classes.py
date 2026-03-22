@@ -201,3 +201,24 @@ async def test_sensor_without_device_class(hass: HomeAssistant, mock_coordinator
     assert sensor.device_class is None
     # But still work with native value
     assert sensor.native_value == 72.5
+
+
+@pytest.mark.asyncio
+async def test_sensor_disabled_by_default(hass: HomeAssistant, mock_coordinator):
+    """Test sensor with enabled_default=False is disabled by default."""
+    sensor_info = {
+        "sensor_key": "soilad1",
+        "category": "sensor",
+        "name": "Soil Moisture AD CH1",
+        "state": 160,
+        "enabled_default": False,
+    }
+
+    sensor = EcowittLocalSensor(
+        coordinator=mock_coordinator,
+        entity_id="sensor.ecowitt_soil_moisture_ad_ch1",
+        sensor_info=sensor_info,
+    )
+
+    assert sensor.entity_registry_enabled_default is False
+    assert sensor.native_value == 160

@@ -121,6 +121,10 @@ class EcowittLocalSensor(
         elif sensor_info.get("entity_category") == "diagnostic":
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
+        # Set entity as disabled by default if specified
+        if sensor_info.get("enabled_default") is False:
+            self._attr_entity_registry_enabled_default = False
+
         # Set suggested display precision if provided
         precision = sensor_info.get("suggested_display_precision")
         if precision is not None:
