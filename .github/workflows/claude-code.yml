@@ -3,6 +3,8 @@ name: Claude Code
 on:
   issues:
     types: [opened, reopened]
+  issue_comment:
+    types: [created]
   workflow_dispatch:
     inputs:
       issue_number:
@@ -19,6 +21,11 @@ permissions:
 jobs:
   claude:
     runs-on: ubuntu-latest
+    # Skip comments made by bots (including the agent itself) to avoid loops
+    if: |
+      github.event_name != 'issue_comment' ||
+      (github.event.comment.user.type != 'Bot' &&
+       github.event.issue.pull_request == null)
 
     steps:
       - name: Checkout repository
@@ -29,6 +36,8 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "number=${{ inputs.issue_number }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "issue_comment" ]; then
+            echo "number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
           else
             echo "number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
           fi
@@ -41,40 +50,28 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: "--model claude-sonnet-4-6 --max-turns 80"
           prompt: |
-            Read CLAUDE.md for full project context first.
+            Read AGENT_SYSTEM_PROMPT.md — this is your complete behavioral guide for this repository.
+            It defines what is actionable, how to implement fixes, branch naming, release process, and all rules.
 
-            Fetch the full details of issue #${{ steps.issue.outputs.number }} from this
-            repository using: gh issue view ${{ steps.issue.outputs.number }} --repo ${{ github.repository }}
+            Also read CLAUDE.md for project architecture and technical context.
 
-            Also fetch all comments: gh issue view ${{ steps.issue.outputs.number }} --repo ${{ github.repository }} --comments
+            Then process issue #${{ steps.issue.outputs.number }}:
 
-            Issue body excerpt (may be truncated):
-            ${{ github.event.issue.body }}
+            Fetch the full issue:
+              gh issue view ${{ steps.issue.outputs.number }} --repo ${{ github.repository }}
 
-            IMPORTANT - Images and attachments:
-            The issue body above may contain image URLs in markdown format like
-            ![description](https://github.com/user-attachments/assets/...).
-            For every image URL found, download it with:
+            Fetch all comments:
+              gh issue view ${{ steps.issue.outputs.number }} --repo ${{ github.repository }} --comments
+
+            Issue body excerpt (may be truncated by GitHub Actions):
+            ${{ github.event.issue.body }}${{ github.event.comment.body }}
+
+            IMPORTANT — Images and attachments:
+            If the issue body or any comment contains image URLs in markdown format like
+            ![description](https://github.com/user-attachments/assets/...), download each one:
               curl -sL "<url>" -o /tmp/issue_img_<N>.png
-            Then view each downloaded file using the Read tool — images often
-            contain critical diagnostic data (screenshots, sensor readings, logs)
-            not described in the text.
+            Then view each file using the Read tool — images often contain critical diagnostic
+            data (sensor lists, livedata JSON, error messages) not described in the text.
 
-            Your task:
-            1. Analyse the issue (including any images) and determine whether it
-               is an actionable bug or feature request.
-            2. If it is actionable, implement a fix on a new branch named
-               claude/issue-${{ steps.issue.outputs.number }}-<short-description>.
-            3. Set up the test environment first if needed:
-               python3 -m venv .venv && .venv/bin/pip install -r requirements_test.txt
-            4. Run the full test suite before opening the PR:
-               PYTHONPATH="$PWD" .venv/bin/pytest tests/ -v
-            5. Bump the patch version in manifest.json and add a CHANGELOG.md entry.
-            6. Open a PR targeting main. Do NOT comment on the issue itself.
-            7. If the issue is not actionable (e.g. a question, duplicate, or
-               needs more info), do nothing — do not comment, do not create a branch.
-
-            Important constraints:
-            - Do NOT implement WH77 support (it is a test sensor only).
-            - Do NOT auto-merge the PR — leave it open for review.
-            - Do NOT post any comments on the issue.
+            Follow the decision tree in AGENT_SYSTEM_PROMPT.md to determine whether this issue
+            is actionable, needs a reply, or should be skipped entirely.
