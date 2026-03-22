@@ -103,7 +103,7 @@ async def _async_setup_device_registry(
     config_url = f"http://{host}" if host else None
 
     # Create gateway device
-    device_registry.async_get_or_create(
+    gateway_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, gateway_id)},
         name=f"Ecowitt Gateway {host}",
@@ -112,6 +112,27 @@ async def _async_setup_device_registry(
         sw_version=gateway_info.get("firmware_version", "Unknown"),
         configuration_url=config_url,
     )
+
+    # Clean up stale "unknown" gateway device left over from before the gateway ID
+    # fallback was introduced (v1.6.8). If the real gateway_id is now known, move any
+    # entities that are still pointing at the old ghost device to the real one.
+    if gateway_id != "unknown":
+        old_device = device_registry.async_get_device(identifiers={(DOMAIN, "unknown")})
+        if old_device and entry.entry_id in old_device.config_entries:
+            entity_registry = er.async_get(hass)
+            for entity in er.async_entries_for_device(
+                entity_registry, old_device.id, include_disabled_entities=True
+            ):
+                entity_registry.async_update_entity(
+                    entity.entity_id, device_id=gateway_device.id
+                )
+                _LOGGER.info(
+                    "Migrated entity %s from ghost 'unknown' gateway device to %s",
+                    entity.entity_id,
+                    gateway_id,
+                )
+            device_registry.async_remove_device(old_device.id)
+            _LOGGER.info("Removed stale 'unknown' gateway device")
 
     # Create individual sensor devices
     hardware_ids = coordinator.sensor_mapper.get_all_hardware_ids()
