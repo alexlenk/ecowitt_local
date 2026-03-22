@@ -1,0 +1,63 @@
+name: Protect Agent Instruction Files
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  check-agent-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for changes to agent instruction files
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CHANGED=$(gh pr diff ${{ github.event.pull_request.number }} \
+            --name-only \
+            --repo "${{ github.repository }}")
+
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          PROTECTED=""
+          for f in CLAUDE.md AGENT_SYSTEM_PROMPT.md .github/CODEOWNERS; do
+            if echo "$CHANGED" | grep -qx "$f"; then
+              PROTECTED="$PROTECTED $f"
+            fi
+          done
+
+          if [ -n "$PROTECTED" ]; then
+            echo "protected=true" >> "$GITHUB_OUTPUT"
+            echo "files=$PROTECTED" >> "$GITHUB_OUTPUT"
+          else
+            echo "protected=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post warning comment
+        if: steps.check.outputs.protected == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --repo "${{ github.repository }}" \
+            --body "## ⚠️ Agent Instruction Files Modified
+
+          This PR modifies files that control the autonomous Claude Code agent:
+          \`\`\`
+          ${{ steps.check.outputs.files }}
+          \`\`\`
+
+          These files define what the agent is allowed to do and how it behaves. Please review these changes carefully before merging — modifying them could alter the agent's behavior in unintended ways.
+
+          @alexlenk manual review required."
+
+      - name: Fail if protected files modified
+        if: steps.check.outputs.protected == 'true'
+        run: |
+          echo "❌ PR modifies agent instruction files: ${{ steps.check.outputs.files }}"
+          echo "Manual review by @alexlenk is required."
+          exit 1
