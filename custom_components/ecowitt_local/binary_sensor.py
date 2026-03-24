@@ -348,7 +348,8 @@ class EcowittStateBinarySensor(
         self._attr_unique_id = f"{DOMAIN}_{entity_id}"
 
         # Set entity ID and name
-        self.entity_id = f"binary_sensor.{entity_id}"
+        base_id = entity_id.split(".", 1)[1] if "." in entity_id else entity_id
+        self.entity_id = f"binary_sensor.{base_id}"
         self._attr_name = sensor_info.get(
             "name", sensor_def.get("name", self._sensor_key)
         )
