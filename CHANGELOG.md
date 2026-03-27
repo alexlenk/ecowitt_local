@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.11] - 2026-03-24
+
+### Fixed
+- **Invalid binary sensor entity ID**: The `srain_piezo` binary sensor (and any future binary sensors) had an invalid entity ID of the form `binary_sensor.sensor.ecowitt_…` due to a double domain prefix. This will become a hard failure in HA 2027.2.0. Entity IDs are now correctly formed as `binary_sensor.ecowitt_…`. (PR #135 by @Juror2372)
+
 ## [1.6.10] - 2026-03-22
 
 ### Fixed
