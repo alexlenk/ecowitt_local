@@ -217,16 +217,17 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             # Force rain-array items to the tipping-bucket device (WH40 or WH69) so they
             # are never mis-attributed to a piezoelectric sensor (WH90/WS90/WS85) that
             # registers the same hex IDs (0x0D–0x13) for its piezoRain data.
-            _rain_hw_id = self.sensor_mapper.get_hardware_id(
-                "wh69batt"
-            ) or self.sensor_mapper.get_hardware_id("wh40batt")
+            _rain_hw_id = (
+                self.sensor_mapper.get_hardware_id("wh69batt")
+                or self.sensor_mapper.get_hardware_id("wh40batt")
+            )
             for item in rain_list:
                 if (
                     isinstance(item, dict)
                     and item.get("id")
                     and item.get("val") is not None
                 ):
-                    entry: dict = {"id": item["id"], "val": item["val"]}
+                    entry = {"id": item["id"], "val": item["val"]}
                     if _rain_hw_id:
                         entry["_force_hardware_id"] = _rain_hw_id
                     all_sensor_items.append(entry)
@@ -452,7 +453,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 if isinstance(item, dict) and "id" in item and "val" in item:
                     sensor_id = item["id"]
                     sensor_val = item["val"]
-                    piezo_entry: dict = {"id": sensor_id, "val": sensor_val}
+                    piezo_entry = {"id": sensor_id, "val": sensor_val}
                     if _piezo_hw_id:
                         piezo_entry["_force_hardware_id"] = _piezo_hw_id
                     all_sensor_items.append(piezo_entry)
@@ -884,7 +885,10 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             # sensors coexist and share the same hex IDs (0x0D–0x13).
             hardware_id = None
             if sensor_key not in GATEWAY_SENSORS:
-                hardware_id = item.get("_force_hardware_id") or self.sensor_mapper.get_hardware_id(sensor_key)
+                hardware_id = (
+                    item.get("_force_hardware_id")
+                    or self.sensor_mapper.get_hardware_id(sensor_key)
+                )
                 _LOGGER.debug("Hardware ID lookup for %s: %s", sensor_key, hardware_id)
 
             # Generate entity information
