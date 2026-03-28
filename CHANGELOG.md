@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.12] - 2026-03-28
+
+### Fixed
+- **WH40 rain data attributed to WH90**: When both a tipping-bucket rain sensor (WH40 or WH69) and a piezoelectric rain sensor (WH90, WS90, or WS85) are registered simultaneously, they share the same rain hex IDs (`0x0D`–`0x13`), causing all rain entities to appear under whichever device registered last. Rain data from the `rain` array is now explicitly forced to the tipping-bucket device, and piezoRain data to the piezoelectric device, regardless of key registration order. (issue #137)
+
 ## [1.6.11] - 2026-03-24
 
 ### Fixed
