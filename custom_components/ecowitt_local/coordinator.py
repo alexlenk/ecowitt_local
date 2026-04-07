@@ -691,6 +691,43 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                                 battery_pct,
                             )
 
+        # Extract ch_leaf data (WH35 leaf wetness sensors)
+        ch_leaf = raw_data.get("ch_leaf", [])
+        if ch_leaf:
+            _LOGGER.debug("Found ch_leaf data with %d items", len(ch_leaf))
+            for item in ch_leaf:
+                _LOGGER.debug("ch_leaf item: %s", item)
+                if isinstance(item, dict):
+                    channel = item.get("channel")
+                    humidity = item.get("humidity", "").replace("%", "").strip()
+                    battery = item.get("battery")
+
+                    if channel:
+                        if humidity:
+                            leaf_key = f"leafwetness_ch{channel}"
+                            all_sensor_items.append({"id": leaf_key, "val": humidity})
+                            _LOGGER.debug(
+                                "Added leaf wetness sensor: %s = %s%%",
+                                leaf_key,
+                                humidity,
+                            )
+
+                        if battery and battery != "None":
+                            battery_key = f"leaf_batt{channel}"
+                            battery_pct = (
+                                str(int(battery) * 20)
+                                if str(battery).isdigit()
+                                else battery
+                            )
+                            all_sensor_items.append(
+                                {"id": battery_key, "val": battery_pct}
+                            )
+                            _LOGGER.debug(
+                                "Added leaf wetness battery sensor: %s = %s%%",
+                                battery_key,
+                                battery_pct,
+                            )
+
         # Extract co2 data (WH45 combo sensor: CO2 + PM2.5 + PM10 + temp/humidity)
         co2_array = raw_data.get("co2", [])
         if co2_array:

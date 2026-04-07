@@ -1997,6 +1997,93 @@ async def test_coordinator_ch_pm25_empty_handling(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_ch_leaf_processing(coordinator):
+    """Test coordinator processing WH35 ch_leaf leaf wetness data."""
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "3D6A",
+                "img": "wh35",
+                "type": "40",
+                "name": "Leaf Wetness CH1",
+                "batt": "5",
+                "signal": "4",
+            }
+        ]
+    )
+    mock_live_data = {
+        "common_list": [],
+        "ch_leaf": [
+            {
+                "channel": "1",
+                "name": "Tausensor",
+                "humidity": "0%",
+                "battery": "5",
+                "voltage": "1.52",
+            },
+            {
+                "channel": "2",
+                "name": "Leaf CH2",
+                "humidity": "75%",
+                "battery": "3",
+                "voltage": "1.30",
+            },
+        ],
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_version = AsyncMock(
+        return_value={"stationtype": "GW3000C", "version": "2.1.0"}
+    )
+
+    result = await coordinator._async_update_data()
+
+    assert result is not None
+    sensors = result["sensors"]
+
+    leaf1_found = leaf2_found = batt1_found = batt2_found = False
+
+    for sensor_id, sensor_data in sensors.items():
+        key = sensor_data.get("sensor_key", "")
+        if key == "leafwetness_ch1":
+            leaf1_found = True
+            assert sensor_data["state"] == 0
+        elif key == "leafwetness_ch2":
+            leaf2_found = True
+            assert sensor_data["state"] == 75
+        elif key == "leaf_batt1":
+            batt1_found = True
+            assert sensor_data["state"] == "100"  # 5 * 20 = 100%
+        elif key == "leaf_batt2":
+            batt2_found = True
+            assert sensor_data["state"] == "60"  # 3 * 20 = 60%
+
+    assert leaf1_found, "leafwetness_ch1 sensor not found"
+    assert leaf2_found, "leafwetness_ch2 sensor not found"
+    assert batt1_found, "leaf_batt1 sensor not found"
+    assert batt2_found, "leaf_batt2 sensor not found"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_ch_leaf_empty_handling(coordinator):
+    """Test coordinator handles empty or missing ch_leaf gracefully."""
+    for ch_leaf_val in [[], None]:
+        mock_live_data = {"common_list": []}
+        if ch_leaf_val is not None:
+            mock_live_data["ch_leaf"] = ch_leaf_val
+
+        coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+        coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+        coordinator.api.get_version = AsyncMock(
+            return_value={"stationtype": "GW3000C", "version": "2.1.0"}
+        )
+
+        result = await coordinator._async_update_data()
+        assert result is not None
+
+
+@pytest.mark.asyncio
 async def test_coordinator_co2_array_processing(coordinator):
     """Test coordinator processing WH45 co2 array data (issue #96)."""
     # Register WH45 sensor mapping so hardware_id is known
