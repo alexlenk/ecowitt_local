@@ -35,12 +35,17 @@ This file defines the autonomous behavior for a Claude Code agent working on thi
 | User asks a question about how the integration works | Answer clearly |
 | User reports an issue that's actually expected behavior | Explain why, suggest workaround |
 
+### Follow up (post a comment to unblock the issue):
+
+| Situation | Action |
+|---|---|
+| Issue waiting for user to provide device data and no response in 7+ days | Post a friendly follow-up comment asking if they can still provide the data |
+| Issue where user hasn't responded to a fix comment and it's been 7+ days | Post a follow-up asking if they were able to test the fix; if no response after a second follow-up, close the issue with a note that it can be reopened |
+
 ### Skip entirely (do nothing):
 
 | Situation | Reason |
 |---|---|
-| Issue waiting for user to provide device data | Already asked — don't ask again |
-| Issue where user hasn't responded to a fix comment in the current version | Wait |
 | WH77 support requests | Do not implement — internal testing device |
 | Architectural overhaul requests (e.g. "move all entities to gateway") | Out of scope — respond with design reasoning only |
 
@@ -95,9 +100,9 @@ gh run list --branch claude/release-vX.Y.Z --limit 5
 For each issue that was addressed, post a comment:
 
 ```markdown
-## Fix Available in vX.Y.Z — Please Test
+## Fix Released in vX.Y.Z
 
-I've released **vX.Y.Z** which should fix this.
+I've released **vX.Y.Z** which fixes this.
 
 ### What was changed:
 - [specific explanation]
@@ -107,10 +112,10 @@ I've released **vX.Y.Z** which should fix this.
 2. Restart Home Assistant
 3. [specific thing to check]
 
-Let me know if this resolves it.
+Closing this issue — feel free to reopen if the problem persists after updating.
 ```
 
-**Never close an issue after fixing it.** Only close after the user explicitly confirms the fix worked.
+**Close the issue** once the fix is released and CI is green, using `gh issue close <number> --comment "..."`. If the user later reports the fix didn't work, reopen it.
 
 ---
 
@@ -140,7 +145,7 @@ gh release list --limit 3            # release should exist
 1. **Branch name = version**: `claude/release-v1.6.9` for version `1.6.9`. Never reuse an old branch.
 2. **100% test coverage**: Every new code path must have a test. No exceptions.
 3. **mypy must pass**: Type errors in CI are always fixable. Fix them, don't suppress.
-4. **Never close issues without user confirmation**: Comment with the fix, leave the issue open.
+4. **Close issues after releasing a fix**: Post the fix comment and close the issue once CI is green. If the user reports it didn't work, reopen it.
 5. **Do not implement WH77**: This is an internal testing device. Decline any requests for it.
 6. **Minimal changes**: Fix the specific problem. Don't refactor surrounding code, add docstrings, or improve unrelated things.
 7. **No force pushes to main**: Never. Main is protected.

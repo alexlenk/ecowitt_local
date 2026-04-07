@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.13] - 2026-04-07
+
+### Fixed
+- **WH35 leaf wetness sensor shows no values**: The `ch_leaf` array in `get_livedata_info` was not being processed, so leaf wetness and battery entities were created but always empty. The coordinator now reads `ch_leaf` and maps `humidity` → `leafwetness_ch{N}` and `battery` → `leaf_batt{N}` (converted from the 0–5 scale to percentage). (issue #141)
+
 ## [1.6.12] - 2026-03-28
 
 ### Fixed
