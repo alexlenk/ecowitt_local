@@ -305,6 +305,37 @@ async def test_rain_sensor_state_classes(mock_coordinator):
         ), f"{sensor_key}: expected {expected}, got {sensor.state_class}"
 
 
+def test_rain_sensor_display_precision():
+    """Rain sensors carry a suggested_display_precision so 0.2 mm doesn't render as 0 mm.
+
+    Regression test for issue #145: on a WH90 a user's Ecowitt app showed 0.2 mm
+    while Home Assistant showed 0 mm because precipitation entities rounded to
+    whole numbers. mm sensors use 1 decimal, in sensors use 2 decimals.
+    """
+    from custom_components.ecowitt_local.const import SENSOR_TYPES
+
+    mm_rain_keys = ["0x0D", "0x0E", "0x7C", "0x10", "0x11", "0x12", "0x13"]
+    for key in mm_rain_keys:
+        assert (
+            SENSOR_TYPES[key].get("suggested_display_precision") == 1
+        ), f"{key} (mm) should have suggested_display_precision=1"
+
+    in_rain_keys = [
+        "rainratein",
+        "eventrainin",
+        "hourlyrainin",
+        "dailyrainin",
+        "weeklyrainin",
+        "monthlyrainin",
+        "yearlyrainin",
+        "totalrainin",
+    ]
+    for key in in_rain_keys:
+        assert (
+            SENSOR_TYPES[key].get("suggested_display_precision") == 2
+        ), f"{key} (in) should have suggested_display_precision=2"
+
+
 @pytest.mark.asyncio
 async def test_battery_sensor_attributes(mock_coordinator):
     """Test battery sensor specific attributes."""
