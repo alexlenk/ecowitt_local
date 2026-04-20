@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.14] - 2026-04-20
+
+### Fixed
+- **Rain entities rounded to whole numbers**: Precipitation entities (rain event, rain rate, 24-hour/daily/weekly/monthly/yearly rain) had no `suggested_display_precision`, so Home Assistant displayed `0.2 mm` as `0 mm` and hid small rainfall totals that were visible in the Ecowitt app. mm-unit rain entities now display 1 decimal place and inch-unit rain entities display 2 decimal places. Underlying state values are unchanged. (issue #145)
+
 ## [1.6.13] - 2026-04-07
 
 ### Fixed
