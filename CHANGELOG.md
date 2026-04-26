@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.15] - 2026-04-26
+
+### Fixed
+- **WH55 leak sensor created device but no entities**: Some gateways (e.g. GW1200B firmware 1.4.6) report WH55 leak channels only via the `ch_leak` array in `get_livedata_info` and never list them in `get_sensors_info`. Without an explicit handler the channels were silently ignored, so the wh55 device existed in Home Assistant but had zero entities. The coordinator now parses `ch_leak`, mapping each channel's `status` → `leak_ch{N}` (`0` = Normal, `1` = leak detected) and `battery` → `leakbatt{N}` (converted from the 0–5 scale to percentage). (issue #149)
+
 ## [1.6.14] - 2026-04-20
 
 ### Fixed

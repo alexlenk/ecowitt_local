@@ -728,6 +728,53 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                                 battery_pct,
                             )
 
+        # Extract ch_leak data (WH55 leak detection sensors). Some gateways (e.g.
+        # GW1200B firmware 1.4.6) report WH55 only via this livedata array — there
+        # is no matching wh55 entry in get_sensors_info — so the sensor_mapper
+        # cannot register hardware IDs and entities won't be created without an
+        # explicit ch_leak handler here.
+        ch_leak = raw_data.get("ch_leak", [])
+        if ch_leak:
+            _LOGGER.debug("Found ch_leak data with %d items", len(ch_leak))
+            for item in ch_leak:
+                _LOGGER.debug("ch_leak item: %s", item)
+                if isinstance(item, dict):
+                    channel = item.get("channel")
+                    status = item.get("status")
+                    battery = item.get("battery")
+
+                    if channel:
+                        if status is not None and str(status) != "":
+                            leak_key = f"leak_ch{channel}"
+                            # WH55 reports "Normal" when dry; any other value
+                            # ("Leakage", "Leak", etc.) means water detected.
+                            leak_val = (
+                                "0" if str(status).strip().lower() == "normal" else "1"
+                            )
+                            all_sensor_items.append({"id": leak_key, "val": leak_val})
+                            _LOGGER.debug(
+                                "Added WH55 leak sensor: %s = %s (status=%s)",
+                                leak_key,
+                                leak_val,
+                                status,
+                            )
+
+                        if battery is not None and str(battery) != "None":
+                            battery_key = f"leakbatt{channel}"
+                            battery_pct = (
+                                str(int(battery) * 20)
+                                if str(battery).isdigit()
+                                else battery
+                            )
+                            all_sensor_items.append(
+                                {"id": battery_key, "val": battery_pct}
+                            )
+                            _LOGGER.debug(
+                                "Added WH55 leak battery sensor: %s = %s%%",
+                                battery_key,
+                                battery_pct,
+                            )
+
         # Extract co2 data (WH45 combo sensor: CO2 + PM2.5 + PM10 + temp/humidity)
         co2_array = raw_data.get("co2", [])
         if co2_array:
