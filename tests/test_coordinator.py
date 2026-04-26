@@ -2084,6 +2084,105 @@ async def test_coordinator_ch_leaf_empty_handling(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_ch_leak_processing(coordinator):
+    """Test coordinator processing WH55 ch_leak leak detection data (issue #149).
+
+    Some gateways (e.g. GW1200B) report WH55 leak channels only via the ch_leak
+    livedata array — get_sensors_info contains no wh55 entry. This test verifies
+    that the coordinator emits leak_ch{n} and leakbatt{n} items for those channels
+    so entities are created.
+    """
+    coordinator._include_inactive = True
+    mock_live_data = {
+        "common_list": [],
+        "ch_leak": [
+            {"channel": "1", "name": "", "battery": "5", "status": "Normal"},
+            {"channel": "2", "name": "", "battery": "3", "status": "Leakage"},
+        ],
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_version = AsyncMock(
+        return_value={"stationtype": "GW1200B", "version": "1.4.6"}
+    )
+
+    result = await coordinator._async_update_data()
+
+    assert result is not None
+    sensors = result["sensors"]
+
+    leak1_found = leak2_found = batt1_found = batt2_found = False
+    for sensor_data in sensors.values():
+        key = sensor_data.get("sensor_key", "")
+        if key == "leak_ch1":
+            leak1_found = True
+            assert str(sensor_data["state"]) == "0"  # Normal → no leak
+        elif key == "leak_ch2":
+            leak2_found = True
+            assert str(sensor_data["state"]) == "1"  # Leakage → leak detected
+        elif key == "leakbatt1":
+            batt1_found = True
+            assert sensor_data["state"] == "100"  # 5 * 20 = 100%
+        elif key == "leakbatt2":
+            batt2_found = True
+            assert sensor_data["state"] == "60"  # 3 * 20 = 60%
+
+    assert leak1_found, "leak_ch1 sensor not found"
+    assert leak2_found, "leak_ch2 sensor not found"
+    assert batt1_found, "leakbatt1 sensor not found"
+    assert batt2_found, "leakbatt2 sensor not found"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_ch_leak_empty_handling(coordinator):
+    """Test coordinator handles empty or missing ch_leak gracefully."""
+    for ch_leak_val in [[], None]:
+        mock_live_data = {"common_list": []}
+        if ch_leak_val is not None:
+            mock_live_data["ch_leak"] = ch_leak_val
+
+        coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+        coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+        coordinator.api.get_version = AsyncMock(
+            return_value={"stationtype": "GW1200B", "version": "1.4.6"}
+        )
+
+        result = await coordinator._async_update_data()
+        assert result is not None
+
+
+@pytest.mark.asyncio
+async def test_coordinator_ch_leak_skips_invalid_items(coordinator):
+    """ch_leak entries without channel, status, or battery should be skipped cleanly."""
+    coordinator._include_inactive = True
+    mock_live_data = {
+        "common_list": [],
+        "ch_leak": [
+            "not_a_dict",
+            {"channel": "", "status": "Normal", "battery": "5"},  # missing channel
+            {"channel": "3"},  # no status, no battery
+            {"channel": "4", "status": "", "battery": "None"},  # blank/None values
+        ],
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_version = AsyncMock(
+        return_value={"stationtype": "GW1200B", "version": "1.4.6"}
+    )
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    # Nothing in the malformed entries should produce a leak or battery sensor.
+    for sensor_data in sensors.values():
+        key = sensor_data.get("sensor_key", "")
+        assert not key.startswith("leak_ch")
+        assert not key.startswith("leakbatt")
+
+
+@pytest.mark.asyncio
 async def test_coordinator_co2_array_processing(coordinator):
     """Test coordinator processing WH45 co2 array data (issue #96)."""
     # Register WH45 sensor mapping so hardware_id is known
