@@ -391,11 +391,7 @@ SENSOR_TYPES.update(
         4,
     )
 )
-SENSOR_TYPES.update(
-    _generate_channel_sensors(
-        "leak_ch", "Leak Sensor CH{ch}", {"device_class": "moisture"}, 4
-    )
-)
+SENSOR_TYPES.update(_generate_channel_sensors("leak_ch", "Leak Sensor CH{ch}", {}, 4))
 SENSOR_TYPES.update(
     _generate_channel_sensors(
         "leafwetness_ch",

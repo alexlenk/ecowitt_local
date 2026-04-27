@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.16] - 2026-04-27
+
+### Fixed
+- **WH55 leak sensor logged Home Assistant warning about invalid unit**: After v1.6.15 added support for the WH55 leak channels, each entity logged `Entity sensor.ecowitt_leak_… is using native unit of measurement 'None' which is not a valid unit for the device class ('moisture')`. The leak sensor reports a binary `0`/`1` state, not a percentage, so the `moisture` device class (which requires `%`) was inappropriate. The device class has been removed; the entity still reports `0`/`1` and keeps its `mdi:water-alert` icon. (issue #149)
+
 ## [1.6.15] - 2026-04-26
 
 ### Fixed
