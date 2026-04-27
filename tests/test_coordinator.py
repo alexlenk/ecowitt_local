@@ -2118,9 +2118,13 @@ async def test_coordinator_ch_leak_processing(coordinator):
         if key == "leak_ch1":
             leak1_found = True
             assert str(sensor_data["state"]) == "0"  # Normal → no leak
+            # Issue #149: must not have device_class "moisture" without a unit.
+            # HA logs warnings when device_class moisture is set without unit "%".
+            assert sensor_data.get("device_class") != "moisture"
         elif key == "leak_ch2":
             leak2_found = True
             assert str(sensor_data["state"]) == "1"  # Leakage → leak detected
+            assert sensor_data.get("device_class") != "moisture"
         elif key == "leakbatt1":
             batt1_found = True
             assert sensor_data["state"] == "100"  # 5 * 20 = 100%
