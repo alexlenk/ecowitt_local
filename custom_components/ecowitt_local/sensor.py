@@ -180,14 +180,18 @@ class EcowittLocalSensor(
             ):
                 self._attr_state_class = SensorStateClass.MEASUREMENT
 
-        # For timestamp device class, convert naive string to timezone-aware datetime
+        # For timestamp device class, convert naive string to timezone-aware datetime.
+        # The gateway reports timestamps in its configured local time (matching the
+        # weather station's clock), not UTC, so attach HA's local timezone to naive
+        # values rather than UTC — otherwise the entity is offset by the user's UTC
+        # offset (issue #153).
         if device_class_str == "timestamp" and isinstance(self._attr_native_value, str):
-            from datetime import timezone as tz
+            import homeassistant.util.dt as dt_util
 
             try:
                 dt = datetime.fromisoformat(self._attr_native_value)
                 if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=tz.utc)
+                    dt = dt.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
                 self._attr_native_value = dt
             except (ValueError, TypeError):
                 self._attr_native_value = None

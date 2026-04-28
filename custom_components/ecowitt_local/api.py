@@ -62,6 +62,7 @@ class EcowittLocalAPI:
         self._close_session = False
         self._authenticated = False
         self._base_url = f"http://{self._host}"
+        self._sensor_pages: Optional[int] = None
 
         if self._session is None:
             self._session = ClientSession(
@@ -270,16 +271,57 @@ class EcowittLocalAPI:
 
         return active_sensors
 
+    async def _get_sensor_pages_count(self) -> int:
+        """Determine how many sensor-info pages the gateway exposes.
+
+        Newer firmware (e.g. GW1100B v2.4.5, GW2000A v3.3.1) moved paired
+        sensors to higher pages and advertises the page count via the
+        ``sensorid_page`` field in ``/get_version``. Older firmware omits the
+        field, in which case we fall back to the historical behaviour of two
+        pages. The result is cached for the lifetime of the client to avoid
+        an extra request per mapping refresh.
+        """
+        if self._sensor_pages is not None:
+            return self._sensor_pages
+
+        try:
+            version = await self.get_version()
+        except EcowittLocalAPIError as err:
+            _LOGGER.debug("Could not fetch /get_version for page count: %s", err)
+            return 2
+
+        raw = version.get("sensorid_page")
+        if raw is None:
+            return 2
+
+        try:
+            count = int(str(raw).strip())
+        except (TypeError, ValueError):
+            _LOGGER.debug("Unparseable sensorid_page value: %r", raw)
+            return 2
+
+        # Sanity-bound: refuse pathological counts so a corrupt response can't
+        # spam the gateway with hundreds of requests.
+        if count < 1 or count > 16:
+            _LOGGER.debug("sensorid_page out of expected range: %d", count)
+            return 2
+
+        self._sensor_pages = count
+        return count
+
     async def get_all_sensor_mappings(self) -> List[Dict[str, Any]]:
-        """Get all sensor mappings from both pages.
+        """Get all sensor mappings from every page the gateway exposes.
+
+        The page count is read from ``/get_version`` (``sensorid_page``); older
+        firmware that doesn't advertise it falls back to pages 1–2.
 
         Returns:
-            Complete list of sensor mappings from both pages
+            Complete list of sensor mappings across all pages
         """
         mappings = []
 
-        # Get mappings from both pages
-        for page in [1, 2]:
+        page_count = await self._get_sensor_pages_count()
+        for page in range(1, page_count + 1):
             try:
                 page_mappings = await self.get_sensor_mapping(page)
                 mappings.extend(page_mappings)

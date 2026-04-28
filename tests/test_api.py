@@ -512,6 +512,208 @@ async def test_get_all_sensor_mappings_with_data_error():
 
 
 @pytest.mark.asyncio
+async def test_get_all_sensor_mappings_uses_sensorid_page():
+    """Newer firmware advertises >2 sensor-info pages via /get_version's sensorid_page.
+
+    Regression test for issues #146, #148, #151: GW2000A V3.3.1 / GW1100B V2.4.5
+    moved paired sensors to higher pages, leaving pages 1–2 with only FFFFFFFF
+    placeholders. The integration must honour the advertised page count.
+    """
+    api = EcowittLocalAPI("192.168.1.100", "")
+
+    with aioresponses() as m:
+        m.get(
+            "http://192.168.1.100/get_version",
+            payload={
+                "stationtype": "GW1100B",
+                "version": "2.4.5",
+                "sensorid_page": "4",
+            },
+        )
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=1",
+            payload={"sensor": []},
+        )
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=2",
+            payload={"sensor": []},
+        )
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=3",
+            payload={"sensor": [{"id": "F94AC", "type": "WH51", "channel": "1"}]},
+        )
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=4",
+            payload={"sensor": [{"id": "F806E", "type": "WH51", "channel": "2"}]},
+        )
+
+        result = await api.get_all_sensor_mappings()
+
+        assert len(result) == 2
+        assert {entry["id"] for entry in result} == {"F94AC", "F806E"}
+
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_all_sensor_mappings_sensorid_page_caching():
+    """Page count from /get_version is cached after first fetch."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+
+    with aioresponses() as m:
+        # /get_version mocked exactly once: a second call would 404.
+        m.get(
+            "http://192.168.1.100/get_version",
+            payload={"stationtype": "GW1100B", "sensorid_page": "1"},
+        )
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=1",
+            payload={"sensor": [{"id": "ABCDE", "type": "WH51", "channel": "1"}]},
+            repeat=True,
+        )
+
+        first = await api.get_all_sensor_mappings()
+        second = await api.get_all_sensor_mappings()
+
+        assert len(first) == 1
+        assert len(second) == 1
+
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_all_sensor_mappings_falls_back_when_get_version_fails():
+    """If /get_version errors, fall back to legacy two-page sweep."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_version", status=500)
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=1",
+            payload={"sensor": [{"id": "AAA", "type": "WH51", "channel": "1"}]},
+        )
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=2",
+            payload={"sensor": []},
+        )
+
+        result = await api.get_all_sensor_mappings()
+
+        assert len(result) == 1
+        assert result[0]["id"] == "AAA"
+
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_all_sensor_mappings_sensorid_page_unparseable():
+    """An unparseable sensorid_page value falls back to two pages."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+
+    with aioresponses() as m:
+        m.get(
+            "http://192.168.1.100/get_version",
+            payload={"stationtype": "GW1100A", "sensorid_page": "notanumber"},
+        )
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=1",
+            payload={"sensor": [{"id": "BBB", "type": "WH51", "channel": "1"}]},
+        )
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=2",
+            payload={"sensor": []},
+        )
+
+        result = await api.get_all_sensor_mappings()
+
+        assert len(result) == 1
+        assert result[0]["id"] == "BBB"
+
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_all_sensor_mappings_sensorid_page_out_of_bounds():
+    """Pathological sensorid_page values fall back to two pages (anti-DoS)."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+
+    with aioresponses() as m:
+        m.get(
+            "http://192.168.1.100/get_version",
+            payload={"stationtype": "GW1100A", "sensorid_page": "9999"},
+        )
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=1",
+            payload={"sensor": [{"id": "CCC", "type": "WH51", "channel": "1"}]},
+        )
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=2",
+            payload={"sensor": []},
+        )
+
+        result = await api.get_all_sensor_mappings()
+
+        assert len(result) == 1
+        assert result[0]["id"] == "CCC"
+
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_all_sensor_mappings_no_sensorid_page_field():
+    """Older firmware returns /get_version without sensorid_page → fall back to two pages."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+
+    with aioresponses() as m:
+        m.get(
+            "http://192.168.1.100/get_version",
+            payload={"stationtype": "GW1100A", "version": "1.7.3"},
+        )
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=1",
+            payload={"sensor": [{"id": "EEE", "type": "WH51", "channel": "1"}]},
+        )
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=2",
+            payload={"sensor": []},
+        )
+
+        result = await api.get_all_sensor_mappings()
+
+        assert len(result) == 1
+        assert result[0]["id"] == "EEE"
+
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_all_sensor_mappings_sensorid_page_zero():
+    """A zero sensorid_page value falls back to two pages."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+
+    with aioresponses() as m:
+        m.get(
+            "http://192.168.1.100/get_version",
+            payload={"stationtype": "GW1100A", "sensorid_page": "0"},
+        )
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=1",
+            payload={"sensor": [{"id": "DDD", "type": "WH51", "channel": "1"}]},
+        )
+        m.get(
+            "http://192.168.1.100/get_sensors_info?page=2",
+            payload={"sensor": []},
+        )
+
+        result = await api.get_all_sensor_mappings()
+
+        assert len(result) == 1
+        assert result[0]["id"] == "DDD"
+
+    await api.close()
+
+
+@pytest.mark.asyncio
 async def test_get_units():
     """Test getting unit settings."""
     api = EcowittLocalAPI("192.168.1.100", "")
