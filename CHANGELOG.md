@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.17] - 2026-04-28
+
+### Fixed
+- **Sensors disappear after gateway firmware update (GW2000A V3.3.1, GW1100B V2.4.5+)**: Newer firmware moved paired sensors to higher pages of `/get_sensors_info` and advertises the page count via `sensorid_page` in `/get_version`. The integration was hardcoded to read only pages 1–2, so paired WH51 / WH34S / WH26 / WN32 sensors became unmapped — entities fell back to channel-based naming on the gateway device, and the `wh26batt` battery never appeared. The API client now reads `sensorid_page` from `/get_version` and iterates every advertised page (with a sane fallback to the legacy two-page sweep when the field is missing or invalid). Diagnosis and proposed fix by @briansperling. (issues #146, #148, #151)
+- **WH57 lightning timestamp displayed with a UTC offset**: `Last Lightning` interpreted the gateway's naive ISO-8601 timestamp as UTC, so users in non-UTC timezones saw the strike time skewed by their UTC offset (e.g. a 20:32 strike showed as 21:32 in CET). The gateway reports times in its local clock, which matches Home Assistant's configured timezone, so naive timestamps are now attached to HA's local timezone. (issue #153)
+
 ## [1.6.16] - 2026-04-27
 
 ### Fixed

@@ -259,9 +259,16 @@ def _make_sensor(sensor_info):
     return EcowittLocalSensor(coordinator, "sensor.ecowitt_test", sensor_info)
 
 
-def test_sensor_timestamp_naive_string_converted_to_utc():
-    """Naive ISO 8601 string for timestamp device class → timezone-aware UTC datetime."""
-    from datetime import datetime, timezone
+def test_sensor_timestamp_naive_string_uses_ha_local_timezone():
+    """Naive ISO 8601 string for timestamp device class → tz-aware datetime in HA's local zone.
+
+    Regression test for issue #153: the gateway reports lightning strike times in
+    its local clock (which matches HA's configured timezone), not UTC. Attaching
+    UTC made the entity show times offset by the user's UTC offset.
+    """
+    from datetime import datetime
+
+    import homeassistant.util.dt as dt_util
 
     entity = _make_sensor(
         {
@@ -277,8 +284,10 @@ def test_sensor_timestamp_naive_string_converted_to_utc():
     )
 
     assert isinstance(entity._attr_native_value, datetime)
-    assert entity._attr_native_value.tzinfo == timezone.utc
+    assert entity._attr_native_value.tzinfo == dt_util.DEFAULT_TIME_ZONE
     assert entity._attr_native_value.year == 2026
+    assert entity._attr_native_value.hour == 20
+    assert entity._attr_native_value.minute == 40
 
 
 def test_sensor_timestamp_invalid_string_becomes_none():
