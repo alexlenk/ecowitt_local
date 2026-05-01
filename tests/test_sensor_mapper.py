@@ -352,3 +352,106 @@ def test_wh69_sensor_mapping():
     entity_id, friendly_name = mapper.generate_entity_id("0x02", "BB")
     assert "bb" in entity_id.lower()
     assert friendly_name == "Outdoor Temperature"
+
+
+def test_wh65_wh90_conflict_prefers_stronger_signal():
+    """When a stale WH65/WH69 slot and an active WH90 share common_list hex IDs,
+    the mapping must go to the sensor with the stronger signal regardless of
+    iteration order — otherwise live data leaks onto a phantom device.
+
+    Reproduces issue #155: after v1.6.17 enabled multi-page sensor fetching,
+    a stale WH65 slot left over from a previously paired weather station was
+    pulled in alongside the active WH90, splitting WH90's entities across two
+    devices.
+    """
+    # Stale WH65 slot first (signal=0 because it stopped transmitting),
+    # active WH90 second.
+    stale_first = [
+        {
+            "id": "EA1234",
+            "img": "wh69",  # WH65 reports img=wh69
+            "name": "Temp & Humidity & Solar & Wind & Rain",
+            "batt": "0",
+            "signal": "0",
+        },
+        {
+            "id": "FF9988",
+            "img": "wh90",
+            "name": "Temp & Humidity & Solar & Wind & Rain",
+            "batt": "0",
+            "signal": "4",
+        },
+    ]
+    mapper = SensorMapper()
+    mapper.update_mapping(stale_first)
+    for shared_key in ("0x02", "0x07", "0x0B", "0x15", "0x17", "0x0D", "0x13"):
+        assert mapper.get_hardware_id(shared_key) == "FF9988"
+    # Each device's unique battery key still resolves to its own hardware ID.
+    assert mapper.get_hardware_id("wh69batt") == "EA1234"
+    assert mapper.get_hardware_id("wh90batt") == "FF9988"
+
+    # Reverse order — active WH90 first, stale WH65 last. The dict-overwrite
+    # default would let the stale slot win; the signal-priority guard keeps
+    # the active sensor.
+    stale_last = [stale_first[1], stale_first[0]]
+    mapper = SensorMapper()
+    mapper.update_mapping(stale_last)
+    for shared_key in ("0x02", "0x07", "0x0B", "0x15", "0x17", "0x0D", "0x13"):
+        assert mapper.get_hardware_id(shared_key) == "FF9988"
+    assert mapper.get_hardware_id("wh69batt") == "EA1234"
+    assert mapper.get_hardware_id("wh90batt") == "FF9988"
+
+
+def test_conflict_with_equal_signals_preserves_last_wins():
+    """When two sensors claim the same key with equal signal strength the
+    later iteration still wins — preserves the historical behaviour for the
+    cases where signal isn't an informative tie-breaker.
+    """
+    mapper = SensorMapper()
+    mapper.update_mapping(
+        [
+            {
+                "id": "AAA111",
+                "img": "wh69",
+                "name": "Temp & Humidity & Solar & Wind & Rain",
+                "batt": "0",
+                "signal": "3",
+            },
+            {
+                "id": "BBB222",
+                "img": "wh90",
+                "name": "Temp & Humidity & Solar & Wind & Rain",
+                "batt": "0",
+                "signal": "3",
+            },
+        ]
+    )
+    assert mapper.get_hardware_id("0x02") == "BBB222"
+
+
+def test_conflict_with_unparseable_signal_does_not_crash():
+    """A non-numeric signal field must not abort the mapping update — the
+    sensor is still registered and competes with signal=-1 (lowest priority).
+    """
+    mapper = SensorMapper()
+    mapper.update_mapping(
+        [
+            {
+                "id": "GOOD01",
+                "img": "wh90",
+                "name": "Temp & Humidity & Solar & Wind & Rain",
+                "batt": "0",
+                "signal": "4",
+            },
+            {
+                "id": "BAD002",
+                "img": "wh69",
+                "name": "Temp & Humidity & Solar & Wind & Rain",
+                "batt": "0",
+                "signal": "--",
+            },
+        ]
+    )
+    assert mapper.get_hardware_id("0x02") == "GOOD01"
+    # The malformed-signal sensor still gets registered in sensor_info.
+    assert mapper.get_sensor_info("BAD002") is not None

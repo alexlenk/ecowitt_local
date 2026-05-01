@@ -35,6 +35,16 @@ class SensorMapper:
         self._hardware_mapping.clear()
         self._sensor_info.clear()
 
+        # Tracks the signal strength of the sensor that currently owns each
+        # mapping key. When two sensor types share live-data keys — most often
+        # WH65 (img=wh69) and WH90 both claiming common_list 0x02–0x13 because
+        # the gateway still has a stale slot from a previously paired WH65 —
+        # the dict-overwrite "last wins" picked an arbitrary owner depending on
+        # iteration order, splitting entities across two phantom devices. By
+        # preferring the entry with the stronger signal we let the active
+        # sensor win (stale slots typically degrade to signal=0).
+        key_signal: Dict[str, int] = {}
+
         for sensor in sensor_mappings:
             try:
                 hardware_id = sensor.get("id", "").strip()
@@ -51,6 +61,11 @@ class SensorMapper:
                 if not hardware_id or hardware_id.upper() in ("FFFFFFFF", "FFFFFFFE"):
                     continue
 
+                try:
+                    signal_int = int(str(signal).strip())
+                except (TypeError, ValueError):
+                    signal_int = -1
+
                 # Store sensor information
                 self._sensor_info[hardware_id] = {
                     "hardware_id": hardware_id,
@@ -65,14 +80,36 @@ class SensorMapper:
                 # Map live data keys to hardware IDs
                 live_keys = self._generate_live_data_keys(sensor_type, channel)
                 _LOGGER.debug(
-                    "Mapping for hardware_id %s (type=%s, channel=%s): keys=%s",
+                    "Mapping for hardware_id %s (type=%s, channel=%s, signal=%s): keys=%s",
                     hardware_id,
                     sensor_type,
                     channel,
+                    signal,
                     live_keys,
                 )
                 for key in live_keys:
-                    self._hardware_mapping[key] = hardware_id
+                    existing_signal = key_signal.get(key)
+                    if existing_signal is None or signal_int >= existing_signal:
+                        if existing_signal is not None:
+                            _LOGGER.info(
+                                "Live-data key %s claimed by both %s (signal=%d) and %s (signal=%d); preferring stronger signal",
+                                key,
+                                self._hardware_mapping[key],
+                                existing_signal,
+                                hardware_id,
+                                signal_int,
+                            )
+                        self._hardware_mapping[key] = hardware_id
+                        key_signal[key] = signal_int
+                    else:
+                        _LOGGER.info(
+                            "Live-data key %s claimed by both %s (signal=%d) and %s (signal=%d); keeping stronger signal",
+                            key,
+                            self._hardware_mapping[key],
+                            existing_signal,
+                            hardware_id,
+                            signal_int,
+                        )
 
             except Exception as err:
                 _LOGGER.warning("Error processing sensor mapping: %s", err)
