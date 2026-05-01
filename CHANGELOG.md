@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.18] - 2026-05-01
+
+### Fixed
+- **Phantom WH69 device showing WH90 entities after v1.6.17**: When a stale WH65/WH69 sensor slot from a previously paired weather station coexisted with an active WH90, both claimed the same `common_list` hex IDs (`0x02`, `0x07`, `0x0B`, `0x15`, `0x17`, `0x0D`–`0x13`). The dict-overwrite "last wins" picked an arbitrary owner depending on iteration order, splitting WH90's entities across two devices: a phantom WH69 with the temperature/humidity/wind/solar entities, and the real WH90 with only the rain entities. v1.6.17's multi-page `get_sensors_info` sweep made this newly visible because the stale WH65 slot lived on a higher page that the previous two-page sweep skipped. The mapper now prefers the entry with the stronger signal when two sensor types share live-data keys, so the active sensor wins and the stale slot stops claiming entities. (issue #155)
+
 ## [1.6.17] - 2026-04-28
 
 ### Fixed
