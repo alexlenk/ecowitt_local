@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.19] - 2026-05-02
+
+### Fixed
+- **Phantom WH69 device persisted after v1.6.18 fix**: v1.6.18 routed the shared `common_list` hex IDs to the active WH90 via signal-priority resolution, but the WH65 slot's device entry — pre-registered from `get_sensors_info` during integration setup — stayed in the device registry with zero entities and an unhelpful `wh69` model label. After platform setup, devices in the integration's config entry whose hardware ID is reported with `signal=0` and which have no entities are now removed; the gateway and any device with at least one entity are left alone, so freshly paired sensors awaiting their first live-data poll and disconnected sensors with cached entities are unaffected. (issue #155)
+
 ## [1.6.18] - 2026-05-01
 
 ### Fixed

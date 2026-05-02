@@ -810,6 +810,218 @@ async def test_cleanup_unknown_gateway_device(
     ), "Ghost entity should be moved to real gateway device"
 
 
+async def test_phantom_signal_zero_device_removed(
+    hass: HomeAssistant, mock_config_entry, mock_ecowitt_api
+):
+    """A stale WH65 slot (signal=0) reported alongside an active WH90 must
+    not leave a phantom device behind after platform setup.
+
+    Reproduces the residual symptom from issue #155: v1.6.18 routed shared
+    common_list keys to the active WH90 via signal-priority resolution, but
+    the WH65 device was already pre-registered by _async_setup_device_registry
+    and stayed in the registry with zero entities. The post-platform cleanup
+    pass should remove it.
+    """
+    from unittest.mock import patch
+
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
+
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.get_version.return_value = {
+        "stationtype": "GW2000A",
+        "version": "3.3.1",
+    }
+    mock_ecowitt_api.get_units.return_value = {"temperature": "1"}
+    mock_ecowitt_api.get_all_sensor_mappings.return_value = [
+        {
+            "id": "EA1234",
+            "img": "wh69",
+            "type": "0",
+            "name": "Temp & Humidity & Solar & Wind & Rain",
+            "batt": "0",
+            "signal": "0",
+        },
+        {
+            "id": "FF9988",
+            "img": "wh90",
+            "type": "48",
+            "name": "Temp & Humidity & Solar & Wind & Rain",
+            "batt": "0",
+            "signal": "4",
+        },
+    ]
+    mock_ecowitt_api.get_live_data.return_value = {
+        "common_list": [
+            {"id": "0x02", "val": "72.5"},
+            {"id": "0x07", "val": "65"},
+        ],
+        "wh90batt": "5",
+    }
+
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+        return_value=mock_ecowitt_api,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    phantom = device_registry.async_get_device(identifiers={(DOMAIN, "EA1234")})
+    assert phantom is None, "Phantom WH65 device should have been removed"
+
+    active = device_registry.async_get_device(identifiers={(DOMAIN, "FF9988")})
+    assert active is not None, "Active WH90 device must remain"
+    active_entities = er.async_entries_for_device(
+        entity_registry, active.id, include_disabled_entities=True
+    )
+    assert active_entities, "Active WH90 device should have entities"
+
+
+async def test_signal_zero_device_with_entities_kept(
+    hass: HomeAssistant, mock_config_entry, mock_ecowitt_api
+):
+    """A signal=0 sensor that still owns entities (e.g. the user's gateway
+    cached entries from a previous session) must not be removed — the cleanup
+    is gated on having zero entities, not on signal alone.
+    """
+    from unittest.mock import patch
+
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
+
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.get_version.return_value = {
+        "stationtype": "GW2000A",
+        "version": "3.3.1",
+    }
+    mock_ecowitt_api.get_units.return_value = {"temperature": "1"}
+    mock_ecowitt_api.get_all_sensor_mappings.return_value = [
+        {
+            "id": "AB1234",
+            "img": "wh51",
+            "type": "15",
+            "name": "Soil moisture CH1",
+            "batt": "5",
+            "signal": "0",
+        },
+    ]
+    mock_ecowitt_api.get_live_data.return_value = {
+        "common_list": [
+            {"id": "soilmoisture1", "val": "42"},
+            {"id": "soilbatt1", "val": "4"},
+        ]
+    }
+
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+        return_value=mock_ecowitt_api,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "AB1234")})
+    assert device is not None, "Sensor with entities must be kept even at signal=0"
+    entities = er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    )
+    assert entities, "Sensor should have its entities preserved"
+
+
+async def test_orphaned_device_unknown_to_mapper_kept(
+    hass: HomeAssistant, mock_config_entry, mock_ecowitt_api
+):
+    """A device whose hardware_id is no longer in get_sensors_info (e.g. the
+    user unpaired the sensor from the gateway) is left alone — its entities
+    likely contain historical state the user may still want to keep around.
+    The cleanup only fires for sensors actively reported as signal=0.
+    """
+    from unittest.mock import patch
+
+    from homeassistant.helpers import device_registry as dr
+
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.get_version.return_value = {
+        "stationtype": "GW2000A",
+        "version": "3.3.1",
+    }
+    mock_ecowitt_api.get_units.return_value = {"temperature": "1"}
+    mock_ecowitt_api.get_all_sensor_mappings.return_value = []
+    mock_ecowitt_api.get_live_data.return_value = {"common_list": []}
+
+    mock_config_entry.add_to_hass(hass)
+    device_registry = dr.async_get(hass)
+    orphan = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "ZZ9999")},
+        name="Ecowitt Orphan ZZ9999",
+        manufacturer="Ecowitt",
+        model="wh51",
+    )
+
+    with patch(
+        "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+        return_value=mock_ecowitt_api,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "ZZ9999")}) is not None
+    ), "Orphaned device unknown to sensor_mapper must not be removed"
+    assert orphan is not None  # silence linter
+
+
+async def test_signal_positive_empty_device_kept(
+    hass: HomeAssistant, mock_config_entry, mock_ecowitt_api
+):
+    """A freshly paired sensor (signal>0) without live data yet should not be
+    removed — the cleanup must only target stale slots (signal=0).
+    """
+    from unittest.mock import patch
+
+    from homeassistant.helpers import device_registry as dr
+
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.get_version.return_value = {
+        "stationtype": "GW2000A",
+        "version": "3.3.1",
+    }
+    mock_ecowitt_api.get_units.return_value = {"temperature": "1"}
+    mock_ecowitt_api.get_all_sensor_mappings.return_value = [
+        {
+            "id": "CD5678",
+            "img": "wh51",
+            "type": "15",
+            "name": "Soil moisture CH2",
+            "batt": "5",
+            "signal": "3",
+        },
+    ]
+    mock_ecowitt_api.get_live_data.return_value = {"common_list": []}
+
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+        return_value=mock_ecowitt_api,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "CD5678")})
+    assert (
+        device is not None
+    ), "Freshly paired sensor (signal>0, no live data yet) must not be removed"
+
+
 async def test_async_remove_entry(hass: HomeAssistant, mock_config_entry):
     """Test async_remove_entry function."""
     from custom_components.ecowitt_local import async_remove_entry

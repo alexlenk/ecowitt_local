@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
@@ -48,6 +48,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Setup platforms (entities will now find their proper devices)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Remove phantom sensor devices that ended up with no entities (issue #155).
+    # _async_setup_device_registry creates a device for every hardware_id reported
+    # by get_sensors_info, but a stale slot left over from a previously paired
+    # sensor (signal=0) can lose every shared common_list key to the active sensor
+    # via signal-priority resolution and end up with no live data of its own —
+    # leaving an empty device entry behind.
+    _async_remove_empty_sensor_devices(hass, entry, coordinator)
 
     # Register services
     await _async_register_services(hass)
@@ -167,6 +175,62 @@ async def _async_setup_device_registry(
                 suggested_area="Outdoor" if is_outdoor else None,
             )
             _LOGGER.debug("Created device for hardware_id: %s", hardware_id)
+
+
+@callback
+def _async_remove_empty_sensor_devices(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    coordinator: EcowittLocalDataUpdateCoordinator,
+) -> None:
+    """Remove phantom sensor devices left over from displaced stale slots.
+
+    A previously paired sensor that is no longer transmitting (signal=0) can
+    still appear in get_sensors_info — newer firmware moves it to a higher
+    page that v1.6.17 began fetching. The signal-priority resolver in
+    sensor_mapper.update_mapping correctly routes shared common_list keys to
+    the active sensor with the stronger signal, but the stale slot's device
+    was already registered by _async_setup_device_registry and now has no
+    entities at all (issue #155 — phantom WH69 alongside the active WH90).
+
+    Only remove devices whose hardware_id has signal=0 in the current sensor
+    info AND have no entities for this entry. That keeps freshly paired
+    sensors (signal>0 but no live data yet) untouched — their device will fill
+    in once data arrives.
+    """
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    gateway_id = coordinator.gateway_info.get("gateway_id", "unknown")
+
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        sensor_hardware_id: str | None = None
+        for ident_domain, ident in device.identifiers:
+            if ident_domain != DOMAIN or ident == gateway_id:
+                continue
+            sensor_hardware_id = ident
+            break
+        if sensor_hardware_id is None:
+            continue
+
+        sensor_info = coordinator.sensor_mapper.get_sensor_info(sensor_hardware_id)
+        if sensor_info is None:
+            continue
+        if str(sensor_info.get("signal", "")).strip() != "0":
+            continue
+
+        entities = er.async_entries_for_device(
+            entity_registry, device.id, include_disabled_entities=True
+        )
+        if entities:
+            continue
+
+        _LOGGER.info(
+            "Removing phantom sensor device %s (%s) — signal=0 with no "
+            "entities, displaced by signal-priority resolution",
+            device.name or device.id,
+            device.model or "unknown model",
+        )
+        device_registry.async_remove_device(device.id)
 
 
 async def _async_register_services(hass: HomeAssistant) -> None:
