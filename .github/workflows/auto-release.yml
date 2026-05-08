@@ -81,13 +81,15 @@ jobs:
           if [ -f CHANGELOG.md ]; then
             echo "📄 Found CHANGELOG.md, extracting notes for version $VERSION"
             
-            # Extract the section for this version
-            # Get content between version header and next version header (or end)
-            awk "/## \[$VERSION\]/,/^## \[/ {
-              if (/^## \[$VERSION\]/) next;
-              if (/^## \[/) exit;
-              print
-            }" CHANGELOG.md > "$NOTES_FILE"
+            # Extract the section for this version using a state-machine.
+            # Range form `/start/,/end/` fails here because the start line also matches
+            # the end pattern (`^## \[`), so the range activates and deactivates on the
+            # same line and nothing gets printed.
+            awk -v ver="$VERSION" '
+              $0 ~ "^## \\[" ver "\\]" { in_section = 1; next }
+              in_section && /^## \[/ { exit }
+              in_section { print }
+            ' CHANGELOG.md > "$NOTES_FILE"
             
             # Remove leading/trailing empty lines
             sed -i '/./,$!d' "$NOTES_FILE"
