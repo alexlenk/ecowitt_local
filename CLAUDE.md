@@ -171,9 +171,145 @@ elif sensor_type.lower() in ("wh90", "weather_station_wh90") or "temp & humidity
 
 ---
 
-# 🏗️ Actual Architecture (Evidence-Based)
+# 📜 Ecowitt HTTP API Spec — Authoritative Reference
 
-## How Hex ID System Really Works
+**Always cross-check sensor questions against the official spec, not just the codebase.** The spec is the source of truth for what fields the gateway *can* emit.
+
+> ⚠️ **Spec ≠ confirmed gateway behavior.** The spec describes the protocol surface; it does NOT guarantee that any specific firmware on any specific gateway model actually emits a given field today. The ✅/❌ markers below reflect *code coverage*, not *user-reported bugs*. Before "fixing" a ❌ entry, confirm the gateway in the user's hands actually sends that field — request a `get_livedata_info` JSON dump or wait for a user report. The issues filed in 2026-05 against the V1.0.6 spec audit (#158–#174) are mostly **spec-derived findings awaiting field verification**, not actively-hit user bugs (with the exception of #158, #164, #173, #174 which are confirmed by code analysis alone).
+
+## Spec Document
+
+- **Current version**: V1.0.6 (2026-01-09) — *check the URL pattern for newer versions*
+- **URL**: https://oss.ecowitt.net/uploads/20260114/HTTP%20API%20interface%20Protocol%20(Generic)-(V1.0.6-2026-1-14)%20.pdf
+- **How to read it**: WebFetch returns garbled binary for this PDF. Save the file and run:
+  ```bash
+  pdftotext -layout /path/to/spec.pdf /tmp/spec.txt
+  ```
+
+## Spec Changelog (lifelong)
+
+| Version | Date | Notable additions |
+|---------|------|------------------|
+| V1.0.3 | 2024-12-18 | `ch_lds` and `debug` blocks added to `get_livedata_info`; `Get_cli_lds`/`Set_cli_lds` API; MQTT support |
+| V1.0.4 | 2025-04-14 | New CO2-block fields: `PM10`, `PM1`, `PM4` and their `_RealAQI`/`_24HAQI`/`_24H` variants; `CO2_24H`; `level` and `total_heat` for LDS |
+| V1.0.5 | 2025-10-08 | `eWN20_SENSOR` (type 70) and `eWN38_SENSOR` (type 71, BGT) added to `get_sensors_info` |
+| V1.0.6 | 2026-01-09 | `get_livedata_info` adds **VPD**, **BGT** (`0xA1`), **WBGT** (`0xA2`), and multi-channel EC (`ch_ec`) |
+
+## `get_livedata_info` Block Layout
+
+The endpoint can return up to 14 top-level blocks. Each is processed independently in `coordinator.py`:
+
+| Block | Sensor | Status |
+|-------|--------|--------|
+| `common_list` | Outdoor weather (hex IDs) | ✅ processed |
+| `rain` | WH40/WH69 tipping bucket | ✅ processed |
+| `piezoRain` | WS90/WH90/WS85 piezo rain | ✅ processed |
+| `wh25` | Indoor T/H/pressure | ✅ processed |
+| `lightning` | WH57 lightning | ✅ processed |
+| `co2` | WH45/WH46D combo | ✅ processed |
+| `ch_pm25` | WH41 PM2.5 channels | ✅ processed |
+| `ch_leak` | WH55 leak channels | ✅ processed |
+| `ch_aisle` | WH31 T/H channels | ✅ processed |
+| `ch_soil` | WH51 soil moisture channels | ✅ processed |
+| `ch_temp` | WH34 temp-only channels | ✅ processed |
+| `ch_leaf` | WH35 leaf wetness channels | ✅ processed |
+| `ch_lds` | WH54 liquid depth channels | ❌ NOT processed (issue #164) |
+| `ch_ec` | WH52 soil EC channels | ✅ processed (vendor) |
+| `debug` | heap, runtime, usr_interval | ❌ not exposed (low priority) |
+
+## Complete `common_list` Hex-ID Catalog
+
+| Hex ID | Spec field | Unit | Status |
+|--------|-----------|------|--------|
+| `0x01` | ITEM_INTEMP — Indoor Temp | °C | ❌ via common_list (issue #172) |
+| `0x02` | ITEM_OUTTEMP — Outdoor Temp | °C | ✅ |
+| `0x03` | ITEM_DEWPOINT — Dew Point | °C | ✅ |
+| `0x04` | ITEM_WINDCHILL — Wind Chill | °C | ❌ (issue #170) |
+| `0x05` | ITEM_HEATINDEX — Heat Index | °C | ❌ (issue #171) |
+| `0x06` | ITEM_INHUMI — Indoor Humidity | % | ❌ via common_list (issue #172) |
+| `0x07` | ITEM_OUTHUMI — Outdoor Humidity | % | ✅ |
+| `0x08` | ITEM_ABSBARO — Absolute Pressure | hPa | ❌ via common_list (issue #172) |
+| `0x09` | ITEM_RELBARO — Relative Pressure | hPa | ❌ via common_list (issue #172) |
+| `0x0A` | ITEM_WINDDIRECTION | ° | ✅ |
+| `0x0B` | ITEM_WINDSPEED | m/s | ✅ |
+| `0x0C` | ITEM_GUSTSPEED | m/s | ✅ |
+| `0x0D` | ITEM_RAINEVENT | mm | ✅ |
+| `0x0E` | ITEM_RAINRATE | mm/h | ✅ |
+| `0x0F` | ITEM_RAIN_GAIN — calibration multiplier | — | ⚠️ silently skipped (issue #168) |
+| `0x10` | ITEM_RAINDAY — **Daily Rain** (NOT Hourly) | mm | ✅ |
+| `0x11` | ITEM_RAINWEEK — Weekly Rain | mm | ✅ |
+| `0x12` | ITEM_RAINMONTH — Monthly Rain | mm | ✅ |
+| `0x13` | ITEM_RAINYEAR — Yearly Rain | mm | ✅ |
+| `0x14` | ITEM_RAINTOTALS — All-time cumulative | mm | ❌ (issue #161) |
+| `0x15` | ITEM_LIGHT — Solar Radiation | W/m² | ✅ |
+| `0x16` | ITEM_UV — UV irradiance | uW/m² | ❌ (issue #160) |
+| `0x17` | ITEM_UVI — UV Index | 0–15 | ✅ |
+| `0x18` | ITEM_TIME — Date/time | — | ⚠️ not a sensor |
+| `0x19` | ITEM_DAYLWINDMAX — Daily max gust | m/s | ✅ |
+| `0xA1` | BGT — Black Globe Temp | °C | ✅ |
+| `0xA2` | WBGT — Wet Bulb Globe Temp | °C | ✅ |
+| `0x6D` | Wind Direction Avg (vendor, NOT in spec) | ° | ✅ — observed on WS80/GW3000 |
+| `0x7C` | 24-Hour Rain (vendor, NOT in spec) | mm | ✅ — observed on WS90 |
+
+### Decimal-string IDs in `common_list` (NOT hex)
+
+| ID | Meaning | Status |
+|----|---------|--------|
+| `"3"` | Feel Like (decimal 3, ≠ `"0x03"` Dew Point) | ⚠️ partial implementation (issue #173) |
+| `"4"` | Unknown — `SENSOR_TYPES` has it as "Apparent Temperature" but not in spec | ⚠️ dead code (issue #173) |
+| `"5"` | VPD (decimal 5, ≠ `"0x05"` Heat Index) — added v1.0.6 | ⚠️ partial implementation (issues #162, #173) |
+
+> **CRITICAL**: `"3"` and `"0x03"` are different keys in the JSON response. Same numeric value, different sensors. Treat them as distinct strings throughout.
+
+## Battery Encoding by Sensor (per `get_sensors_info` enum)
+
+The spec defines **three encoding schemes**. Real-world livedata behavior may differ from spec text — see [issue #174](https://github.com/alexlenk/ecowitt_local/issues/174).
+
+| Encoding | Sensors | Conversion |
+|----------|---------|-----------|
+| **Binary** (0=normal, 1=low) | WH65, WH25, WH26, WH31 (`ch_aisle`), WH51 (`ch_soil`) | `0→100%, 1→10%` |
+| **0–5 bar level** | WH41 (`ch_pm25`), WH57 (`lightning`), WH55 (`ch_leak`), WH45 (`co2`) | `val × 20%` |
+| **Voltage** (`val × 0.02V`; low ≤ 1.2V) | WH68, WH80, WH40 (`rain`), WH34 (`ch_temp`), WH35 (`ch_leaf`), WH54 (`ch_lds`), WH85, WH90 (`piezoRain`) | spec: voltage; observed: gateway often normalizes to 0–5 bars |
+
+**`get_sensors_info`** always returns `batt` as 0–5 bars regardless of underlying encoding. **`get_livedata_info`** behavior is firmware-dependent and inconsistent — issue #138 (closed unresolved) hinted at this.
+
+## Sensor Enum (`get_sensors_info` types)
+
+```
+0   WH65          26  WH57 (Lightning)        49  WH85 (Wind & Rain)
+1   WH68          27-30  WH55_CH1-4           58-65  WH51_CH9-16
+2   WH80          31-38  WH34_CH1-8           66-69  WH54_CH1-4 (LDS)
+3   WH40          39  WH45 (CO2/PM combo)     70  WN20 (NEW v1.0.5, unsupported)
+4   WH25          40-47  WH35_CH1-8           71  WN38 (BGT, supported as 0xA1)
+5   WH26          48  WH90
+6-13   WH31_CH1-8
+14-21  WH51_CH1-8
+22-25  WH41_CH1-4
+```
+
+WH65 and WH69 share `img: "wh69"` and name `"Temp & Humidity & Solar & Wind & Rain"` (same as WH90). Disambiguate by `type` and `id`.
+
+## Adding Support for a New Sensor — 4-Place Update Pattern
+
+When a new sensor type is added, **all four locations** must be updated or the entity won't appear correctly:
+
+1. **`sensor_mapper.py` — name mapping**
+   - For hex IDs: add to `hex_to_name` dict (~line 550)
+   - For decimal-string IDs: add to `decimal_id_names` dict (~line 540)
+
+2. **`sensor_mapper.py` — device key list** in `_generate_live_data_keys` (~line 136+)
+   - Add the key to every device type that emits this field
+   - Without this, `get_hardware_id()` returns `None` → **orphan entity** (entity created but no parent device — same shape as issue #173)
+
+3. **`const.py` — `SENSOR_TYPES`** entry with `name`, `unit`, `device_class`
+   - For batteries: add to `BATTERY_SENSORS` instead
+   - For binary: add to `BINARY_SENSORS`
+
+4. **`coordinator.py`** — only if the sensor lives in a **non-`common_list` block** (e.g. `ch_lds`, `co2`, `ch_pm25`). `common_list` items flow through automatically once steps 1–3 are done.
+
+If `get_sensors_info` registers a device but no entity is ever produced for it, that's a **phantom device** — same shape as the v1.6.18 phantom WH69 fix and issue #164 (WH54). Always check both ends of the pipeline (`get_sensors_info` device registration AND `get_livedata_info` block parsing).
+
+---
 
 ### Two-Part Architecture
 1. **sensor_mapper.py**: Device-specific hex ID mapping lists (lines 184-247)
@@ -551,6 +687,14 @@ The release automation consists of three workflows:
   - Deletes source branch
 - **Note**: Currently configured but can be manual
 
+### Release notes in HACS / Home Assistant
+
+HACS shows the **GitHub Release body** to users when an update is available. The auto-release workflow extracts that body from `CHANGELOG.md` using an awk state-machine that finds `## [VERSION]` and prints lines until the next `## [` header.
+
+If a release ever shows the generic fallback ("This release includes updates and improvements...") instead of the actual changelog entries, it means the awk extraction silently returned empty. Fix the workflow's awk script — do **not** edit the GitHub release body manually, because HACS caches it and the next release will regress.
+
+The original range-expression form (`/start/,/end/`) was buggy: because the start line `## [VERSION]` also matches the end pattern `^## \[`, the range activated and deactivated on the same line and nothing got printed. The state-machine form in `auto-release.yml` is the correct shape — keep it.
+
 ### 3. `auto-release.yml` - Git Tag & GitHub Release Creation
 - **Trigger**: Push to `main` branch (after merge)
 - **Actions**:
@@ -590,6 +734,26 @@ Follow Semantic Versioning (SemVer):
 - **Major** (1.x.x): Breaking changes
 - **Minor** (x.1.x): New features, backward compatible
 - **Patch** (x.x.1): Bug fixes, backward compatible
+
+### Planned: v1.7.0 after V1.0.6 spec-audit issues land
+
+Once the V1.0.6 spec-audit bugs (#158–#174) are fixed, **bump the next release to v1.7.0** (minor), not another patch in the v1.6.x line. Rationale:
+- Several of those changes add new entities (Wind Chill, Heat Index, VPD, WH54 LDS, AQI fields, etc.) — that's new functionality, which calls for a minor bump.
+- A few correct existing entity values (battery percentages, AQI/concentration unit fix). Those are fixes, but bundled with the new-feature changes the cumulative impact is meaningfully larger than a typical patch.
+- A minor bump gives the release notes a clean header for the README/changelog audit pass.
+
+Save v2.0.0 for an actual breaking change (e.g. removing a long-deprecated entity, restructuring config flow). Don't burn the major bump on a spec-coverage cleanup.
+
+Don't bump to v1.7.0 mid-stream — wait until enough of the spec-audit bugs are landed that the cumulative change warrants the minor-version signal.
+
+### Batch size: max 5–7 issues per agent run
+
+When fixing the spec-audit backlog (#158–#174) or any large issue batch, **do not attempt more than 5–7 issues in a single agent session**. Reasons:
+- Each fix needs CHANGELOG entry, version bump, branch creation, CI wait, PR merge — context grows fast.
+- Overnight runs that try to power through 10+ issues consistently degrade in quality late in the run: shortcuts on tests, skimped CHANGELOG entries, missed cross-cutting checks.
+- A failed CI on issue #11 of a 15-issue batch wastes the entire run; smaller batches fail more recoverably.
+
+Pick 5–7 thematically related issues per run (e.g. "all common_list hex-ID drops" or "all name-string fallbacks"), land them as one minor release, then start a fresh session for the next batch.
 
 ## CHANGELOG Format
 
