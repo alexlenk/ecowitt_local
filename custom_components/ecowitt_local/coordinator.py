@@ -312,10 +312,20 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         # Create battery sensor if battery data exists
                         if battery:
                             battery_key = f"soilbatt{channel}"
-                            # Convert battery level (1=20%, 2=40%, 3=60%, 4=80%, 5=100%)
-                            battery_pct = (
-                                str(int(battery) * 20) if battery.isdigit() else battery
-                            )
+                            # Spec (V1.0.6 §7) defines WH51 battery as binary
+                            # (0=normal, 1=low) — same encoding as WH31 ch_aisle.
+                            # Some firmwares also report a 0-5 bar level, so accept
+                            # both: "0"=full, "1"=low, "2"-"5"=bar*20.
+                            if battery == "0":
+                                battery_pct = "100"
+                            elif battery == "1":
+                                battery_pct = "10"
+                            else:
+                                battery_pct = (
+                                    str(int(battery) * 20)
+                                    if battery.isdigit()
+                                    else battery
+                                )
                             all_sensor_items.append(
                                 {"id": battery_key, "val": battery_pct}
                             )
@@ -646,14 +656,18 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 _LOGGER.debug("ch_pm25 item: %s", item)
                 if isinstance(item, dict):
                     channel = item.get("channel")
-                    # Real-time PM2.5 (gateway may use lowercase or uppercase key)
+                    # Real-time PM2.5 concentration (gateway may use lowercase or uppercase key)
                     pm25_val = item.get("pm25") or item.get("PM25")
-                    # 24-hour average PM2.5
-                    pm25_24h_val = (
-                        item.get("pm25_avg_24h")
-                        or item.get("PM25_24HAQI")
-                        or item.get("pm25_24h")
-                    )
+                    # 24-hour average PM2.5 concentration. Per spec (V1.0.6 §1)
+                    # the ch_pm25 block does NOT expose a 24h concentration —
+                    # only PM25_24HAQI (an AQI index, dimensionless 0–500).
+                    # Some firmwares still emit pm25_avg_24h/pm25_24h, so accept
+                    # those if present, but treat PM25_24HAQI as the AQI index
+                    # it is (separate entity below).
+                    pm25_24h_val = item.get("pm25_avg_24h") or item.get("pm25_24h")
+                    # Real-time and 24-hour AQI indices (dimensionless 0–500)
+                    pm25_realaqi_val = item.get("PM25_RealAQI")
+                    pm25_24haqi_val = item.get("PM25_24HAQI")
                     battery = item.get("battery")
 
                     if channel:
@@ -673,6 +687,28 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                                 "Added PM2.5 24h avg sensor: %s = %s",
                                 pm25_24h_key,
                                 pm25_24h_val,
+                            )
+
+                        if pm25_realaqi_val and pm25_realaqi_val != "None":
+                            realaqi_key = f"pm25_aqi_realtime_ch{channel}"
+                            all_sensor_items.append(
+                                {"id": realaqi_key, "val": pm25_realaqi_val}
+                            )
+                            _LOGGER.debug(
+                                "Added PM2.5 real-time AQI sensor: %s = %s",
+                                realaqi_key,
+                                pm25_realaqi_val,
+                            )
+
+                        if pm25_24haqi_val and pm25_24haqi_val != "None":
+                            aqi_24h_key = f"pm25_aqi_24h_ch{channel}"
+                            all_sensor_items.append(
+                                {"id": aqi_24h_key, "val": pm25_24haqi_val}
+                            )
+                            _LOGGER.debug(
+                                "Added PM2.5 24h AQI sensor: %s = %s",
+                                aqi_24h_key,
+                                pm25_24haqi_val,
                             )
 
                         if battery and battery != "None":
@@ -774,6 +810,48 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                                 battery_key,
                                 battery_pct,
                             )
+
+        # Extract ch_lds data (WH54 liquid depth sensors — types 66–69, channels 1–4)
+        ch_lds = raw_data.get("ch_lds", [])
+        if ch_lds:
+            _LOGGER.debug("Found ch_lds data with %d items", len(ch_lds))
+            for item in ch_lds:
+                _LOGGER.debug("ch_lds item: %s", item)
+                if isinstance(item, dict):
+                    channel = item.get("channel")
+                    if not channel:
+                        continue
+
+                    air = item.get("air")
+                    if air and str(air) != "None":
+                        air_key = f"lds_air_ch{channel}"
+                        all_sensor_items.append({"id": air_key, "val": str(air)})
+                        _LOGGER.debug("Added WH54 air gap: %s = %s", air_key, air)
+
+                    depth = item.get("depth")
+                    if depth and str(depth) != "None":
+                        depth_key = f"lds_depth_ch{channel}"
+                        all_sensor_items.append({"id": depth_key, "val": str(depth)})
+                        _LOGGER.debug("Added WH54 depth: %s = %s", depth_key, depth)
+
+                    voltage = item.get("voltage")
+                    if voltage and str(voltage) != "None":
+                        volt_key = f"lds_voltage_ch{channel}"
+                        all_sensor_items.append({"id": volt_key, "val": str(voltage)})
+                        _LOGGER.debug("Added WH54 voltage: %s = %sV", volt_key, voltage)
+
+                    battery = item.get("battery")
+                    if battery is not None and str(battery) != "None":
+                        battery_key = f"lds_batt{channel}"
+                        battery_pct = (
+                            str(int(battery) * 20)
+                            if str(battery).isdigit()
+                            else str(battery)
+                        )
+                        all_sensor_items.append({"id": battery_key, "val": battery_pct})
+                        _LOGGER.debug(
+                            "Added WH54 battery: %s = %s%%", battery_key, battery_pct
+                        )
 
         # Extract co2 data (WH45 combo sensor: CO2 + PM2.5 + PM10 + temp/humidity)
         co2_array = raw_data.get("co2", [])

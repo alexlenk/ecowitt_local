@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.20] - 2026-05-09
+
+### Added
+- **WH54 liquid depth sensor support**: WH54 channels (1–4) registered devices in Home Assistant but produced zero entities because the `ch_lds` livedata array was never parsed — the same phantom-device shape as the WH69 fix in v1.6.18/v1.6.19. The coordinator now reads `ch_lds`, mapping each channel's `air` → `lds_air_ch{N}` (mm), `depth` → `lds_depth_ch{N}` (mm), `voltage` → `lds_voltage_ch{N}` (V), and `battery` → `lds_batt{N}` (converted from the 0–5 scale to percentage). The WH54 device is now labelled "Liquid Depth Sensor" and treated as outdoor. (issue #164)
+- **PM2.5 AQI entities for WH41**: The `ch_pm25` block exposes both real-time and 24-hour AQI indices (`PM25_RealAQI`, `PM25_24HAQI`), but the integration previously dropped the real-time AQI entirely and misused the 24-hour AQI as a µg/m³ concentration on the `pm25_avg_24h_ch{N}` entity. Two new entities are now created per channel: `pm25_aqi_realtime_ch{N}` and `pm25_aqi_24h_ch{N}`, both with unit `AQI` (dimensionless 0–500). (issue #158)
+- **Feels Like Temperature and VPD now attach to outdoor weather stations**: The `"3"` (Feels Like) and `"5"` (VPD) decimal-string IDs in `common_list` had `SENSOR_TYPES` metadata but were never wired into a device's hex-ID list, so they registered as orphan entities on the gateway device. Both IDs are now part of the WH69, WH80/WS80, WH90, and WS90 key lists, and they attach to the outdoor sensor that calculates them. (issue #173)
+
+### Fixed
+- **WH51 soil moisture battery showed 0% for healthy sensors**: Per spec V1.0.6 §7, WH51 (`ch_soil`) battery uses the same binary encoding as WH31 (`ch_aisle`) — `0` = normal, `1` = low — but the `ch_soil` handler converted `"0"` to `0%` via the universal `*20` formula, making fully-charged sensors look dead. The handler now matches `ch_aisle`: `"0"` → 100%, `"1"` → 10%, and `"2"`–`"5"` continue to use the 0-5 bar `*20` conversion that some firmwares emit. (issue #174)
+- **PM25_24HAQI no longer misused as concentration**: Previously, when a gateway emitted only `PM25_24HAQI` (an AQI index, dimensionless 0–500), it was stored on the `pm25_avg_24h_ch{N}` entity with unit µg/m³ — visually conflating an AQI of 82 with a concentration of 82 µg/m³. `PM25_24HAQI` now populates the new `pm25_aqi_24h_ch{N}` AQI entity instead. The `pm25_avg_24h_ch{N}` concentration entity continues to be populated by the genuine concentration fields (`pm25_avg_24h`, `pm25_24h`) when emitted. (issue #158)
+
+### Changed
+- **Removed unused decimal-id `"4"` (Apparent Temperature) sensor type**: This `SENSOR_TYPES` entry was a developer error — `"4"` is not defined anywhere in the V1.0.6 spec (which uses `"3"` for Feels Like and `"5"` for VPD; `"0x04"` is Wind Chill, a separate hex ID). The dead entry has been removed along with its placeholder slot in `GATEWAY_SENSORS`. (issue #173)
+
 ## [1.6.19] - 2026-05-02
 
 ### Fixed

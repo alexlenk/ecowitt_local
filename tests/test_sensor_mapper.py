@@ -455,3 +455,84 @@ def test_conflict_with_unparseable_signal_does_not_crash():
     assert mapper.get_hardware_id("0x02") == "GOOD01"
     # The malformed-signal sensor still gets registered in sensor_info.
     assert mapper.get_sensor_info("BAD002") is not None
+
+
+def test_wh54_generates_lds_keys():
+    """WH54 sensor type produces lds_*_ch{N} keys for the channel (issue #164)."""
+    mapper = SensorMapper()
+    keys = mapper._generate_live_data_keys("WH54", "2")
+    assert "lds_air_ch2" in keys
+    assert "lds_depth_ch2" in keys
+    assert "lds_voltage_ch2" in keys
+    assert "lds_batt2" in keys
+
+
+def test_wh54_alias_lds():
+    """The 'lds' sensor_type alias maps to the same WH54 keys."""
+    mapper = SensorMapper()
+    keys = mapper._generate_live_data_keys("lds", "1")
+    assert "lds_depth_ch1" in keys
+
+
+def test_wh69_includes_decimal_id_3_and_5():
+    """WH69 weather station includes decimal IDs '3' (Feels Like) and '5' (VPD)."""
+    mapper = SensorMapper()
+    keys = mapper._generate_live_data_keys("WH69", "")
+    assert "3" in keys
+    assert "5" in keys
+
+
+def test_wh90_includes_decimal_id_3_and_5():
+    """WH90 outdoor station includes decimal IDs '3' and '5' (issue #173)."""
+    mapper = SensorMapper()
+    keys = mapper._generate_live_data_keys("WH90", "")
+    assert "3" in keys
+    assert "5" in keys
+
+
+def test_ws90_includes_decimal_id_3_and_5():
+    """WS90 outdoor station includes decimal IDs '3' and '5'."""
+    mapper = SensorMapper()
+    keys = mapper._generate_live_data_keys("WS90", "")
+    assert "3" in keys
+    assert "5" in keys
+
+
+def test_wh80_includes_decimal_id_3_and_5():
+    """WH80 wind/solar station includes decimal IDs '3' and '5'."""
+    mapper = SensorMapper()
+    keys = mapper._generate_live_data_keys("WH80", "")
+    assert "3" in keys
+    assert "5" in keys
+
+
+def test_decimal_id_entity_id_generation():
+    """Decimal IDs generate proper entity IDs and friendly names."""
+    mapper = SensorMapper()
+    eid_3, name_3 = mapper.generate_entity_id("3", "ABC123")
+    assert eid_3 == "sensor.ecowitt_feels_like_temp_abc123"
+    assert name_3 == "Feels Like Temperature"
+
+    eid_5, name_5 = mapper.generate_entity_id("5", "ABC123")
+    assert eid_5 == "sensor.ecowitt_vpd_abc123"
+    assert name_5 == "Vapor Pressure Deficit"
+
+
+def test_wh41_includes_aqi_keys():
+    """WH41 PM2.5 sensor includes the new AQI keys (issue #158)."""
+    mapper = SensorMapper()
+    keys = mapper._generate_live_data_keys("WH41", "1")
+    assert "pm25_aqi_realtime_ch1" in keys
+    assert "pm25_aqi_24h_ch1" in keys
+
+
+def test_pm25_aqi_entity_id_generation():
+    """PM2.5 AQI keys generate distinct entity IDs (no collision with concentration)."""
+    mapper = SensorMapper()
+    eid_real, _ = mapper.generate_entity_id("pm25_aqi_realtime_ch1", "EF891")
+    eid_24h, _ = mapper.generate_entity_id("pm25_aqi_24h_ch1", "EF891")
+    eid_pm25, _ = mapper.generate_entity_id("pm25_ch1", "EF891")
+    assert eid_real == "sensor.ecowitt_pm25_aqi_realtime_ef891"
+    assert eid_24h == "sensor.ecowitt_pm25_aqi_24h_ef891"
+    assert eid_pm25 == "sensor.ecowitt_pm25_ef891"
+    assert len({eid_real, eid_24h, eid_pm25}) == 3
