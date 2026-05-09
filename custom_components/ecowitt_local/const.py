@@ -41,9 +41,6 @@ GATEWAY_SENSORS: Final = {
     "humidityin",  # Indoor humidity
     "baromabsin",  # Absolute pressure
     "baromrelin",  # Relative pressure
-    "3",  # Feels like temperature (gateway sensor)
-    "4",  # Apparent temperature (gateway sensor)
-    "5",  # Vapor Pressure Deficit (gateway sensor)
 }
 
 
@@ -98,12 +95,6 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
         "name": "Feels Like Temperature",
         "unit": "°C",
         "device_class": "temperature",
-    },
-    "4": {
-        "name": "Apparent Temperature",
-        "unit": "°C",
-        "device_class": "temperature",
-        "state_class": "measurement",
     },
     "5": {"name": "Vapor Pressure Deficit", "unit": "kPa", "device_class": "pressure"},
     # Humidity sensors
@@ -391,6 +382,24 @@ SENSOR_TYPES.update(
         4,
     )
 )
+# PM2.5 AQI indices (dimensionless 0–500) — distinct from concentrations above.
+# Spec (V1.0.6 §1) ch_pm25 block: PM25_RealAQI, PM25_24HAQI.
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "pm25_aqi_realtime_ch",
+        "PM2.5 AQI CH{ch}",
+        {"unit": "AQI", "icon": "mdi:air-filter", "state_class": "measurement"},
+        4,
+    )
+)
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "pm25_aqi_24h_ch",
+        "PM2.5 24h AQI CH{ch}",
+        {"unit": "AQI", "icon": "mdi:air-filter", "state_class": "measurement"},
+        4,
+    )
+)
 SENSOR_TYPES.update(_generate_channel_sensors("leak_ch", "Leak Sensor CH{ch}", {}, 4))
 SENSOR_TYPES.update(
     _generate_channel_sensors(
@@ -398,6 +407,40 @@ SENSOR_TYPES.update(
         "Leaf Wetness CH{ch}",
         {"unit": "%", "device_class": "moisture"},
         8,
+    )
+)
+
+# WH54 liquid depth sensors (4 channels). Spec V1.0.6 §1 ch_lds block:
+# air = distance from sensor to liquid surface; depth = liquid depth; both in
+# mm (gateway always reports mm regardless of unit setting).
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "lds_air_ch",
+        "Liquid Depth Air Gap CH{ch}",
+        {"unit": "mm", "device_class": "distance", "state_class": "measurement"},
+        4,
+    )
+)
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "lds_depth_ch",
+        "Liquid Depth CH{ch}",
+        {"unit": "mm", "device_class": "distance", "state_class": "measurement"},
+        4,
+    )
+)
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "lds_voltage_ch",
+        "Liquid Depth Sensor Voltage CH{ch}",
+        {
+            "unit": "V",
+            "device_class": "voltage",
+            "state_class": "measurement",
+            "entity_category": "diagnostic",
+            "suggested_display_precision": 2,
+        },
+        4,
     )
 )
 
@@ -563,6 +606,11 @@ BATTERY_SENSORS.update(
 BATTERY_SENSORS.update(
     _generate_battery_sensors(
         "leaf_batt", "Leaf Wetness CH{ch} Battery", "leafwetness_ch{ch}", 8
+    )
+)
+BATTERY_SENSORS.update(
+    _generate_battery_sensors(
+        "lds_batt", "Liquid Depth CH{ch} Battery", "lds_depth_ch{ch}", 4
     )
 )
 

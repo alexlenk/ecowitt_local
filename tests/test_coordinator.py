@@ -1277,11 +1277,18 @@ async def test_coordinator_update_sensor_mapping_error(coordinator):
 
 @pytest.mark.asyncio
 async def test_coordinator_process_ch_soil_data(coordinator):
-    """Test processing ch_soil data structure."""
+    """Test processing ch_soil data structure.
+
+    Issue #174: WH51 (ch_soil) battery is binary per spec (0=full, 1=low),
+    matching WH31 (ch_aisle). The handler must accept both binary and 0-5
+    bar encodings.
+    """
     mock_live_data = {
         "ch_soil": [
             {"channel": "1", "humidity": "45%", "battery": "4"},
             {"channel": "2", "humidity": "50%", "battery": "3"},
+            {"channel": "3", "humidity": "60%", "battery": "0"},  # binary full
+            {"channel": "4", "humidity": "70%", "battery": "1"},  # binary low
         ]
     }
 
@@ -1293,32 +1300,33 @@ async def test_coordinator_process_ch_soil_data(coordinator):
     sensors = result["sensors"]
 
     # Check for soil moisture sensors
-    soil1_found = False
-    soil2_found = False
-    battery1_found = False
-    battery2_found = False
+    found = {
+        "soilmoisture1": False,
+        "soilmoisture2": False,
+        "soilbatt1": False,
+        "soilbatt2": False,
+        "soilbatt3": False,
+        "soilbatt4": False,
+    }
 
     for entity_id, sensor_data in sensors.items():
         sensor_key = sensor_data.get("sensor_key")
+        if sensor_key in found:
+            found[sensor_key] = True
         if sensor_key == "soilmoisture1":
-            soil1_found = True
-            assert sensor_data["state"] == 45  # Converted to int
+            assert sensor_data["state"] == 45
         elif sensor_key == "soilmoisture2":
-            soil2_found = True
-            assert sensor_data["state"] == 50  # Converted to int
+            assert sensor_data["state"] == 50
         elif sensor_key == "soilbatt1":
-            battery1_found = True
-            # ch_soil converts 4 to "80", battery processing now recognizes it's already converted
-            assert sensor_data["state"] == "80"  # 4 * 20 = 80 (no double conversion)
+            assert sensor_data["state"] == "80"  # bar 4 → 80%
         elif sensor_key == "soilbatt2":
-            battery2_found = True
-            # ch_soil converts 3 to "60", battery processing recognizes it's already converted
-            assert sensor_data["state"] == "60"  # 3 * 20 = 60 (no double conversion)
+            assert sensor_data["state"] == "60"  # bar 3 → 60%
+        elif sensor_key == "soilbatt3":
+            assert sensor_data["state"] == "100"  # binary 0 → full (100%)
+        elif sensor_key == "soilbatt4":
+            assert sensor_data["state"] == "10"  # binary 1 → low (10%)
 
-    assert soil1_found
-    assert soil2_found
-    assert battery1_found
-    assert battery2_found
+    assert all(found.values()), f"Missing sensors: {found}"
 
 
 @pytest.mark.asyncio
@@ -1863,7 +1871,17 @@ async def test_coordinator_ch_temp_empty_handling(coordinator):
 
 @pytest.mark.asyncio
 async def test_coordinator_ch_pm25_processing(coordinator):
-    """Test coordinator processing WH41 ch_pm25 PM2.5 air quality data."""
+    """Test coordinator processing WH41 ch_pm25 PM2.5 air quality data.
+
+    Per spec V1.0.6 §1, ch_pm25 distinguishes:
+    - PM25 / pm25: real-time concentration (µg/m³)
+    - pm25_avg_24h / pm25_24h: 24h concentration (only emitted by some firmwares)
+    - PM25_RealAQI: real-time AQI (dimensionless 0–500)
+    - PM25_24HAQI: 24h AQI (dimensionless 0–500)
+
+    Issue #158: PM25_24HAQI was previously misused as a concentration with
+    µg/m³ unit. It is now mapped to its own pm25_aqi_24h_ch{N} entity.
+    """
     mock_live_data = {
         "common_list": [],
         "ch_pm25": [
@@ -1871,12 +1889,13 @@ async def test_coordinator_ch_pm25_processing(coordinator):
                 "channel": "1",
                 "pm25": "2.0",
                 "pm25_avg_24h": "8.0",
+                "PM25_RealAQI": "55",
                 "battery": "5",
             },
             {
                 "channel": "2",
                 "PM25": "15.5",  # Test uppercase field name variant
-                "PM25_24HAQI": "12.0",  # Test alternative 24h field name
+                "PM25_24HAQI": "12",  # AQI index, not concentration
                 "battery": "3",
             },
         ],
@@ -1893,8 +1912,9 @@ async def test_coordinator_ch_pm25_processing(coordinator):
     assert result is not None
     sensors = result["sensors"]
 
-    pm25_ch1_found = pm25_24h_ch1_found = batt1_found = False
-    pm25_ch2_found = pm25_24h_ch2_found = batt2_found = False
+    pm25_ch1_found = pm25_24h_ch1_found = realaqi_ch1_found = batt1_found = False
+    pm25_ch2_found = aqi_24h_ch2_found = batt2_found = False
+    pm25_24h_ch2_found = False
 
     for sensor_id, sensor_data in sensors.items():
         key = sensor_data.get("sensor_key", "")
@@ -1904,6 +1924,10 @@ async def test_coordinator_ch_pm25_processing(coordinator):
         elif key == "pm25_avg_24h_ch1":
             pm25_24h_ch1_found = True
             assert sensor_data["state"] == 8.0
+        elif key == "pm25_aqi_realtime_ch1":
+            realaqi_ch1_found = True
+            assert sensor_data["state"] == 55
+            assert sensor_data["unit_of_measurement"] == "AQI"
         elif key == "pm25batt1":
             batt1_found = True
             assert sensor_data["state"] == "100"  # 5 * 20 = 100%
@@ -1912,16 +1936,23 @@ async def test_coordinator_ch_pm25_processing(coordinator):
             assert sensor_data["state"] == 15.5
         elif key == "pm25_avg_24h_ch2":
             pm25_24h_ch2_found = True
-            assert sensor_data["state"] == 12.0
+        elif key == "pm25_aqi_24h_ch2":
+            aqi_24h_ch2_found = True
+            assert sensor_data["state"] == 12
+            assert sensor_data["unit_of_measurement"] == "AQI"
         elif key == "pm25batt2":
             batt2_found = True
             assert sensor_data["state"] == "60"  # 3 * 20 = 60%
 
     assert pm25_ch1_found, "pm25_ch1 sensor not found"
     assert pm25_24h_ch1_found, "pm25_avg_24h_ch1 sensor not found"
+    assert realaqi_ch1_found, "pm25_aqi_realtime_ch1 sensor not found"
     assert batt1_found, "pm25batt1 sensor not found"
     assert pm25_ch2_found, "pm25_ch2 sensor not found (uppercase PM25 field)"
-    assert pm25_24h_ch2_found, "pm25_avg_24h_ch2 sensor not found (PM25_24HAQI field)"
+    assert aqi_24h_ch2_found, "pm25_aqi_24h_ch2 sensor not found (PM25_24HAQI field)"
+    assert (
+        not pm25_24h_ch2_found
+    ), "PM25_24HAQI must NOT populate pm25_avg_24h_ch2 (it is an AQI, not a concentration)"
     assert batt2_found, "pm25batt2 sensor not found"
 
 
@@ -2770,3 +2801,113 @@ async def test_coordinator_soil_ad_missing_fields(coordinator):
         if "soilad" in s.get("sensor_key", "")
     ]
     assert ad_keys == ["soilad3"]
+
+
+@pytest.mark.asyncio
+async def test_coordinator_ch_lds_processing(coordinator):
+    """Test coordinator processing WH54 ch_lds liquid depth sensor data (issue #164).
+
+    Per spec V1.0.6 §1, ch_lds emits {channel, air, depth, voltage, battery}
+    for each WH54 channel. Without parsing, WH54 devices register but produce
+    zero entities (phantom devices, same shape as issue #155).
+    """
+    mock_live_data = {
+        "common_list": [],
+        "ch_lds": [
+            {
+                "channel": "2",
+                "name": "Tank A",
+                "unit": "mm",
+                "battery": "5",
+                "voltage": "1.50",
+                "air": "3044 mm",
+                "depth": "955 mm",
+            },
+            {
+                "channel": "4",
+                "name": "Tank B",
+                "unit": "mm",
+                "battery": "3",
+                "voltage": "3.16",
+                "air": "46 mm",
+                "depth": "3953 mm",
+            },
+        ],
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_version = AsyncMock(
+        return_value={"stationtype": "GW3000C", "version": "2.1.0"}
+    )
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    found = {
+        "lds_air_ch2": False,
+        "lds_depth_ch2": False,
+        "lds_voltage_ch2": False,
+        "lds_batt2": False,
+        "lds_air_ch4": False,
+        "lds_depth_ch4": False,
+        "lds_voltage_ch4": False,
+        "lds_batt4": False,
+    }
+    for sensor_data in sensors.values():
+        key = sensor_data.get("sensor_key", "")
+        if key in found:
+            found[key] = True
+        if key == "lds_air_ch2":
+            assert sensor_data["state"] == 3044
+            assert sensor_data["unit_of_measurement"] == "mm"
+        elif key == "lds_depth_ch2":
+            assert sensor_data["state"] == 955
+        elif key == "lds_voltage_ch2":
+            assert sensor_data["state"] == 1.50
+        elif key == "lds_batt2":
+            assert sensor_data["state"] == "100"  # 5 * 20
+        elif key == "lds_air_ch4":
+            assert sensor_data["state"] == 46
+        elif key == "lds_depth_ch4":
+            assert sensor_data["state"] == 3953
+        elif key == "lds_voltage_ch4":
+            assert sensor_data["state"] == 3.16
+        elif key == "lds_batt4":
+            assert sensor_data["state"] == "60"  # 3 * 20
+
+    assert all(found.values()), f"Missing WH54 sensors: {found}"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_ch_lds_skips_no_channel_or_empty(coordinator):
+    """ch_lds items without channel or with no readable fields are skipped."""
+    mock_live_data = {
+        "common_list": [],
+        "ch_lds": [
+            {"name": "no channel"},  # missing channel
+            {
+                "channel": "1",
+                "air": "None",
+                "depth": "",
+                "voltage": "None",
+                "battery": "None",
+            },
+            "not a dict",
+        ],
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_version = AsyncMock(
+        return_value={"stationtype": "GW3000C", "version": "2.1.0"}
+    )
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+    lds_keys = [
+        s.get("sensor_key")
+        for s in sensors.values()
+        if str(s.get("sensor_key", "")).startswith("lds_")
+    ]
+    assert lds_keys == [], f"Expected no lds entities, got {lds_keys}"

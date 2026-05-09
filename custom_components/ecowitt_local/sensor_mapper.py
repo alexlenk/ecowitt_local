@@ -198,6 +198,8 @@ class SensorMapper:
                     [
                         f"pm25_ch{ch_num}",
                         f"pm25_avg_24h_ch{ch_num}",
+                        f"pm25_aqi_realtime_ch{ch_num}",
+                        f"pm25_aqi_24h_ch{ch_num}",
                         f"pm25batt{ch_num}",
                     ]
                 )
@@ -275,6 +277,8 @@ class SensorMapper:
                     "0x11",  # Rain weekly
                     "0x12",  # Rain monthly
                     "0x13",  # Rain yearly
+                    "3",  # Feels Like (decimal id, distinct from 0x03 dewpoint)
+                    "5",  # VPD (decimal id, distinct from 0x05 heat index)
                     "wh69batt",  # Battery level
                 ]
             )
@@ -299,6 +303,8 @@ class SensorMapper:
                     "0x11",  # Rain weekly
                     "0x12",  # Rain monthly
                     "0x13",  # Rain yearly
+                    "3",  # Feels Like (decimal id, distinct from 0x03 dewpoint)
+                    "5",  # VPD (decimal id, distinct from 0x05 heat index)
                     "ws90batt",  # Battery level (%)
                     "ws90_voltage",  # Battery voltage (V)
                     "ws90cap_volt",  # Capacitor voltage (V)
@@ -322,6 +328,8 @@ class SensorMapper:
                     "0x6D",  # Wind Direction Avg
                     "0x15",  # Solar Radiation
                     "0x17",  # UV Index
+                    "3",  # Feels Like (decimal id, distinct from 0x03 dewpoint)
+                    "5",  # VPD (decimal id, distinct from 0x05 heat index)
                     "wh80batt",  # Battery
                 ]
             )
@@ -349,6 +357,8 @@ class SensorMapper:
                     "0x11",  # Rain weekly
                     "0x12",  # Rain monthly
                     "0x13",  # Rain yearly
+                    "3",  # Feels Like (decimal id, distinct from 0x03 dewpoint)
+                    "5",  # VPD (decimal id, distinct from 0x05 heat index)
                     "wh90batt",  # Battery level (%)
                     "wh90_voltage",  # Battery voltage (V)
                     "wh90cap_volt",  # Capacitor voltage (V)
@@ -419,6 +429,18 @@ class SensorMapper:
                     [
                         f"leafwetness_ch{ch_num}",
                         f"leaf_batt{ch_num}",
+                    ]
+                )
+        elif sensor_type.lower() in ("wh54", "lds"):
+            # WH54 liquid depth sensor (channels 1-4 = types 66-69).
+            # Data arrives via the ch_lds livedata block.
+            if ch_num:
+                keys.extend(
+                    [
+                        f"lds_air_ch{ch_num}",
+                        f"lds_depth_ch{ch_num}",
+                        f"lds_voltage_ch{ch_num}",
+                        f"lds_batt{ch_num}",
                     ]
                 )
         elif sensor_type.lower() in ("wn38", "bgt"):
@@ -586,6 +608,8 @@ class SensorMapper:
             "soilec": "soil_conductivity",  # must precede generic "soil"
             "soilad": "soil_moisture_ad",  # must precede generic "soil"
             "soil": "soil_moisture",
+            "pm25_aqi_24h": "pm25_aqi_24h",  # ch_pm25 24h AQI (must precede generic "pm25")
+            "pm25_aqi_realtime": "pm25_aqi_realtime",  # ch_pm25 real-time AQI (must precede generic "pm25")
             "pm25_avg_24h": "pm25_24h_avg",  # must precede "pm25_24h" and generic "pm25"
             "pm25_24h": "pm25_24h_co2",  # WH45 24h avg (must precede generic "pm25")
             "pm25": "pm25",
