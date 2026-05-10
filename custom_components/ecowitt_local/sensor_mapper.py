@@ -237,7 +237,10 @@ class SensorMapper:
                     "wh40batt",
                 ]
             )
-        elif sensor_type.lower() in ("wh68", "weather_station"):
+        elif (
+            sensor_type.lower() in ("wh68", "weather_station")
+            or "solar & wind" in sensor_type.lower()
+        ):
             # Main weather station
             keys.extend(
                 [
@@ -261,14 +264,17 @@ class SensorMapper:
             keys.extend(
                 [
                     "0x02",  # Temperature
-                    "0x03",  # Temperature (alternate)
+                    "0x03",  # Dewpoint
+                    "0x04",  # Wind Chill
+                    "0x05",  # Heat Index
                     "0x07",  # Humidity
                     "0x0B",  # Wind speed
-                    "0x0C",  # Wind speed (alternate)
-                    "0x19",  # Wind gust
+                    "0x0C",  # Wind gust
+                    "0x19",  # Max daily gust
                     "0x0A",  # Wind direction
-                    "0x6D",  # Wind direction (alternate)
+                    "0x6D",  # Wind direction avg
                     "0x15",  # Solar radiation
+                    "0x16",  # UV irradiance
                     "0x17",  # UV index
                     "0x0D",  # Rain event
                     "0x0E",  # Rain rate
@@ -277,6 +283,7 @@ class SensorMapper:
                     "0x11",  # Rain weekly
                     "0x12",  # Rain monthly
                     "0x13",  # Rain yearly
+                    "0x14",  # Rain total
                     "3",  # Feels Like (decimal id, distinct from 0x03 dewpoint)
                     "5",  # VPD (decimal id, distinct from 0x05 heat index)
                     "wh69batt",  # Battery level
@@ -287,14 +294,17 @@ class SensorMapper:
             keys.extend(
                 [
                     "0x02",  # Temperature
-                    "0x03",  # Temperature (alternate)
+                    "0x03",  # Dewpoint
+                    "0x04",  # Wind Chill
+                    "0x05",  # Heat Index
                     "0x07",  # Humidity
                     "0x0B",  # Wind speed
-                    "0x0C",  # Wind speed (alternate)
-                    "0x19",  # Wind gust
+                    "0x0C",  # Wind gust
+                    "0x19",  # Max daily gust
                     "0x0A",  # Wind direction
-                    "0x6D",  # Wind direction (alternate)
+                    "0x6D",  # Wind direction avg
                     "0x15",  # Solar radiation
+                    "0x16",  # UV irradiance
                     "0x17",  # UV index
                     "0x0D",  # Rain event
                     "0x0E",  # Rain rate
@@ -303,6 +313,7 @@ class SensorMapper:
                     "0x11",  # Rain weekly
                     "0x12",  # Rain monthly
                     "0x13",  # Rain yearly
+                    "0x14",  # Rain total
                     "3",  # Feels Like (decimal id, distinct from 0x03 dewpoint)
                     "5",  # VPD (decimal id, distinct from 0x05 heat index)
                     "ws90batt",  # Battery level (%)
@@ -320,6 +331,8 @@ class SensorMapper:
                 [
                     "0x02",  # Temperature
                     "0x03",  # Dewpoint
+                    "0x04",  # Wind Chill
+                    "0x05",  # Heat Index
                     "0x07",  # Humidity
                     "0x0B",  # Wind Speed
                     "0x0C",  # Wind Gust
@@ -327,6 +340,7 @@ class SensorMapper:
                     "0x0A",  # Wind Direction
                     "0x6D",  # Wind Direction Avg
                     "0x15",  # Solar Radiation
+                    "0x16",  # UV irradiance
                     "0x17",  # UV Index
                     "3",  # Feels Like (decimal id, distinct from 0x03 dewpoint)
                     "5",  # VPD (decimal id, distinct from 0x05 heat index)
@@ -341,14 +355,17 @@ class SensorMapper:
             keys.extend(
                 [
                     "0x02",  # Temperature
-                    "0x03",  # Temperature (alternate)
+                    "0x03",  # Dewpoint
+                    "0x04",  # Wind Chill
+                    "0x05",  # Heat Index
                     "0x07",  # Humidity
                     "0x0B",  # Wind speed
-                    "0x0C",  # Wind speed (alternate)
-                    "0x19",  # Wind gust
+                    "0x0C",  # Wind gust
+                    "0x19",  # Max daily gust
                     "0x0A",  # Wind direction
-                    "0x6D",  # Wind direction (alternate)
+                    "0x6D",  # Wind direction avg
                     "0x15",  # Solar radiation
+                    "0x16",  # UV irradiance
                     "0x17",  # UV index
                     "0x0D",  # Rain event
                     "0x0E",  # Rain rate
@@ -357,6 +374,7 @@ class SensorMapper:
                     "0x11",  # Rain weekly
                     "0x12",  # Rain monthly
                     "0x13",  # Rain yearly
+                    "0x14",  # Rain total
                     "3",  # Feels Like (decimal id, distinct from 0x03 dewpoint)
                     "5",  # VPD (decimal id, distinct from 0x05 heat index)
                     "wh90batt",  # Battery level (%)
@@ -399,6 +417,11 @@ class SensorMapper:
                     "humidityin",
                     "baromrelin",
                     "baromabsin",
+                    # Newer firmware may emit these via common_list hex IDs instead of wh25 block
+                    "0x01",  # Indoor temperature
+                    "0x06",  # Indoor humidity
+                    "0x08",  # Absolute pressure
+                    "0x09",  # Relative pressure
                     "wh25batt",
                 ]
             )
@@ -462,12 +485,16 @@ class SensorMapper:
                     "0x11",  # Rain weekly
                     "0x12",  # Rain monthly
                     "0x13",  # Rain yearly
+                    "0x14",  # Rain total
                     "ws85batt",  # Battery level (%)
                     "ws85_voltage",  # Battery voltage (V)
                     "ws85cap_volt",  # Capacitor voltage (V)
                 ]
             )
-        elif sensor_type.lower() in ("wh45", "wh46", "combo", "co2_pm"):
+        elif (
+            sensor_type.lower() in ("wh45", "wh46", "combo", "co2_pm")
+            or "pm25 & pm10 & co2" in sensor_type.lower()
+        ):
             # WH45/WH46D combo sensor (CO2 + PM + temp/humidity)
             # WH46D adds PM1.0 and PM4.0 on top of WH45 sensors
             keys.extend(
@@ -477,12 +504,20 @@ class SensorMapper:
                     "humi_co2",  # Humidity
                     "pm25_co2",  # PM2.5 current
                     "pm25_24h_co2",  # PM2.5 24h average
+                    "pm25_realaqi_co2",  # PM2.5 real-time AQI
+                    "pm25_24haqi_co2",  # PM2.5 24h AQI
                     "pm10_co2",  # PM10 current
                     "pm10_24h_co2",  # PM10 24h average
+                    "pm10_realaqi_co2",  # PM10 real-time AQI
+                    "pm10_24haqi_co2",  # PM10 24h AQI
                     "pm1_co2",  # PM1.0 current (WH46D)
                     "pm1_24h_co2",  # PM1.0 24h average (WH46D)
+                    "pm1_realaqi_co2",  # PM1.0 real-time AQI (WH46D)
+                    "pm1_24haqi_co2",  # PM1.0 24h AQI (WH46D)
                     "pm4_co2",  # PM4.0 current (WH46D)
                     "pm4_24h_co2",  # PM4.0 24h average (WH46D)
+                    "pm4_realaqi_co2",  # PM4.0 real-time AQI (WH46D)
+                    "pm4_24haqi_co2",  # PM4.0 24h AQI (WH46D)
                     "co2",  # CO2 current
                     "co2_24h",  # CO2 24h average
                     "co2_batt",  # Battery
@@ -570,23 +605,32 @@ class SensorMapper:
         if key.startswith("0x"):
             # Map hex IDs to human-readable sensor type names
             hex_to_name = {
+                "0x01": "indoor_temp",
                 "0x02": "outdoor_temp",
                 "0x03": "dewpoint",
+                "0x04": "wind_chill",
+                "0x05": "heat_index",
+                "0x06": "indoor_humidity",
                 "0x07": "outdoor_humidity",
+                "0x08": "absolute_pressure",
+                "0x09": "relative_pressure",
+                "0x0A": "wind_direction",
                 "0x0B": "wind_speed",
                 "0x0C": "wind_gust",
-                "0x19": "max_daily_gust",
-                "0x0A": "wind_direction",
-                "0x6D": "wind_direction_avg",
-                "0x15": "solar_radiation",
-                "0x17": "uv_index",
                 "0x0D": "rain_event",
                 "0x0E": "rain_rate",
-                "0x7C": "24h_rain",
+                "0x0F": "rain_gain",
                 "0x10": "daily_rain",
                 "0x11": "weekly_rain",
                 "0x12": "monthly_rain",
                 "0x13": "yearly_rain",
+                "0x14": "total_rain",
+                "0x15": "solar_radiation",
+                "0x16": "uv_radiation",
+                "0x17": "uv_index",
+                "0x19": "max_daily_gust",
+                "0x6D": "wind_direction_avg",
+                "0x7C": "24h_rain",
                 "0xA1": "bgt",
                 "0xA2": "wbgt",
             }

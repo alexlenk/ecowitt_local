@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-05-10
+
+### Added
+- **Wind Chill (0x04) and Heat Index (0x05)**: Both `common_list` hex IDs are now exposed as temperature entities (°C) for all outdoor weather stations that emit them (WH69, WH90, WS90, WH80/WS80). These were silently dropped before because they had no `SENSOR_TYPES` entry or device key list. (issues #170, #171)
+- **UV Radiation (0x16)**: Raw UV irradiance in µW/m² is now a separate entity, distinct from the existing UV Index (0x17). Added to all outdoor weather stations that have a UV sensor. (issue #160)
+- **Total Rain (0x14)**: All-time cumulative rain total is now exposed for rain-capable devices (WH69, WH90, WS90, WH85, WH40). (issue #161)
+- **Indoor sensors via `common_list` (0x01, 0x06, 0x08, 0x09)**: Gateways running newer firmware may emit indoor temperature, indoor humidity, absolute pressure, and relative pressure via `common_list` hex IDs instead of (or in addition to) the `wh25` block. These IDs are now in the WH25 device key list and `SENSOR_TYPES` so they create proper entities when present. (issue #172)
+- **WH45/WH46D AQI index entities for co2 block**: All AQI index fields from the `co2` livedata block are now exposed — `PM25_RealAQI`, `PM25_24HAQI`, `PM10_RealAQI`, `PM10_24HAQI`, `PM1_RealAQI`, `PM1_24HAQI` (WH46D), `PM4_RealAQI`, `PM4_24HAQI` (WH46D) — each as a dimensionless `AQI` entity. Previously only raw concentrations (µg/m³) were exposed for the co2 block. (issue #163)
+- **Solar Illuminance (lx) entity for non-hex weather stations (WH68)**: The hex-based path (0x15 W/m²) already computed a `solar_lux` illuminance entity, but the string-key path (`solarradiation` W/m², used by WH68 and similar) did not. It now does the same calculation (W/m² × 126.7). (issue #180)
+
+### Fixed
+- **Solar Radiation shows in lx instead of W/m² (gateway in lux mode)**: When a WH68-type gateway is configured to output solar radiation in lux, the integration labelled the entity "Solar Radiation" with a lux unit — visually wrong. The entity is now renamed "Solar Illuminance" (lx, `illuminance` device class) and a derived "Solar Radiation" entity in W/m² (÷ 126.7) is also created alongside it. (issue #180)
+- **WH68 detection falls back to "Solar & Wind" firmware name**: If a gateway reports `img: ""` or a non-standard string for WH68, the official firmware name string `"Solar & Wind"` is now accepted as a detection fallback, matching the hardening pattern used for WH90. (issue #166)
+- **WH45 detection falls back to "PM25 & PM10 & CO2" firmware name**: Same hardening for WH45/WH46D — the official firmware name string `"PM25 & PM10 & CO2"` is now a valid detection fallback. (issue #167)
+
+### Changed
+- **0x0F Rain Gain intentionally omitted**: A comment has been added in `coordinator.py` near the rain block to document that `0x0F` (`ITEM_RAIN_GAIN`) is a calibration multiplier and is intentionally not exposed as a sensor entity. Use the gateway's web UI or the `get_rain_totals` endpoint to view or change the gain. (issue #168)
+
 ## [1.6.21] - 2026-05-10
 
 ### Fixed

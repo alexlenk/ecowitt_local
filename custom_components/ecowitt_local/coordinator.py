@@ -211,6 +211,9 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     )
 
         # Extract rain data (tipping-bucket rain sensor — WH40, GW1200, GW2000A with WH69)
+        # Note: 0x0F (ITEM_RAIN_GAIN) is a calibration multiplier, not a live measurement.
+        # It is intentionally not exposed as a sensor entity. Use the gateway's web UI or
+        # the get_rain_totals endpoint (spec §9) to view or change the gain setting.
         rain_list = raw_data.get("rain", [])
         if rain_list:
             _LOGGER.debug("Found rain data with %d items", len(rain_list))
@@ -932,6 +935,22 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         "Added WH46D PM4.0 24h avg: pm4_24h_co2 = %s", pm4_24h_val
                     )
 
+                # AQI index fields (dimensionless 0–500). Spec V1.0.6 §1 co2 block.
+                for _pm_key, _co2_key in (
+                    ("PM25_RealAQI", "pm25_realaqi_co2"),
+                    ("PM25_24HAQI", "pm25_24haqi_co2"),
+                    ("PM10_RealAQI", "pm10_realaqi_co2"),
+                    ("PM10_24HAQI", "pm10_24haqi_co2"),
+                    ("PM1_RealAQI", "pm1_realaqi_co2"),
+                    ("PM1_24HAQI", "pm1_24haqi_co2"),
+                    ("PM4_RealAQI", "pm4_realaqi_co2"),
+                    ("PM4_24HAQI", "pm4_24haqi_co2"),
+                ):
+                    _aqi_val = co2_item.get(_pm_key)
+                    if _aqi_val and str(_aqi_val) != "None":
+                        all_sensor_items.append({"id": _co2_key, "val": str(_aqi_val)})
+                        _LOGGER.debug("Added WH45 AQI: %s = %s", _co2_key, _aqi_val)
+
                 co2_val = co2_item.get("CO2") or co2_item.get("CO2_val")
                 if co2_val:
                     all_sensor_items.append({"id": "co2", "val": str(co2_val)})
@@ -1176,42 +1195,79 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 },
             }
 
-            # For solar radiation in W/m², also create a computed illuminance entity.
-            # The gateway's local API always returns W/m² regardless of the unit setting
-            # in the gateway web UI, so we compute lux = W/m² × 126.7 here.
-            if sensor_key == "0x15" and unit == "W/m²" and sensor_value:
-                try:
-                    lux_val = round(float(sensor_value) * 126.7, 1)
-                    lux_entity_id, lux_name = self.sensor_mapper.generate_entity_id(
-                        "solar_lux", hardware_id
-                    )
-                    lux_sensor_info = SENSOR_TYPES.get("solar_lux", {})
-                    sensors_data[lux_entity_id] = {
-                        "entity_id": lux_entity_id,
-                        "name": lux_name,
-                        "state": str(lux_val),
-                        "unit_of_measurement": "lx",
-                        "device_class": "illuminance",
-                        "state_class": lux_sensor_info.get("state_class")
-                        or "measurement",
-                        "category": "sensor",
-                        "sensor_key": "solar_lux",
-                        "hardware_id": hardware_id,
-                        "raw_value": str(lux_val),
-                        "attributes": {
+            # Solar radiation secondary entity:
+            # - hex 0x15 (W/m²): also compute Solar Illuminance in lx = val × 126.7
+            # - non-hex 'solarradiation' (W/m²): same lux computation
+            # - non-hex 'solarradiation' (lx): rename primary entity to "Solar Illuminance"
+            #   and compute Solar Radiation in W/m² = val / 126.7
+            if sensor_key in ("0x15", "solarradiation") and sensor_value:
+                if unit == "W/m²":
+                    try:
+                        lux_val = round(float(sensor_value) * 126.7, 1)
+                        lux_entity_id, lux_name = self.sensor_mapper.generate_entity_id(
+                            "solar_lux", hardware_id
+                        )
+                        lux_sensor_info = SENSOR_TYPES.get("solar_lux", {})
+                        sensors_data[lux_entity_id] = {
+                            "entity_id": lux_entity_id,
+                            "name": lux_name,
+                            "state": str(lux_val),
+                            "unit_of_measurement": "lx",
+                            "device_class": "illuminance",
+                            "state_class": lux_sensor_info.get("state_class")
+                            or "measurement",
+                            "category": "sensor",
                             "sensor_key": "solar_lux",
-                            "last_update": datetime.now().isoformat(),
-                            **sensor_details,
-                        },
-                    }
-                    _LOGGER.debug(
-                        "Added computed solar_lux entity: %s = %s lx (from %s W/m²)",
-                        lux_entity_id,
-                        lux_val,
-                        sensor_value,
-                    )
-                except (ValueError, TypeError):
-                    pass
+                            "hardware_id": hardware_id,
+                            "raw_value": str(lux_val),
+                            "attributes": {
+                                "sensor_key": "solar_lux",
+                                "last_update": datetime.now().isoformat(),
+                                **sensor_details,
+                            },
+                        }
+                        _LOGGER.debug(
+                            "Added computed solar_lux entity: %s = %s lx (from %s W/m²)",
+                            lux_entity_id,
+                            lux_val,
+                            sensor_value,
+                        )
+                    except (ValueError, TypeError):
+                        pass
+                elif unit == "lx" and sensor_key == "solarradiation":
+                    # Gateway is in lux mode: rename the primary entity to Solar Illuminance
+                    # and add a derived Solar Radiation entity in W/m².
+                    sensors_data[entity_id]["name"] = "Solar Illuminance"
+                    try:
+                        wm2_val = round(float(sensor_value) / 126.7, 1)
+                        wm2_entity_id = entity_id.replace(
+                            "solar_radiation", "solar_radiation_wm2"
+                        )
+                        sensors_data[wm2_entity_id] = {
+                            "entity_id": wm2_entity_id,
+                            "name": "Solar Radiation",
+                            "state": str(wm2_val),
+                            "unit_of_measurement": "W/m²",
+                            "device_class": "irradiance",
+                            "state_class": "measurement",
+                            "category": "sensor",
+                            "sensor_key": "solarradiation_wm2",
+                            "hardware_id": hardware_id,
+                            "raw_value": str(wm2_val),
+                            "attributes": {
+                                "sensor_key": "solarradiation_wm2",
+                                "last_update": datetime.now().isoformat(),
+                                **sensor_details,
+                            },
+                        }
+                        _LOGGER.debug(
+                            "Added computed Solar Radiation entity: %s = %s W/m² (from %s lx)",
+                            wm2_entity_id,
+                            wm2_val,
+                            sensor_value,
+                        )
+                    except (ValueError, TypeError):
+                        pass
 
         # Add diagnostic and signal strength sensors for hardware devices
         self._add_diagnostic_and_signal_sensors(sensors_data)
