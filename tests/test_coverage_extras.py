@@ -1377,3 +1377,38 @@ async def test_api_get_soil_calibration_non_list():
 
     assert result == []
     await api.close()
+
+
+@pytest.mark.asyncio
+async def test_solarradiation_lux_mode_invalid_value(coordinator):
+    """Test solarradiation lux mode handles non-numeric value without crashing.
+
+    Uses item_unit="lx" so the unit is forced to lx without going through the regex
+    that requires a numeric prefix, leaving sensor_value as a non-numeric string that
+    triggers the ValueError in the float() conversion (coordinator.py lines 1271-1272).
+    """
+    from unittest.mock import AsyncMock
+
+    # Supply unit as a separate field so embedded_unit = "lx" but sensor_value stays
+    # as a non-numeric string that will raise ValueError in float().
+    mock_live_data = {
+        "common_list": [{"id": "solarradiation", "val": "not_a_number", "unit": "lx"}],
+    }
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+
+    # Should not raise; the except clause in coordinator.py (lines 1271-1272) handles it
+    result = await coordinator._async_update_data()
+    assert result is not None
+    sensors = result["sensors"]
+    # Primary entity is renamed Solar Illuminance but W/m² derived entity is absent
+    lux_entity = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "solarradiation"), None
+    )
+    assert lux_entity is not None
+    assert lux_entity["name"] == "Solar Illuminance"
+    wm2_entity = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "solarradiation_wm2"),
+        None,
+    )
+    assert wm2_entity is None

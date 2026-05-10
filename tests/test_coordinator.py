@@ -2911,3 +2911,153 @@ async def test_coordinator_ch_lds_skips_no_channel_or_empty(coordinator):
         if str(s.get("sensor_key", "")).startswith("lds_")
     ]
     assert lds_keys == [], f"Expected no lds entities, got {lds_keys}"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_co2_aqi_fields(coordinator):
+    """Test WH45 co2 block AQI index fields are extracted (issue #163)."""
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "2859",
+                "img": "wh45",
+                "type": "39",
+                "name": "PM25 & PM10 & CO2",
+                "batt": "5",
+                "signal": "4",
+            }
+        ]
+    )
+    raw_data = {
+        "co2": [
+            {
+                "PM25": "13.0",
+                "PM25_RealAQI": "53",
+                "PM25_24HAQI": "60",
+                "PM25_24H": "16.4",
+                "PM10": "13.9",
+                "PM10_RealAQI": "13",
+                "PM10_24HAQI": "18",
+                "PM10_24H": "19.9",
+                "PM1": "11.5",
+                "PM1_RealAQI": "48",
+                "PM1_24HAQI": "52",
+                "PM4": "13.6",
+                "PM4_RealAQI": "54",
+                "PM4_24HAQI": "65",
+                "CO2": "880",
+                "battery": "5",
+            }
+        ],
+    }
+
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    aqi_keys = {
+        "pm25_realaqi_co2": "53",
+        "pm25_24haqi_co2": "60",
+        "pm10_realaqi_co2": "13",
+        "pm10_24haqi_co2": "18",
+        "pm1_realaqi_co2": "48",
+        "pm1_24haqi_co2": "52",
+        "pm4_realaqi_co2": "54",
+        "pm4_24haqi_co2": "65",
+    }
+    for aqi_key, expected_val in aqi_keys.items():
+        found = next(
+            (s for s in sensors.values() if s.get("sensor_key") == aqi_key), None
+        )
+        assert found is not None, f"AQI sensor '{aqi_key}' not found in processed data"
+        assert (
+            str(found["state"]) == expected_val
+        ), f"{aqi_key}: expected {expected_val}, got {found['state']}"
+        assert found["unit_of_measurement"] == "AQI"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_solarradiation_wm2_creates_solar_lux(coordinator):
+    """Test that solarradiation in W/m² also creates a solar_lux entity (issue #180)."""
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "A1B2",
+                "img": "wh68",
+                "type": "1",
+                "name": "Solar & Wind",
+                "batt": "3",
+                "signal": "4",
+            }
+        ]
+    )
+    mock_live_data = {
+        "common_list": [{"id": "solarradiation", "val": "200.0 W/m2"}],
+    }
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    solar_found = any(
+        s.get("sensor_key") == "solarradiation"
+        and s.get("unit_of_measurement") == "W/m²"
+        for s in sensors.values()
+    )
+    lux_found = any(s.get("sensor_key") == "solar_lux" for s in sensors.values())
+    assert solar_found, "solarradiation (W/m²) entity not found"
+    assert lux_found, "solar_lux entity not created from solarradiation W/m²"
+
+    lux_entity = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "solar_lux"), None
+    )
+    assert lux_entity is not None
+    assert lux_entity["unit_of_measurement"] == "lx"
+    assert lux_entity["device_class"] == "illuminance"
+    # 200.0 * 126.7 = 25340.0
+    assert float(lux_entity["state"]) == pytest.approx(25340.0, abs=1.0)
+
+
+@pytest.mark.asyncio
+async def test_coordinator_solarradiation_lux_mode(coordinator):
+    """Test solarradiation in lx mode: rename to Solar Illuminance, add W/m² entity (issue #180)."""
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "A1B2",
+                "img": "wh68",
+                "type": "1",
+                "name": "Solar & Wind",
+                "batt": "3",
+                "signal": "4",
+            }
+        ]
+    )
+    mock_live_data = {
+        "common_list": [{"id": "solarradiation", "val": "25340.0 lx"}],
+    }
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    # Primary entity should be renamed to Solar Illuminance in lx
+    lux_entity = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "solarradiation"), None
+    )
+    assert lux_entity is not None, "solarradiation entity not found"
+    assert lux_entity["name"] == "Solar Illuminance"
+    assert lux_entity["unit_of_measurement"] == "lx"
+
+    # Derived W/m² entity should also be present
+    wm2_entity = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "solarradiation_wm2"),
+        None,
+    )
+    assert wm2_entity is not None, "solarradiation_wm2 entity not created"
+    assert wm2_entity["name"] == "Solar Radiation"
+    assert wm2_entity["unit_of_measurement"] == "W/m²"
+    assert wm2_entity["device_class"] == "irradiance"
+    # 25340.0 / 126.7 ≈ 200.0
+    assert float(wm2_entity["state"]) == pytest.approx(200.0, abs=1.0)
