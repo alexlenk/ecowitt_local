@@ -1031,3 +1031,285 @@ async def test_async_remove_entry(hass: HomeAssistant, mock_config_entry):
 
     # Function should complete without error
     # Currently it just logs, so we verify it doesn't raise an exception
+
+
+async def test_orphan_decimal_4_entity_removed_on_setup(
+    hass: HomeAssistant, mock_config_entry, mock_ecowitt_api
+):
+    """The orphan "4" entity created before v1.6.20 is removed at startup.
+
+    "4" was a developer mistake — it isn't in the V1.0.6 spec and was removed
+    from SENSOR_TYPES in v1.6.20. Pre-existing entities with the gateway-based
+    unique_id `ecowitt_local_<entry_id>_4` should be cleaned up so they no
+    longer appear as nameless "Unavailable" sensors. (issue #178)
+    """
+    from unittest.mock import patch
+
+    from homeassistant.helpers import entity_registry as er
+
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.get_version.return_value = {
+        "stationtype": "GW2000A",
+        "version": "3.3.1",
+    }
+    mock_ecowitt_api.get_units.return_value = {"temperature": "0"}
+    mock_ecowitt_api.get_all_sensor_mappings.return_value = []
+    mock_ecowitt_api.get_live_data.return_value = {"common_list": []}
+
+    mock_config_entry.add_to_hass(hass)
+
+    entity_registry = er.async_get(hass)
+    orphan = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=f"{DOMAIN}_{mock_config_entry.entry_id}_4",
+        config_entry=mock_config_entry,
+    )
+
+    with patch(
+        "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+        return_value=mock_ecowitt_api,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get(orphan.entity_id) is None
+    ), "Orphan '4' entity must be removed at startup"
+
+
+async def test_orphan_decimal_5_entity_migrated_to_outdoor_station(
+    hass: HomeAssistant, mock_config_entry, mock_ecowitt_api
+):
+    """An orphan VPD entity from before v1.6.21 is migrated to the WH90 device.
+
+    Before v1.6.20, the "5" key had no hardware mapping so its entity was
+    pinned to the gateway via `ecowitt_local_<entry_id>_5`. v1.6.20 routed
+    "5" to the outdoor weather station, but the existing gateway-based entity
+    was left orphaned. The migration must update both unique_id and device_id
+    to point at the active outdoor station, preserving history. (issue #178)
+    """
+    from unittest.mock import patch
+
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
+
+    entity_registry = er.async_get(hass)
+    mock_config_entry.add_to_hass(hass)
+    orphan = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=f"{DOMAIN}_{mock_config_entry.entry_id}_5",
+        config_entry=mock_config_entry,
+    )
+
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.get_version.return_value = {
+        "stationtype": "GW2000A",
+        "version": "3.3.1",
+    }
+    mock_ecowitt_api.get_units.return_value = {"temperature": "0"}
+    mock_ecowitt_api.get_all_sensor_mappings.return_value = [
+        {
+            "id": "FF9988",
+            "img": "wh90",
+            "type": "48",
+            "name": "Temp & Humidity & Solar & Wind & Rain",
+            "batt": "0",
+            "signal": "4",
+        },
+    ]
+    # Crucially, no "5" in live data — the old orphan must be migrated
+    # even when the gateway hasn't yet emitted the new key.
+    mock_ecowitt_api.get_live_data.return_value = {
+        "common_list": [{"id": "0x02", "val": "22.2"}],
+        "wh90batt": "5",
+    }
+
+    with patch(
+        "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+        return_value=mock_ecowitt_api,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device_registry = dr.async_get(hass)
+    wh90_device = device_registry.async_get_device(identifiers={(DOMAIN, "FF9988")})
+    assert wh90_device is not None
+
+    migrated = entity_registry.async_get(orphan.entity_id)
+    assert migrated is not None, "Entity should still exist after migration"
+    assert (
+        migrated.unique_id == f"{DOMAIN}_FF9988_5"
+    ), "Unique ID should reference the WH90 hardware ID"
+    assert (
+        migrated.device_id == wh90_device.id
+    ), "Entity should now belong to the WH90 device"
+
+
+async def test_orphan_decimal_5_removed_when_duplicate_exists(
+    hass: HomeAssistant, mock_config_entry, mock_ecowitt_api
+):
+    """If a hardware-based VPD entity already exists, the gateway orphan is removed.
+
+    When the firmware emits "5" and v1.6.20 has already created the new entity
+    on the WH90, both the old gateway orphan and the new WH90 entity exist.
+    The migration cannot rename the orphan to a unique_id already in use, so
+    it removes the orphan instead. (issue #178)
+    """
+    from unittest.mock import patch
+
+    from homeassistant.helpers import entity_registry as er
+
+    entity_registry = er.async_get(hass)
+    mock_config_entry.add_to_hass(hass)
+
+    # Pre-create both the orphan AND the new hardware-based entity to simulate
+    # a user upgrading after v1.6.20 had time to create the new entity.
+    orphan = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=f"{DOMAIN}_{mock_config_entry.entry_id}_5",
+        config_entry=mock_config_entry,
+    )
+    duplicate = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=f"{DOMAIN}_FF9988_5",
+        config_entry=mock_config_entry,
+    )
+
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.get_version.return_value = {
+        "stationtype": "GW2000A",
+        "version": "3.3.1",
+    }
+    mock_ecowitt_api.get_units.return_value = {"temperature": "0"}
+    mock_ecowitt_api.get_all_sensor_mappings.return_value = [
+        {
+            "id": "FF9988",
+            "img": "wh90",
+            "type": "48",
+            "name": "Temp & Humidity & Solar & Wind & Rain",
+            "batt": "0",
+            "signal": "4",
+        },
+    ]
+    mock_ecowitt_api.get_live_data.return_value = {
+        "common_list": [{"id": "5", "val": "1.45"}],
+        "wh90batt": "5",
+    }
+
+    with patch(
+        "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+        return_value=mock_ecowitt_api,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get(orphan.entity_id) is None
+    ), "Orphan must be removed when a hardware-based duplicate exists"
+    assert (
+        entity_registry.async_get(duplicate.entity_id) is not None
+    ), "Hardware-based duplicate must be preserved"
+
+
+async def test_orphan_decimal_3_5_left_alone_without_outdoor_station(
+    hass: HomeAssistant, mock_config_entry, mock_ecowitt_api
+):
+    """Without an outdoor weather station, "3"/"5" orphans are left untouched.
+
+    Migrating with no destination would either drop the entity or leave it
+    pointing at the gateway with mismatched metadata. The cleanup only acts
+    when the outdoor station can absorb the entity. (issue #178)
+    """
+    from unittest.mock import patch
+
+    from homeassistant.helpers import entity_registry as er
+
+    entity_registry = er.async_get(hass)
+    mock_config_entry.add_to_hass(hass)
+    orphan_3 = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=f"{DOMAIN}_{mock_config_entry.entry_id}_3",
+        config_entry=mock_config_entry,
+    )
+    orphan_5 = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=f"{DOMAIN}_{mock_config_entry.entry_id}_5",
+        config_entry=mock_config_entry,
+    )
+
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.get_version.return_value = {
+        "stationtype": "GW1100A",
+        "version": "1.7.3",
+    }
+    mock_ecowitt_api.get_units.return_value = {"temperature": "0"}
+    mock_ecowitt_api.get_all_sensor_mappings.return_value = []
+    mock_ecowitt_api.get_live_data.return_value = {"common_list": []}
+
+    with patch(
+        "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+        return_value=mock_ecowitt_api,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get(orphan_3.entity_id) is not None
+    ), "Without an outdoor station, '3' orphan must be preserved"
+    assert (
+        entity_registry.async_get(orphan_5.entity_id) is not None
+    ), "Without an outdoor station, '5' orphan must be preserved"
+
+
+async def test_unknown_decimal_id_skipped_in_processing(
+    hass: HomeAssistant, mock_config_entry, mock_ecowitt_api
+):
+    """Live-data items with unknown numeric ids (e.g. "4") never become entities.
+
+    Some firmware emits decimal ids that aren't in the V1.0.6 spec. Without
+    SENSOR_TYPES metadata an entity built from such a key has no name, no unit,
+    and no device class — exactly the "4" orphan from issue #178. Drop these
+    keys before they reach the entity layer so they don't reappear after the
+    migration cleanup runs. (issue #178)
+    """
+    from unittest.mock import patch
+
+    from homeassistant.helpers import entity_registry as er
+
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.get_version.return_value = {
+        "stationtype": "GW2000A",
+        "version": "3.3.1",
+    }
+    mock_ecowitt_api.get_units.return_value = {"temperature": "0"}
+    mock_ecowitt_api.get_all_sensor_mappings.return_value = []
+    mock_ecowitt_api.get_live_data.return_value = {
+        "common_list": [
+            {"id": "0x02", "val": "22.2"},
+            {"id": "4", "val": "20.5"},
+        ]
+    }
+
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+        return_value=mock_ecowitt_api,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    decimal_4_entities = [
+        ent
+        for ent in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if ent.unique_id.endswith("_4")
+    ]
+    assert decimal_4_entities == [], "Unknown decimal-id '4' must not produce an entity"

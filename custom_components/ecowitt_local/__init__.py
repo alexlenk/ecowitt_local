@@ -46,6 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Setup device registry entries FIRST so devices exist when entities are created
     await _async_setup_device_registry(hass, entry, coordinator)
 
+    # Clean up orphan decimal-id entities left over from before v1.6.21 (issue #178).
+    _async_cleanup_decimal_id_orphans(hass, entry, coordinator)
+
     # Setup platforms (entities will now find their proper devices)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -231,6 +234,90 @@ def _async_remove_empty_sensor_devices(
             device.model or "unknown model",
         )
         device_registry.async_remove_device(device.id)
+
+
+@callback
+def _async_cleanup_decimal_id_orphans(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    coordinator: EcowittLocalDataUpdateCoordinator,
+) -> None:
+    """Clean up orphan decimal-id entities created before v1.6.21 (issue #178).
+
+    v1.6.20 routed common_list decimal IDs "3" (Feels Like Temp) and "5" (VPD)
+    to the outdoor weather station, and removed the spurious "4" sensor type
+    that wasn't in the V1.0.6 spec. Pre-existing entities created on the gateway
+    device kept their old gateway-based unique_id `ecowitt_local_<entry_id>_<key>`
+    and went "unavailable" — the orphan VPD and "4" entries reported in #178.
+
+    For "3" and "5": migrate the orphan to the outdoor weather station device
+    by updating unique_id and device_id (preserves history). If a hardware-based
+    equivalent already exists, remove the orphan instead.
+
+    For "4": always remove. The key is not in the V1.0.6 spec.
+    """
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    # Resolve the outdoor weather station's hardware ID by looking up any of
+    # its battery keys; whichever is mapped wins (WH90 takes priority).
+    outdoor_hardware_id: str | None = None
+    for batt_key in ("wh90batt", "ws90batt", "wh80batt", "wh69batt"):
+        outdoor_hardware_id = coordinator.sensor_mapper.get_hardware_id(batt_key)
+        if outdoor_hardware_id:
+            break
+
+    outdoor_device = (
+        device_registry.async_get_device(identifiers={(DOMAIN, outdoor_hardware_id)})
+        if outdoor_hardware_id
+        else None
+    )
+
+    prefix = f"{DOMAIN}_{entry.entry_id}_"
+    for entity in list(
+        er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    ):
+        if not entity.unique_id.startswith(prefix):
+            continue
+        sensor_key = entity.unique_id[len(prefix) :]
+
+        if sensor_key == "4":
+            _LOGGER.info(
+                "Removing orphan '4' entity %s — key is not in V1.0.6 spec",
+                entity.entity_id,
+            )
+            entity_registry.async_remove(entity.entity_id)
+            continue
+
+        if sensor_key not in ("3", "5"):
+            continue
+
+        if outdoor_device is None or outdoor_hardware_id is None:
+            continue
+
+        new_unique_id = f"{DOMAIN}_{outdoor_hardware_id}_{sensor_key}"
+        existing = entity_registry.async_get_entity_id("sensor", DOMAIN, new_unique_id)
+        sensor_label = "Feels Like Temp" if sensor_key == "3" else "VPD"
+        if existing and existing != entity.entity_id:
+            _LOGGER.info(
+                "Removing orphan %s entity %s — already migrated to %s",
+                sensor_label,
+                entity.entity_id,
+                existing,
+            )
+            entity_registry.async_remove(entity.entity_id)
+        else:
+            _LOGGER.info(
+                "Migrating orphan %s entity %s from gateway to outdoor station %s",
+                sensor_label,
+                entity.entity_id,
+                outdoor_hardware_id,
+            )
+            entity_registry.async_update_entity(
+                entity.entity_id,
+                new_unique_id=new_unique_id,
+                device_id=outdoor_device.id,
+            )
 
 
 async def _async_register_services(hass: HomeAssistant) -> None:

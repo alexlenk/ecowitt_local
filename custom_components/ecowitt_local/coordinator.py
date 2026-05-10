@@ -984,6 +984,17 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             if not sensor_key:
                 continue
 
+            # Skip purely numeric decimal-string keys with no SENSOR_TYPES entry.
+            # The V1.0.6 spec defines "3" (Feels Like) and "5" (VPD), both in
+            # SENSOR_TYPES. Other numeric ids like "4" appear on some gateways
+            # but are not in the spec and would create entities with no metadata.
+            if sensor_key.isdigit() and sensor_key not in SENSOR_TYPES:
+                _LOGGER.debug(
+                    "Skipping unknown decimal-id sensor key '%s' (not in V1.0.6 spec)",
+                    sensor_key,
+                )
+                continue
+
             # Skip empty values unless we include inactive sensors
             if not sensor_value and not self._include_inactive:
                 _LOGGER.debug(

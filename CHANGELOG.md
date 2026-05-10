@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.21] - 2026-05-10
+
+### Fixed
+- **Orphan "4" and Vapor Pressure Deficit entities persisted on gateway after v1.6.20**: v1.6.20 routed common_list decimal IDs `"3"` (Feels Like) and `"5"` (VPD) to the outdoor weather station device and removed the spurious `"4"` sensor type that was never in the V1.0.6 spec. Entities created on the gateway device by earlier versions kept their old gateway-based unique_id and went "unavailable", because the new code creates entities under different unique_ids on the outdoor station. The integration now migrates `"3"` and `"5"` orphans to the active outdoor weather station (preserving history) and removes the orphan `"4"` entry on startup. Live-data processing also now skips unknown numeric sensor keys so a stray `"4"` from gateway firmware no longer re-creates an unnamed entity. (issue #178)
+
 ## [1.6.20] - 2026-05-09
 
 ### Added
