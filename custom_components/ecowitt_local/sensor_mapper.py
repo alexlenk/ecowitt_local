@@ -652,6 +652,8 @@ class SensorMapper:
             "soilec": "soil_conductivity",  # must precede generic "soil"
             "soilad": "soil_moisture_ad",  # must precede generic "soil"
             "soil": "soil_moisture",
+            "pm25_24haqi": "pm25_24haqi_co2",  # WH45/WH46D co2 block 24h AQI (must precede "pm25_24h")
+            "pm25_realaqi": "pm25_realaqi_co2",  # WH45/WH46D co2 block real-time AQI (must precede generic "pm25")
             "pm25_aqi_24h": "pm25_aqi_24h",  # ch_pm25 24h AQI (must precede generic "pm25")
             "pm25_aqi_realtime": "pm25_aqi_realtime",  # ch_pm25 real-time AQI (must precede generic "pm25")
             "pm25_avg_24h": "pm25_24h_avg",  # must precede "pm25_24h" and generic "pm25"

@@ -129,6 +129,27 @@ def test_extract_sensor_type_from_key(sensor_mapper: SensorMapper):
     assert sensor_mapper._extract_sensor_type_from_key("baromrelin") == "pressure"
 
 
+def test_co2_pm25_keys_have_unique_entity_ids(sensor_mapper: SensorMapper):
+    """Regression test for issue #182.
+
+    v1.7.0 added pm25_realaqi_co2 and pm25_24haqi_co2 to the WH45/WH46D
+    co2 block, but the substring "pm25" in pm25_realaqi_co2 matched the
+    generic "pm25" pattern in type_mappings, collapsing it to the same
+    sensor_type ("pm25") as pm25_co2 and clobbering the concentration
+    entity in the coordinator's sensors_data dict. Same issue for
+    pm25_24haqi_co2 vs pm25_24h_co2 via the "pm25_24h" pattern.
+    """
+    keys = ["pm25_co2", "pm25_24h_co2", "pm25_realaqi_co2", "pm25_24haqi_co2"]
+    types = {k: sensor_mapper._extract_sensor_type_from_key(k) for k in keys}
+    assert len(set(types.values())) == len(
+        keys
+    ), f"sensor_type collision among WH45/WH46D co2 PM2.5 keys: {types}"
+    entity_ids = {k: sensor_mapper.generate_entity_id(k, "2859")[0] for k in keys}
+    assert len(set(entity_ids.values())) == len(
+        keys
+    ), f"entity_id collision among WH45/WH46D co2 PM2.5 keys: {entity_ids}"
+
+
 def test_extract_identifier_from_key(sensor_mapper: SensorMapper):
     """Test extracting identifier from key."""
     assert sensor_mapper._extract_identifier_from_key("soilmoisture1") == "ch1"
