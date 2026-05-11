@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-05-11
+
+### Fixed
+- **WH45/WH46D PM2.5 concentration entities disappeared after v1.7.0**: The new `pm25_realaqi_co2` and `pm25_24haqi_co2` AQI keys added in v1.7.0 collapsed to the same generated entity_id as the pre-existing `pm25_co2` (PM2.5 concentration) and `pm25_24h_co2` (PM2.5 24h avg concentration) entities, because the substring `pm25` and `pm25_24h` in the type-mapping table matched both the concentration and AQI keys. The AQI entries were processed last and overwrote the concentration entries in the coordinator's per-entity_id dict, so the PM2.5 µg/m³ entities went unavailable on the WH45/WH46D device. Two new type-mapping entries (`pm25_24haqi` and `pm25_realaqi`) now run before the generic `pm25_24h` and `pm25` patterns so each PM2.5 co2 key gets a distinct sensor_type and entity_id. (issue #182)
+
 ## [1.7.0] - 2026-05-10
 
 ### Added
