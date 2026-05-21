@@ -456,7 +456,8 @@ class SensorMapper:
                 )
         elif sensor_type.lower() in ("wh54", "lds"):
             # WH54 liquid depth sensor (channels 1-4 = types 66-69).
-            # Data arrives via the ch_lds livedata block.
+            # Data arrives via the ch_lds livedata block; level and total_heat
+            # come from the /get_cli_lds configuration endpoint (spec V1.0.4+).
             if ch_num:
                 keys.extend(
                     [
@@ -464,6 +465,8 @@ class SensorMapper:
                         f"lds_depth_ch{ch_num}",
                         f"lds_voltage_ch{ch_num}",
                         f"lds_batt{ch_num}",
+                        f"lds_level_ch{ch_num}",
+                        f"lds_total_heat_ch{ch_num}",
                     ]
                 )
         elif sensor_type.lower() in ("wn38", "bgt"):

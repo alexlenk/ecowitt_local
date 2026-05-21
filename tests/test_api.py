@@ -836,3 +836,48 @@ async def test_make_request_text_plain_content_type_with_json():
         assert result == {"stationtype": "GW3000", "version": "1.1.0"}
 
     await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_lds_config():
+    """Test getting LDS sensor configuration data (issue #169)."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+
+    mock_data = [
+        {
+            "id": "0x1234",
+            "ch": "2",
+            "name": "",
+            "unit": "mm",
+            "offset": "0",
+            "total_height": "3999",
+            "total_heat": "57702",
+            "level": "4",
+        }
+    ]
+
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_cli_lds", payload=mock_data)
+
+        result = await api.get_lds_config()
+
+        assert result == mock_data
+        assert result[0]["level"] == "4"
+        assert result[0]["total_heat"] == "57702"
+
+    await api.close()
+
+
+@pytest.mark.asyncio
+async def test_get_lds_config_non_list_response():
+    """Test get_lds_config returns empty list when gateway returns non-list (issue #169)."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_cli_lds", payload={"error": "not supported"})
+
+        result = await api.get_lds_config()
+
+        assert result == []
+
+    await api.close()
