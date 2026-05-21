@@ -486,13 +486,17 @@ def test_wh54_generates_lds_keys():
     assert "lds_depth_ch2" in keys
     assert "lds_voltage_ch2" in keys
     assert "lds_batt2" in keys
+    assert "lds_level_ch2" in keys
+    assert "lds_total_heat_ch2" in keys
 
 
 def test_wh54_alias_lds():
-    """The 'lds' sensor_type alias maps to the same WH54 keys."""
+    """The 'lds' sensor_type alias maps to the same WH54 keys including diagnostics."""
     mapper = SensorMapper()
     keys = mapper._generate_live_data_keys("lds", "1")
     assert "lds_depth_ch1" in keys
+    assert "lds_level_ch1" in keys
+    assert "lds_total_heat_ch1" in keys
 
 
 def test_wh69_includes_decimal_id_3_and_5():

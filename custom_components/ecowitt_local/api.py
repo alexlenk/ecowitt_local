@@ -359,6 +359,21 @@ class EcowittLocalAPI:
             return data
         return []
 
+    async def get_lds_config(self) -> List[Dict[str, Any]]:
+        """Get LDS sensor configuration data including level and total_heat fields.
+
+        Returns:
+            List of LDS sensor configuration data per channel
+
+        Raises:
+            ConnectionError: Network error
+            DataError: Invalid response data
+        """
+        data = await self._make_request("/get_cli_lds")
+        if isinstance(data, list):
+            return data
+        return []
+
     async def get_units(self) -> Dict[str, Any]:
         """Get unit settings from the gateway.
 

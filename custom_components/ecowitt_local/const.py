@@ -26,6 +26,7 @@ API_SENSORS: Final = "/get_sensors_info"
 API_VERSION: Final = "/get_version"
 API_UNITS: Final = "/get_units_info"
 API_SOIL_CALIBRATION: Final = "/get_cli_soilad"
+API_LDS_CONFIG: Final = "/get_cli_lds"
 
 # Device information
 MANUFACTURER: Final = "Ecowitt"
@@ -533,6 +534,25 @@ SENSOR_TYPES.update(
             "entity_category": "diagnostic",
             "suggested_display_precision": 2,
         },
+        4,
+    )
+)
+# WH54 diagnostic fields from /get_cli_lds configuration endpoint (spec V1.0.4+).
+# level = Data Filter Factor (integer, controls sensor smoothing)
+# total_heat = Heater-on Counter (cumulative activations, relevant in cold climates)
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "lds_level_ch",
+        "Liquid Depth Filter Level CH{ch}",
+        {"state_class": "measurement", "entity_category": "diagnostic"},
+        4,
+    )
+)
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "lds_total_heat_ch",
+        "Liquid Depth Heater Counter CH{ch}",
+        {"state_class": "total_increasing", "entity_category": "diagnostic"},
         4,
     )
 )

@@ -371,6 +371,7 @@ def mock_ecowitt_api():
     )
     mock_instance.get_all_sensor_mappings = AsyncMock(return_value=[])
     mock_instance.get_soil_calibration = AsyncMock(return_value=[])
+    mock_instance.get_lds_config = AsyncMock(return_value=[])
 
     return mock_instance
 

@@ -991,6 +991,39 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         except Exception as err:
             _LOGGER.debug("Could not fetch soil AD data: %s", err)
 
+        # Fetch LDS config data from /get_cli_lds (level and total_heat — spec V1.0.4+)
+        try:
+            lds_config = await self.api.get_lds_config()
+            if lds_config:
+                _LOGGER.debug("Found LDS config data with %d items", len(lds_config))
+                for item in lds_config:
+                    if isinstance(item, dict):
+                        ch = item.get("ch")
+                        if not ch:
+                            continue
+                        level = item.get("level")
+                        if level is not None and str(level) != "None":
+                            level_key = f"lds_level_ch{ch}"
+                            all_sensor_items.append(
+                                {"id": level_key, "val": str(level)}
+                            )
+                            _LOGGER.debug(
+                                "Added WH54 filter level: %s = %s", level_key, level
+                            )
+                        total_heat = item.get("total_heat")
+                        if total_heat is not None and str(total_heat) != "None":
+                            heat_key = f"lds_total_heat_ch{ch}"
+                            all_sensor_items.append(
+                                {"id": heat_key, "val": str(total_heat)}
+                            )
+                            _LOGGER.debug(
+                                "Added WH54 heater counter: %s = %s",
+                                heat_key,
+                                total_heat,
+                            )
+        except Exception as err:
+            _LOGGER.debug("Could not fetch LDS config data: %s", err)
+
         _LOGGER.debug("Total sensor items to process: %d", len(all_sensor_items))
 
         for item in all_sensor_items:

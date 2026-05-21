@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.2] - 2026-05-21
+
+### Added
+- **WH54 diagnostic entities — Filter Level and Heater Counter**: Two new diagnostic entities are now exposed for WH54 liquid depth sensors using the `/get_cli_lds` configuration endpoint (API spec V1.0.4+). `Liquid Depth Filter Level CH{N}` reports the Data Filter Factor (an integer setting that controls sensor smoothing), and `Liquid Depth Heater Counter CH{N}` reports the cumulative heater activation count (`state_class: total_increasing`), useful for diagnosing WH54 operation in cold climates. These entities appear under the WH54 device alongside the existing air/depth/voltage entities. (issue #169)
+
 ## [1.7.1] - 2026-05-11
 
 ### Fixed

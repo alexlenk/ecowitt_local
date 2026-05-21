@@ -2914,6 +2914,158 @@ async def test_coordinator_ch_lds_skips_no_channel_or_empty(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_lds_config_data(coordinator):
+    """Test coordinator processes /get_cli_lds level and total_heat fields (issue #169)."""
+    mock_live_data = {
+        "common_list": [],
+        "ch_lds": [
+            {
+                "channel": "2",
+                "air": "3044 mm",
+                "depth": "955 mm",
+                "voltage": "1.50",
+                "battery": "5",
+            },
+        ],
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_lds_config = AsyncMock(
+        return_value=[
+            {
+                "id": "0x1234",
+                "ch": "2",
+                "name": "",
+                "unit": "mm",
+                "offset": "0",
+                "total_height": "3999",
+                "total_heat": "57702",
+                "level": "4",
+            }
+        ]
+    )
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    level_found = False
+    heat_found = False
+    for sensor_data in sensors.values():
+        key = sensor_data.get("sensor_key", "")
+        if key == "lds_level_ch2":
+            level_found = True
+            assert sensor_data["state"] == 4
+        elif key == "lds_total_heat_ch2":
+            heat_found = True
+            assert sensor_data["state"] == 57702
+
+    assert level_found, "lds_level_ch2 entity should be created"
+    assert heat_found, "lds_total_heat_ch2 entity should be created"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_lds_config_error_handling(coordinator):
+    """Test that /get_cli_lds errors are handled gracefully (issue #169)."""
+    mock_live_data = {
+        "common_list": [],
+        "ch_lds": [
+            {
+                "channel": "1",
+                "air": "100 mm",
+                "depth": "500 mm",
+                "voltage": "3.0",
+                "battery": "4",
+            },
+        ],
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_lds_config = AsyncMock(
+        side_effect=Exception("Gateway does not support this endpoint")
+    )
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    # Main LDS sensors should still work
+    depth1_found = any(s.get("sensor_key") == "lds_depth_ch1" for s in sensors.values())
+    assert depth1_found, "lds_depth_ch1 should still be created when config fetch fails"
+
+    # No level/total_heat sensors
+    diag_found = any(
+        s.get("sensor_key", "").startswith("lds_level_")
+        or s.get("sensor_key", "").startswith("lds_total_heat_")
+        for s in sensors.values()
+    )
+    assert not diag_found, "No LDS config entities when API call fails"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_lds_config_empty_response(coordinator):
+    """Test LDS config with empty response from gateway (issue #169)."""
+    mock_live_data = {"common_list": []}
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_lds_config = AsyncMock(return_value=[])
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    diag_found = any(
+        s.get("sensor_key", "").startswith("lds_level_")
+        or s.get("sensor_key", "").startswith("lds_total_heat_")
+        for s in sensors.values()
+    )
+    assert not diag_found, "No LDS config entities when no config data"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_lds_config_missing_fields(coordinator):
+    """Test LDS config items with missing ch, level, or total_heat are handled (issue #169)."""
+    mock_live_data = {"common_list": []}
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_lds_config = AsyncMock(
+        return_value=[
+            {"id": "0x1111", "total_heat": "100", "level": "2"},  # missing ch
+            {"id": "0x2222", "ch": "1"},  # missing both level and total_heat
+            {
+                "id": "0x3333",
+                "ch": "2",
+                "level": "None",
+                "total_heat": "None",
+            },  # None strings
+            "not_a_dict",  # not a dict
+            {"id": "0x4444", "ch": "3", "level": "5", "total_heat": "12345"},  # valid
+        ]
+    )
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    level_keys = [
+        s.get("sensor_key")
+        for s in sensors.values()
+        if str(s.get("sensor_key", "")).startswith("lds_level_")
+    ]
+    heat_keys = [
+        s.get("sensor_key")
+        for s in sensors.values()
+        if str(s.get("sensor_key", "")).startswith("lds_total_heat_")
+    ]
+    assert level_keys == [
+        "lds_level_ch3"
+    ], f"Expected only lds_level_ch3, got {level_keys}"
+    assert heat_keys == [
+        "lds_total_heat_ch3"
+    ], f"Expected only lds_total_heat_ch3, got {heat_keys}"
+
+
+@pytest.mark.asyncio
 async def test_coordinator_co2_aqi_fields(coordinator):
     """Test WH45 co2 block AQI index fields are extracted (issue #163)."""
     coordinator.sensor_mapper.update_mapping(
