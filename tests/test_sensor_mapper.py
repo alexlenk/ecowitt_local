@@ -499,6 +499,36 @@ def test_wh54_alias_lds():
     assert "lds_total_heat_ch1" in keys
 
 
+def test_wh65_uses_wh69_key_list():
+    """WH65 with img='wh65' (some firmware variants) maps to the same key list as WH69."""
+    mapper = SensorMapper()
+    keys_wh65 = mapper._generate_live_data_keys("WH65", "")
+    keys_wh69 = mapper._generate_live_data_keys("WH69", "")
+    assert keys_wh65 == keys_wh69
+    assert "0x07" in keys_wh65  # Outdoor humidity
+    assert "0x02" in keys_wh65  # Outdoor temperature
+    assert "wh69batt" in keys_wh65  # Battery
+
+
+def test_wh65_img_wh65_sensor_mapping():
+    """WH65 reporting img='wh65' should register the same keys as img='wh69' (issue #187)."""
+    mapper = SensorMapper()
+    mapper.update_mapping(
+        [
+            {
+                "id": "AB1234",
+                "img": "wh65",
+                "name": "Temp & Humidity & Solar & Wind & Rain",
+                "batt": "0",
+                "signal": "4",
+            }
+        ]
+    )
+    assert mapper.get_hardware_id("0x02") == "AB1234"
+    assert mapper.get_hardware_id("0x07") == "AB1234"
+    assert mapper.get_hardware_id("wh69batt") == "AB1234"
+
+
 def test_wh69_includes_decimal_id_3_and_5():
     """WH69 weather station includes decimal IDs '3' (Feels Like) and '5' (VPD)."""
     mapper = SensorMapper()

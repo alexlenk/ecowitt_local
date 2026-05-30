@@ -259,8 +259,9 @@ class SensorMapper:
                     "wh68batt",
                 ]
             )
-        elif sensor_type.lower() in ("wh69", "weather_station_wh69"):
-            # WH69 7-in-1 outdoor sensor array (uses hex IDs in common_list)
+        elif sensor_type.lower() in ("wh69", "wh65", "weather_station_wh69"):
+            # WH69 / WH65 7-in-1 outdoor sensor array (uses hex IDs in common_list)
+            # WH65 shares img="wh69" on most firmware; "wh65" catches firmware variants
             keys.extend(
                 [
                     "0x02",  # Temperature
