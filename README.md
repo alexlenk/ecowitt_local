@@ -84,7 +84,7 @@ If your gateway is not in either list and setup fails with a connection or 404 e
 | **WH55** | Leak detection (CH1–4) |
 | **WH57** | Lightning (strike count, distance, last strike time) |
 | **WH68** | Weather station (temp, humidity, wind, solar, UV) |
-| **WH69** | Weather station with piezo rain |
+| **WH65 / WH69** | Weather station with piezo rain |
 | **WH80 / WS80** | Weather station |
 | **WH90 / WS90** | Weather station with piezo rain and solar |
 | **WN38** | Black Globe Thermometer (BGT + WBGT) |

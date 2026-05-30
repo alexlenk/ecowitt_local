@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.3] - 2026-05-30
+
+### Fixed
+- **WH65 no longer recognized after firmware update**: Some WH65 firmware versions report `img: "wh65"` instead of the usual `img: "wh69"`. The integration previously only matched `"wh69"`, so a WH65 on newer firmware would not create any entities. The sensor type detection now also accepts `"wh65"` as an alias for the WH69/WH65 outdoor sensor array. (issue #187)
+
+### Changed
+- **WH65 added to supported sensors list in README**: WH65 shares the WH69 integration path and was always functionally supported, but was not listed in the README. The table now shows **WH65 / WH69** to make this explicit.
+
 ## [1.7.2] - 2026-05-21
 
 ### Added
