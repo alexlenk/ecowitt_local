@@ -679,7 +679,7 @@ class SensorMapper:
             if pattern in clean_key.lower():
                 return sensor_type
 
-        return clean_key.lower() or "sensor"
+        return clean_key.lower().strip("_") or "sensor"
 
     def _extract_sensor_type_from_battery(self, battery_key: str) -> str:
         """Extract sensor type name from battery key."""

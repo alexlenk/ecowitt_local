@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.4] - 2026-05-31
+
+### Fixed
+- **Invalid entity ID for WH34 temperature channel sensors**: WH34 sensors (ch_temp block) generated entity IDs with a double underscore such as `sensor.ecowitt_tf__b0d0`. This happened because `_extract_sensor_type_from_key` stripped the channel suffix `ch` from the key `tf_ch` and returned `tf_` (trailing underscore), which then combined with the `_` separator before the hardware ID. The extraction now strips trailing underscores from the computed type name, producing valid entity IDs like `sensor.ecowitt_tf_b0d0`. Home Assistant was warning that double-underscore entity IDs will stop working in HA 2027.2.0. (issue #189)
+
 ## [1.7.3] - 2026-05-30
 
 ### Fixed
