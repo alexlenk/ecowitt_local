@@ -127,6 +127,19 @@ def test_extract_sensor_type_from_key(sensor_mapper: SensorMapper):
     assert sensor_mapper._extract_sensor_type_from_key("pm25_ch1") == "pm25"
     assert sensor_mapper._extract_sensor_type_from_key("windspeedmph") == "wind"
     assert sensor_mapper._extract_sensor_type_from_key("baromrelin") == "pressure"
+    # tf_ch1 (WH34) strips digit then strips "ch", leaving trailing "_" — must not produce double underscore
+    assert sensor_mapper._extract_sensor_type_from_key("tf_ch1") == "tf"
+
+
+def test_tf_ch_entity_id_no_double_underscore(sensor_mapper: SensorMapper):
+    """Regression test for issue #189.
+
+    tf_ch1 (WH34) was producing sensor.ecowitt_tf__b0d0 (double underscore)
+    because _extract_sensor_type_from_key returned "tf_" with a trailing underscore.
+    """
+    entity_id, _ = sensor_mapper.generate_entity_id("tf_ch1", "B0D0")
+    assert "__" not in entity_id, f"Double underscore in entity ID: {entity_id}"
+    assert entity_id == "sensor.ecowitt_tf_b0d0"
 
 
 def test_co2_pm25_keys_have_unique_entity_ids(sensor_mapper: SensorMapper):
