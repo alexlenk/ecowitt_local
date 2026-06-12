@@ -54,8 +54,15 @@ class SensorMapper:
                 battery = sensor.get("batt", "")
                 signal = sensor.get("signal", "")
 
-                # Extract channel from name (e.g., "Soil moisture CH2" → "2")
+                # Extract channel from name (e.g., "Soil moisture CH2" → "2").
+                # Fall back to the numeric type field when the name has been
+                # customised (e.g., "LivingRoom" on GW3000A) and no "CH{n}" is
+                # present — the type enum encodes the channel for WH31/WH51/etc.
                 channel = self._extract_channel_from_name(name)
+                if not channel:
+                    channel = self._extract_channel_from_type_num(
+                        img.lower(), sensor.get("type", "")
+                    )
                 sensor_type = img.upper()
 
                 if not hardware_id or hardware_id.upper() in ("FFFFFFFF", "FFFFFFFE"):
@@ -89,7 +96,7 @@ class SensorMapper:
                 )
                 for key in live_keys:
                     existing_signal = key_signal.get(key)
-                    if existing_signal is None or signal_int >= existing_signal:
+                    if existing_signal is None or signal_int > existing_signal:
                         if existing_signal is not None:
                             _LOGGER.info(
                                 "Live-data key %s claimed by both %s (signal=%d) and %s (signal=%d); preferring stronger signal",
@@ -132,6 +139,47 @@ class SensorMapper:
 
         match = re.search(r"CH(\d+)", name)
         return match.group(1) if match else ""
+
+    def _extract_channel_from_type_num(self, img: str, type_str: str) -> str:
+        """Extract channel number from the sensor type enum value.
+
+        Ecowitt's get_sensors_info ``type`` field encodes both the sensor model
+        and its channel number.  This is the only reliable source when a user has
+        renamed sensors with custom names that don't contain "CH{n}" (common on
+        GW3000A and other gateways that expose the rename UI).
+
+        Ranges per spec V1.0.5 §3 sensor enum:
+          WH31_CH1-8  : 6–13   channel = type - 5
+          WH51_CH1-8  : 14–21  channel = type - 13
+          WH41_CH1-4  : 22–25  channel = type - 21
+          WH55_CH1-4  : 27–30  channel = type - 26
+          WH34_CH1-8  : 31–38  channel = type - 30
+          WH35_CH1-8  : 40–47  channel = type - 39
+          WH51_CH9-16 : 58–65  channel = type - 49
+          WH54_CH1-4  : 66–69  channel = type - 65
+        """
+        try:
+            type_num = int(str(type_str).strip())
+        except (ValueError, TypeError):
+            return ""
+
+        if img in ("wh31", "temp_hum") and 6 <= type_num <= 13:
+            return str(type_num - 5)
+        if img in ("wh51", "soil") and 14 <= type_num <= 21:
+            return str(type_num - 13)
+        if img in ("wh51", "soil") and 58 <= type_num <= 65:
+            return str(type_num - 49)
+        if img in ("wh41", "pm25") and 22 <= type_num <= 25:
+            return str(type_num - 21)
+        if img in ("wh55", "leak") and 27 <= type_num <= 30:
+            return str(type_num - 26)
+        if img in ("wh34", "temp_only") and 31 <= type_num <= 38:
+            return str(type_num - 30)
+        if img in ("wh35", "leaf_wetness") and 40 <= type_num <= 47:
+            return str(type_num - 39)
+        if img in ("wh54", "lds") and 66 <= type_num <= 69:
+            return str(type_num - 65)
+        return ""
 
     def _generate_live_data_keys(self, sensor_type: str, channel: str) -> List[str]:
         """Generate possible live data keys for a sensor type and channel.

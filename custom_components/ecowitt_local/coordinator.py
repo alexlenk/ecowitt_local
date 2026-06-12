@@ -1694,24 +1694,43 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         sensors_dict = self.data.get("sensors", {})
         sensor_data = sensors_dict.get(entity_id)
         if sensor_data is None:
-            # Try to find by iterating and matching by sensor_key for hex ID sensors
-            # This handles entity_id mismatches during transition periods
+            # Try to find by iterating and matching by sensor_key for hex ID sensors.
+            # This handles entity_id mismatches during version-transition periods
+            # where the entity_id format changed between releases.
+            # Guard: also verify the sensor-type portion of the entity_id matches so
+            # that we never return e.g. "daily_rain" data for an "outdoor_humidity"
+            # entity — both share the same hardware_id suffix and the loose match
+            # caused incorrect unit-change HA repair notifications (issue #192).
             for eid, sdata in sensors_dict.items():
                 if isinstance(sdata, dict):
-                    # Extract the sensor_key from the stored entity_id
                     if sdata.get("sensor_key") and entity_id:
-                        # Check if the sensor_key matches between stored and requested
                         stored_key = sdata.get("sensor_key", "")
-                        # Also check by hardware_id match
                         stored_hw_id = sdata.get("hardware_id", "")
                         if stored_hw_id and stored_hw_id.lower() in entity_id.lower():
                             if stored_key.startswith("0x"):
-                                _LOGGER.debug(
-                                    "Found sensor by hardware_id match: %s -> %s",
-                                    entity_id,
-                                    eid,
+                                # Only return when the sensor type is consistent
+                                # with the requested entity_id to avoid returning
+                                # e.g. daily_rain (mm) for outdoor_humidity (%).
+                                # Two cases both count as a match:
+                                #   1. Human-readable type name in the entity_id
+                                #      (current format: "ecowitt_outdoor_humidity_…")
+                                #   2. Raw hex key in the entity_id
+                                #      (legacy format: "ecowitt_0x07_…")
+                                sensor_type_name = (
+                                    self.sensor_mapper._extract_sensor_type_from_key(
+                                        stored_key
+                                    )
                                 )
-                                return dict(sdata)
+                                type_matches = (
+                                    sensor_type_name and sensor_type_name in entity_id
+                                ) or stored_key.lower() in entity_id.lower()
+                                if type_matches:
+                                    _LOGGER.debug(
+                                        "Found sensor by hardware_id match: %s -> %s",
+                                        entity_id,
+                                        eid,
+                                    )
+                                    return dict(sdata)
             return None
         return dict(sensor_data) if isinstance(sensor_data, dict) else None
 

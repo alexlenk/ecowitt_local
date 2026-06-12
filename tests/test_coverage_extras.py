@@ -504,8 +504,10 @@ def test_coordinator_get_sensor_data_hardware_id_fallback():
     from custom_components.ecowitt_local.coordinator import (
         EcowittLocalDataUpdateCoordinator,
     )
+    from custom_components.ecowitt_local.sensor_mapper import SensorMapper
 
     obj = EcowittLocalDataUpdateCoordinator.__new__(EcowittLocalDataUpdateCoordinator)
+    obj.sensor_mapper = SensorMapper()
     obj.data = {
         "sensors": {
             "sensor.ecowitt_wind_speed_abc123": {
@@ -516,7 +518,9 @@ def test_coordinator_get_sensor_data_hardware_id_fallback():
         }
     }
 
-    # Old entity_id format lookup (entity_id not directly in sensors dict)
+    # Old entity_id format lookup (entity_id not directly in sensors dict).
+    # The raw hex key "0x0b" appears in the old-format entity_id, so the
+    # fallback should match it.
     result = obj.get_sensor_data("sensor.ecowitt_0x0b_abc123")
     assert result is not None
     assert result["sensor_key"] == "0x0B"
