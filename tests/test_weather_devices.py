@@ -169,6 +169,106 @@ class TestWH31TempHumidity:
         assert mapper.get_hardware_id("humidity1") == "D1E2F3"
         assert mapper.get_hardware_id("humidity2") == "E4F5A6"
 
+    def test_wh31_custom_names_use_type_field(self):
+        """Test WH31 with custom names falls back to type-based channel extraction.
+
+        GW3000A and other gateways let users rename sensors (e.g., "LivingRoom").
+        The "CH{n}" pattern disappears from the name, so the channel must be
+        inferred from the sensor type enum (issue #193).
+        """
+        mapper = SensorMapper()
+        mappings = [
+            {
+                "id": "AA0001",
+                "img": "wh31",
+                "type": "6",
+                "name": "LivingRoom",
+                "batt": "4",
+                "signal": "4",
+            },
+            {
+                "id": "AA0002",
+                "img": "wh31",
+                "type": "7",
+                "name": "Office",
+                "batt": "4",
+                "signal": "3",
+            },
+            {
+                "id": "AA0003",
+                "img": "wh31",
+                "type": "8",
+                "name": "Barbara Bedroom",
+                "batt": "3",
+                "signal": "4",
+            },
+            {
+                "id": "AA0004",
+                "img": "wh31",
+                "type": "9",
+                "name": "Bathroom",
+                "batt": "4",
+                "signal": "4",
+            },
+        ]
+        mapper.update_mapping(mappings)
+
+        # Channel must be extracted from the type field, not the custom name
+        assert mapper.get_hardware_id("temp1f") == "AA0001"
+        assert mapper.get_hardware_id("humidity1") == "AA0001"
+        assert mapper.get_hardware_id("batt1") == "AA0001"
+
+        assert mapper.get_hardware_id("temp2f") == "AA0002"
+        assert mapper.get_hardware_id("humidity2") == "AA0002"
+
+        assert mapper.get_hardware_id("temp3f") == "AA0003"
+        assert mapper.get_hardware_id("humidity3") == "AA0003"
+
+        assert mapper.get_hardware_id("temp4f") == "AA0004"
+        assert mapper.get_hardware_id("humidity4") == "AA0004"
+
+    def test_extract_channel_from_type_num_all_sensors(self):
+        """Test _extract_channel_from_type_num covers all channel sensor types."""
+        mapper = SensorMapper()
+
+        # WH31 CH1-8
+        assert mapper._extract_channel_from_type_num("wh31", "6") == "1"
+        assert mapper._extract_channel_from_type_num("wh31", "13") == "8"
+
+        # WH51 CH1-8
+        assert mapper._extract_channel_from_type_num("wh51", "14") == "1"
+        assert mapper._extract_channel_from_type_num("wh51", "21") == "8"
+
+        # WH51 CH9-16
+        assert mapper._extract_channel_from_type_num("wh51", "58") == "9"
+        assert mapper._extract_channel_from_type_num("wh51", "65") == "16"
+
+        # WH41 CH1-4
+        assert mapper._extract_channel_from_type_num("wh41", "22") == "1"
+        assert mapper._extract_channel_from_type_num("wh41", "25") == "4"
+
+        # WH55 CH1-4
+        assert mapper._extract_channel_from_type_num("wh55", "27") == "1"
+        assert mapper._extract_channel_from_type_num("wh55", "30") == "4"
+
+        # WH34 CH1-8
+        assert mapper._extract_channel_from_type_num("wh34", "31") == "1"
+        assert mapper._extract_channel_from_type_num("wh34", "38") == "8"
+
+        # WH35 CH1-8
+        assert mapper._extract_channel_from_type_num("wh35", "40") == "1"
+        assert mapper._extract_channel_from_type_num("wh35", "47") == "8"
+
+        # WH54 CH1-4
+        assert mapper._extract_channel_from_type_num("wh54", "66") == "1"
+        assert mapper._extract_channel_from_type_num("wh54", "69") == "4"
+
+        # Unknown type → empty
+        assert mapper._extract_channel_from_type_num("wh31", "99") == ""
+        assert mapper._extract_channel_from_type_num("wh90", "48") == ""
+        assert mapper._extract_channel_from_type_num("wh31", "abc") == ""
+        assert mapper._extract_channel_from_type_num("wh31", "") == ""
+
 
 class TestWH57LightningDetector:
     """Test WH57 lightning detector support."""

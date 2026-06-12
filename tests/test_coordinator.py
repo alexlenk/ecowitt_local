@@ -785,6 +785,67 @@ async def test_coordinator_get_sensor_data_no_data(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_get_sensor_data_fallback_type_mismatch(coordinator):
+    """Fallback must NOT return a sensor of a different type for the same hardware_id.
+
+    When the primary sensor-key+hardware_id lookup misses (e.g., because the
+    mapping temporarily reassigned a hex key to a different device), the
+    entity_id-based fallback previously returned the *first* hex sensor that
+    shared the hardware_id suffix.  On a WH90 this could mean a rain sensor
+    (unit mm) was returned for the outdoor-humidity entity (unit %) causing HA
+    to raise a unit-change repair notification (issue #192).
+    """
+    # Simulate the coordinator having two sensors for hardware_id "9804":
+    # the humidity entity and a daily-rain entity.  The primary lookup for
+    # outdoor_humidity has already failed (not in sensors dict under that key),
+    # so the fallback loop must skip the rain entity and return None.
+    coordinator.data = {
+        "sensors": {
+            "sensor.ecowitt_daily_rain_9804": {
+                "entity_id": "sensor.ecowitt_daily_rain_9804",
+                "sensor_key": "0x10",
+                "hardware_id": "9804",
+                "unit_of_measurement": "mm",
+                "name": "Daily Rain",
+            },
+        }
+    }
+
+    # Looking for the outdoor_humidity entity that is missing from sensors dict.
+    # The fallback must NOT return the daily_rain entry.
+    result = coordinator.get_sensor_data("sensor.ecowitt_outdoor_humidity_9804")
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_coordinator_get_sensor_data_fallback_type_match(coordinator):
+    """Fallback returns a sensor when the entity_id contains the sensor type name."""
+    # Simulate a format-transition scenario: coordinator regenerated the entity_id
+    # to the new format ("outdoor_humidity_9804") but the entity was registered
+    # under an older id.  The fallback should find it when type matches.
+    coordinator.data = {
+        "sensors": {
+            "sensor.ecowitt_outdoor_humidity_9804": {
+                "entity_id": "sensor.ecowitt_outdoor_humidity_9804",
+                "sensor_key": "0x07",
+                "hardware_id": "9804",
+                "unit_of_measurement": "%",
+                "name": "Outdoor Humidity",
+            },
+        }
+    }
+
+    # Direct lookup works, so fallback path is not exercised here, but we also
+    # verify the happy path still returns the correct entry.
+    result = coordinator.get_sensor_data("sensor.ecowitt_outdoor_humidity_9804")
+
+    assert result is not None
+    assert result["sensor_key"] == "0x07"
+    assert result["unit_of_measurement"] == "%"
+
+
+@pytest.mark.asyncio
 async def test_coordinator_get_all_sensors(coordinator):
     """Test getting all sensor data."""
     mock_sensors = {

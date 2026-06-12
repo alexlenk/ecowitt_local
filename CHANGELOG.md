@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.5] - 2026-06-12
+
+### Fixed
+- **WH31 sensors with custom names not creating entities (GW3000A)**: When WH31 temperature/humidity sensors are renamed in the gateway web UI (e.g., "LivingRoom", "Office"), their `get_sensors_info` name no longer contains the "CH{n}" pattern that the integration used to extract the channel number. With no channel, no live-data keys were generated and no entities appeared despite `ch_aisle` data being present. The sensor mapper now falls back to the sensor `type` enum field (types 6–13 → channels 1–8 for WH31) when the name-based extraction returns nothing. The same fallback is applied to all other channel sensors (WH51, WH41, WH55, WH34, WH35, WH54). (issue #193)
+- **Spurious unit-change repair notifications for outdoor weather sensors**: When two sensors (e.g., an active WH90 and a stale WH65 slot) temporarily claimed the same live-data keys with equal signal strength, the `>=` comparison caused the mapping to flip between the two on consecutive polls. If the active sensor lost the race for one poll cycle, all its entities fell through to a loose hardware-ID-based fallback that returned the first hex sensor found for that device — which could be a rain entity (unit mm) instead of a humidity entity (unit %). Home Assistant then raised a unit-change repair. Two fixes combined: (1) the signal comparison is now `>` (strict), so the first-seen entry wins on a tie and the mapping stays stable; (2) the fallback in `get_sensor_data` now verifies that the sensor-type name derived from the stored sensor key (e.g., `outdoor_humidity` for `0x07`) appears in the requested entity ID before returning, preventing cross-sensor contamination. (issue #192)
+
 ## [1.7.4] - 2026-05-31
 
 ### Fixed

@@ -436,10 +436,12 @@ def test_wh65_wh90_conflict_prefers_stronger_signal():
     assert mapper.get_hardware_id("wh90batt") == "FF9988"
 
 
-def test_conflict_with_equal_signals_preserves_last_wins():
+def test_conflict_with_equal_signals_preserves_first_wins():
     """When two sensors claim the same key with equal signal strength the
-    later iteration still wins — preserves the historical behaviour for the
-    cases where signal isn't an informative tie-breaker.
+    *first* iteration wins.  This keeps the mapping stable across consecutive
+    get_sensors_info polls — without it, alternating list order between polls
+    would flip all entities between two devices, triggering unit-change repair
+    notifications in Home Assistant (issue #192).
     """
     mapper = SensorMapper()
     mapper.update_mapping(
@@ -460,7 +462,7 @@ def test_conflict_with_equal_signals_preserves_last_wins():
             },
         ]
     )
-    assert mapper.get_hardware_id("0x02") == "BBB222"
+    assert mapper.get_hardware_id("0x02") == "AAA111"
 
 
 def test_conflict_with_unparseable_signal_does_not_crash():
