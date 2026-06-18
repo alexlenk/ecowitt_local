@@ -680,7 +680,8 @@ def _generate_battery_sensors(
 BATTERY_SENSORS: Final = {
     # Fixed battery sensors
     "wh57batt": {"name": "Lightning Sensor Battery", "sensor_key": "lightning"},
-    "wh40batt": {"name": "Rain Sensor Battery", "sensor_key": "rainratein"},
+    "wh40batt": {"name": "WH40 Rain Sensor Battery", "sensor_key": "rainratein"},
+    "wn20batt": {"name": "WN20 Rain Sensor Battery", "sensor_key": "rainratein"},
     "wh68batt": {"name": "Weather Station Battery", "sensor_key": "tempf"},
     "wh25batt": {"name": "Indoor Station Battery", "sensor_key": "tempinf"},
     "wh26batt": {"name": "Outdoor Sensor Battery", "sensor_key": "0x02"},

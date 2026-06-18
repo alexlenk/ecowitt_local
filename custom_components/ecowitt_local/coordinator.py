@@ -210,19 +210,23 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         "Added WH26 battery from 0x03: wh26batt = %s%%", battery_pct
                     )
 
-        # Extract rain data (tipping-bucket rain sensor — WH40, GW1200, GW2000A with WH69)
+        # Extract rain data (tipping-bucket rain sensor — WN20, WH40, GW1200, GW2000A with WH69)
         # Note: 0x0F (ITEM_RAIN_GAIN) is a calibration multiplier, not a live measurement.
         # It is intentionally not exposed as a sensor entity. Use the gateway's web UI or
         # the get_rain_totals endpoint (spec §9) to view or change the gain setting.
         rain_list = raw_data.get("rain", [])
         if rain_list:
             _LOGGER.debug("Found rain data with %d items", len(rain_list))
-            # Force rain-array items to the tipping-bucket device (WH40 or WH69) so they
+            # Force rain-array items to the tipping-bucket device (WN20, WH40 or WH69) so they
             # are never mis-attributed to a piezoelectric sensor (WH90/WS90/WS85) that
             # registers the same hex IDs (0x0D–0x13) for its piezoRain data.
             _rain_hw_id = self.sensor_mapper.get_hardware_id(
                 "wh69batt"
-            ) or self.sensor_mapper.get_hardware_id("wh40batt")
+            ) or self.sensor_mapper.get_hardware_id(
+                "wh40batt"
+            ) or self.sensor_mapper.get_hardware_id(
+                "wn20batt"
+            )
             for item in rain_list:
                 if (
                     isinstance(item, dict)
@@ -233,9 +237,10 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     if _rain_hw_id:
                         entry["_force_hardware_id"] = _rain_hw_id
                     all_sensor_items.append(entry)
-                    # Extract WH40/WH69 battery from the 0x13 (yearly rain) item which carries it.
+                    # Extract WN20/WH40/WH69 battery from the 0x13 (yearly rain) item which carries it.
                     # Battery uses binary encoding: "0" = full (100%), "1" = low (10%).
                     # Use wh69batt if a WH69 is registered (links battery to WH69 device),
+                    # or use wn20batt if a WN20 is registered (links battery to WN20 device),
                     # otherwise fall back to wh40batt for standalone WH40 rain gauges.
                     if item.get("id") == "0x13" and item.get("battery"):
                         # WH40 uses 0-5 bar scale; WH69 uses binary (0=full, 1=low).
@@ -246,12 +251,13 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                             battery_pct = str(batt_val * 20)  # 0-5 bar scale
                         else:
                             battery_pct = "100" if batt_str == "0" else "10"  # binary
-                        battery_key = (
-                            "wh69batt"
-                            if self.sensor_mapper.get_hardware_id("wh69batt")
-                            is not None
-                            else "wh40batt"
-                        )
+
+                        battery_key = "wh40batt"
+                        if self.sensor_mapper.get_hardware_id("wh69batt") is not None:
+                            battery_key = "wh69batt"
+                        elif self.sensor_mapper.get_hardware_id("wn20batt") is not None:
+                            battery_key = "wn20batt"
+
                         all_sensor_items.append({"id": battery_key, "val": battery_pct})
                         _LOGGER.debug(
                             "Added rain battery: %s = %s%%", battery_key, battery_pct
@@ -1105,7 +1111,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
 
             # Get hardware ID for this sensor (only for non-gateway sensors).
             # Items from rain/piezoRain may carry a _force_hardware_id to resolve
-            # conflicts when tipping-bucket (WH40/WH69) and piezoelectric (WH90/WS90/WS85)
+            # conflicts when tipping-bucket (WN20/WH40/WH69) and piezoelectric (WH90/WS90/WS85)
             # sensors coexist and share the same hex IDs (0x0D–0x13).
             hardware_id = None
             if sensor_key not in GATEWAY_SENSORS:

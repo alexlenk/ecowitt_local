@@ -71,6 +71,7 @@ If your gateway is not in either list and setup fails with a connection or 404 e
 
 | Sensor | Description |
 |---|---|
+| **WN20** | Traditional rain gauge |
 | **WH25** | Indoor temperature, humidity, barometric pressure |
 | **WH26 / WN32** | Outdoor temperature, humidity, dew point |
 | **WH31** | Multi-channel temperature & humidity (CH1–8) |
