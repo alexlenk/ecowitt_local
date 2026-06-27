@@ -465,6 +465,45 @@ def test_conflict_with_equal_signals_preserves_first_wins():
     assert mapper.get_hardware_id("0x02") == "AAA111"
 
 
+def test_conflict_with_equal_signal_stays_with_previous_owner_across_polls():
+    """Two real, simultaneously-active sensors (e.g. WH90 and WH32/WN32) can
+    legitimately share common_list keys with equal signal strength. If the
+    gateway returns them in a different order from one poll to the next, the
+    key must keep following the previous poll's owner instead of flipping —
+    otherwise both entities go sporadic/unavailable (issue #197).
+    """
+    wh90 = {
+        "id": "6530",
+        "img": "wh90",
+        "name": "Temp & Humidity & Solar & Wind & Rain",
+        "batt": "0",
+        "signal": "4",
+    }
+    wh32 = {
+        "id": "A9",
+        "img": "wh26",
+        "name": "Outdoor T&H",
+        "batt": "0",
+        "signal": "4",
+    }
+
+    mapper = SensorMapper()
+    mapper.update_mapping([wh90, wh32])
+    first_winner = mapper.get_hardware_id("0x02")
+    assert first_winner == "6530"
+
+    # Reversed order on the next poll, signals unchanged. Without the
+    # previous-owner tie-break this would flip to "A9".
+    mapper.update_mapping([wh32, wh90])
+    assert mapper.get_hardware_id("0x02") == first_winner
+    assert mapper.get_hardware_id("0x07") == first_winner
+    assert mapper.get_hardware_id("0x03") == first_winner
+
+    # If the previous owner drops out entirely, the remaining sensor takes over.
+    mapper.update_mapping([wh32])
+    assert mapper.get_hardware_id("0x02") == "A9"
+
+
 def test_conflict_with_unparseable_signal_does_not_crash():
     """A non-numeric signal field must not abort the mapping update — the
     sensor is still registered and competes with signal=-1 (lowest priority).
