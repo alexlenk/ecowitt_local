@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.6] - 2026-06-27
+
+### Fixed
+- **WH32/WN32 outdoor sensor data sporadic/unavailable when paired with a WH90/WS90**: When a WH32/WN32 outdoor temp/humidity sensor and a WH90/WS90 weather station are both present, they legitimately share the same common_list keys (`0x02` temperature, `0x07` humidity, `0x03` dewpoint) with equal signal strength. The gateway's `get_sensors_info` device order isn't guaranteed to stay the same between polls, so the previous tie-break (first-seen-in-this-poll wins) caused key ownership to flip between the two devices on every poll, leaving both entities with sporadic, single-point updates instead of continuous data. The mapper now remembers which hardware ID owned a key in the previous poll and keeps that owner stable on a tie, only switching when the previous owner's signal drops or it disappears entirely. (issue #197)
+
 ## [1.7.5] - 2026-06-12
 
 ### Fixed

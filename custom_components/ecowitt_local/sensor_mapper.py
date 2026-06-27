@@ -32,6 +32,14 @@ class SensorMapper:
         Args:
             sensor_mappings: List of sensor mapping dictionaries from API
         """
+        # Snapshot the previous poll's winners before clearing. Two sensors
+        # with genuinely equal signal (e.g. a WH90 and a WH32/WN32 both
+        # reporting outdoor temp/humidity/dewpoint) can appear in a different
+        # order in get_sensors_info from one poll to the next, which would
+        # otherwise flip key ownership every poll and starve both entities
+        # of continuous data (issue #197).
+        previous_mapping: Dict[str, str] = dict(self._hardware_mapping)
+
         self._hardware_mapping.clear()
         self._sensor_info.clear()
 
@@ -96,15 +104,30 @@ class SensorMapper:
                 )
                 for key in live_keys:
                     existing_signal = key_signal.get(key)
-                    if existing_signal is None or signal_int > existing_signal:
+                    is_stable_tie = (
+                        existing_signal is not None
+                        and signal_int == existing_signal
+                        and previous_mapping.get(key) == hardware_id
+                        and self._hardware_mapping.get(key) != hardware_id
+                    )
+                    if (
+                        existing_signal is None
+                        or signal_int > existing_signal
+                        or is_stable_tie
+                    ):
                         if existing_signal is not None:
                             _LOGGER.info(
-                                "Live-data key %s claimed by both %s (signal=%d) and %s (signal=%d); preferring stronger signal",
+                                "Live-data key %s claimed by both %s (signal=%d) and %s (signal=%d); preferring %s",
                                 key,
                                 self._hardware_mapping[key],
                                 existing_signal,
                                 hardware_id,
                                 signal_int,
+                                (
+                                    "previous stable owner"
+                                    if is_stable_tie
+                                    else "stronger signal"
+                                ),
                             )
                         self._hardware_mapping[key] = hardware_id
                         key_signal[key] = signal_int

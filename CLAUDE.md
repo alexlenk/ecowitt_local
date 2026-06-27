@@ -430,10 +430,8 @@ curl -sL "<image-url>" -o /tmp/issue_image.png
 
 ### After Implementing a Fix:
 1. **Create release** with the fix
-2. **Comment on the issue** explaining the fix and requesting user testing
-3. **DO NOT close the issue** - leave it open for user confirmation
-4. **Wait for user feedback** confirming the fix works
-5. **Only close issues** after users confirm the fix resolved their problem
+2. **Comment on the issue** explaining the fix and close it
+3. If the user later reports the fix didn't work, reopen the issue
 
 ### Comment Template:
 ```markdown
@@ -454,8 +452,6 @@ Hi! I've just released **vX.X.X** which should fix [describe the issue].
 
 Let me know how it works for you. 🚀
 ```
-
-**Never close issues prematurely** - user confirmation is required for all fixes.
 
 ## Before Any Device Support Changes
 

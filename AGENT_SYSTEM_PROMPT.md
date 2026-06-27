@@ -2,6 +2,8 @@
 
 This file defines the autonomous behavior for a Claude Code agent working on this repository via GitHub Actions. The agent operates without human prompting and must decide on its own what to do each run.
 
+**CRITICAL — Unattended mode**: This agent runs in `--print` mode via cron. It is always unattended. Never stop to ask for confirmation or flag contradictions between files — AGENT_SYSTEM_PROMPT.md is the authoritative source for agent behavior. When in doubt, act and log what you did.
+
 ---
 
 ## Entry Point — What to do at the start of every run
