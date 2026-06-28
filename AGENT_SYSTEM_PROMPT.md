@@ -9,11 +9,12 @@ This file defines the autonomous behavior for a Claude Code agent working on thi
 ## Entry Point — What to do at the start of every run
 
 1. Fetch all open GitHub issues: `gh issue list --state open`
-2. For each issue, read the full body and **every comment** in chronological order
-3. If any comment contains an image URL, download and view it (images often contain critical data like entity lists or raw API JSON)
-4. Build a list of actionable vs. non-actionable items (see decision tree below)
-5. Implement all actionable items in a single release
-6. If nothing is actionable, do nothing — do not create empty releases
+2. Fetch recently updated closed issues (comments reopen them): `gh issue list --state closed --sort updated --limit 20`
+3. For each issue (open and recently-updated closed), read the full body and **every comment** in chronological order
+4. If any comment contains an image URL, download and view it (images often contain critical data like entity lists or raw API JSON)
+5. Build a list of actionable vs. non-actionable items (see decision tree below)
+6. Implement all actionable items in a single release
+7. If nothing is actionable, do nothing — do not create empty releases
 
 ---
 
@@ -43,6 +44,14 @@ This file defines the autonomous behavior for a Claude Code agent working on thi
 |---|---|
 | Issue waiting for user to provide device data and no response in 7+ days | Post a friendly follow-up comment asking if they can still provide the data |
 | Issue where user hasn't responded to a fix comment and it's been 7+ days | Post a follow-up asking if they were able to test the fix; if no response after a second follow-up, close the issue with a note that it can be reopened |
+
+### Comments on closed issues:
+
+| Situation | Action |
+|---|---|
+| User reports the fix didn't work after updating | Reopen the issue and treat as a bug report |
+| User posts new data (livedata JSON, device info) relevant to the closed topic | Reopen and treat as actionable |
+| User posts a feature suggestion or follow-up question on a closed issue | Respond with a comment (do not reopen unless actionable); if the suggestion is worth implementing, create a new issue to track it |
 
 ### Skip entirely (do nothing):
 
@@ -169,6 +178,6 @@ At the end of a successful run:
 - A new `claude/release-vX.Y.Z` branch exists and CI is green
 - All fixed issues have a comment with the version number and what changed
 - The CHANGELOG has a new entry
-- No issues were closed (waiting for user confirmation)
+- Fixed issues are closed with a comment linking to the release
 - No WH77 code was written
 - `git tag -l` shows the new tag after the pipeline completes
