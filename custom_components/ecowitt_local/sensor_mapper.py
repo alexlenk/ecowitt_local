@@ -308,6 +308,20 @@ class SensorMapper:
                     "wh40batt",
                 ]
             )
+        elif sensor_type.lower() in ("wn20", "rain mini"):
+            # WN20 tipping-bucket rain gauge — same "rain" array hex IDs as WH40
+            keys.extend(
+                [
+                    "0x0D",  # Rain event total
+                    "0x0E",  # Rain rate
+                    "0x7C",  # 24-hour rain
+                    "0x10",  # Daily rain
+                    "0x11",  # Weekly rain
+                    "0x12",  # Monthly rain
+                    "0x13",  # Yearly rain
+                    "wn20batt",
+                ]
+            )
         elif (
             sensor_type.lower() in ("wh68", "weather_station")
             or "solar & wind" in sensor_type.lower()
@@ -763,6 +777,8 @@ class SensorMapper:
         elif "wh57" in battery_key:
             return "lightning_battery"
         elif "wh40" in battery_key:
+            return "rain_battery"
+        elif "wn20" in battery_key:
             return "rain_battery"
         elif "wh69" in battery_key:
             return "wh69_weather_station_battery"

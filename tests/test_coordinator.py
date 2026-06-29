@@ -2071,6 +2071,44 @@ async def test_coordinator_rain_uses_wh40batt_when_no_wh69(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_rain_uses_wn20batt_when_no_wh69_or_wh40(coordinator):
+    """Test that rain array battery falls back to wn20batt when neither WH69 nor WH40 is registered."""
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "2FD4",
+                "img": "wn20",
+                "type": "70",
+                "name": "Rain Mini",
+                "batt": "5",
+                "signal": "4",
+            }
+        ]
+    )
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "rain": [{"id": "0x13", "val": "100.0 mm", "battery": "5"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wn20_battery_found = any(
+        sensors[k].get("sensor_key") == "wn20batt" for k in sensors
+    )
+    assert (
+        wn20_battery_found
+    ), "wn20batt should be used when no WH69 or WH40 is registered"
+
+    wh40_battery_found = any(
+        sensors[k].get("sensor_key") == "wh40batt" for k in sensors
+    )
+    assert (
+        not wh40_battery_found
+    ), "wh40batt should NOT be used when only WN20 is registered"
+
+
+@pytest.mark.asyncio
 async def test_coordinator_ch_pm25_empty_handling(coordinator):
     """Test coordinator handles empty or missing ch_pm25 gracefully."""
     for ch_pm25_val in [[], None]:
