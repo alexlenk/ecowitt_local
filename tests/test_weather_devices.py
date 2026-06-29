@@ -539,6 +539,98 @@ class TestWH40RainGauge:
         assert "Battery" in name
 
 
+class TestWN20RainGauge:
+    """Test WN20 rain gauge support."""
+
+    def test_wn20_sensor_mapping(self, mock_wn20_sensor_mapping):
+        """Test WN20 sensor mapping and key generation."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wn20_sensor_mapping])
+
+        assert "2FD4" in mapper.get_all_hardware_ids()
+
+        sensor_info = mapper.get_sensor_info("2FD4")
+        assert sensor_info is not None
+        assert sensor_info["sensor_type"] == "WN20"
+        assert sensor_info["device_model"] == "wn20"
+        assert sensor_info["battery"] == "5"
+        assert sensor_info["signal"] == "4"
+        assert sensor_info["channel"] == ""  # Rain gauge has no channel
+
+    def test_wn20_live_data_keys(self, mock_wn20_sensor_mapping):
+        """Test WN20 generates correct live data keys (hex IDs matching rain array format)."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wn20_sensor_mapping])
+
+        expected_keys = [
+            "0x0D",  # Rain event
+            "0x0E",  # Rain rate
+            "0x7C",  # 24-hour rain
+            "0x10",  # Daily rain
+            "0x11",  # Weekly rain
+            "0x12",  # Monthly rain
+            "0x13",  # Yearly rain
+            "wn20batt",
+        ]
+
+        for key in expected_keys:
+            hardware_id = mapper.get_hardware_id(key)
+            assert hardware_id == "2FD4", f"Key {key} should map to 2FD4"
+
+    def test_wn20_entity_id_generation(self, mock_wn20_sensor_mapping):
+        """Test WN20 entity ID generation."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wn20_sensor_mapping])
+
+        entity_id, name = mapper.generate_entity_id("0x0E", "2FD4")
+        assert "rain" in entity_id.lower() or "2fd4" in entity_id.lower()
+        assert "Rain" in name
+
+        entity_id, name = mapper.generate_entity_id("wn20batt", "2FD4")
+        assert entity_id == "sensor.ecowitt_rain_battery_2fd4"
+        assert "Battery" in name
+
+    def test_wn20_unique_rain_sensor_type(self):
+        """Test WN20 is distinct from other weather sensors."""
+        mapper = SensorMapper()
+
+        rain_mapping = {
+            "id": "RAIN1",
+            "img": "wn20",
+            "type": "70",
+            "name": "Rain Mini",
+            "batt": "5",
+            "signal": "4",
+        }
+
+        weather_mapping = {
+            "id": "WEATHER1",
+            "img": "wh68",
+            "type": "1",
+            "name": "Solar & Wind",
+            "batt": "90",
+            "signal": "4",
+        }
+
+        mapper.update_mapping([rain_mapping, weather_mapping])
+
+        assert mapper.get_hardware_id("0x0E") == "RAIN1"
+        assert mapper.get_hardware_id("tempf") == "WEATHER1"
+        assert mapper.get_hardware_id("wn20batt") == "RAIN1"
+        assert mapper.get_hardware_id("wh68batt") == "WEATHER1"
+
+    def test_wn20_battery_monitoring(self, mock_wn20_sensor_mapping):
+        """Test WN20 battery monitoring integration."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wn20_sensor_mapping])
+
+        assert mapper.get_hardware_id("wn20batt") == "2FD4"
+
+        entity_id, name = mapper.generate_entity_id("wn20batt", "2FD4")
+        assert "battery" in entity_id.lower()
+        assert "Battery" in name
+
+
 class TestWH41PM25Sensor:
     """Test WH41 PM2.5 air quality sensor support."""
 

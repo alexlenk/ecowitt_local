@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.7] - 2026-06-29
+
+### Added
+- **WN20 rain gauge support**: Added device detection for the WN20 ("Rain Mini", `type` 70) tipping-bucket rain gauge. It reports through the same `rain` block hex IDs (`0x0D`–`0x13`) as the WH40, so it now creates rain event/rate/daily/weekly/monthly/yearly entities plus a dedicated battery sensor (`wn20batt`), without renaming or otherwise affecting the existing `wh40batt` entity used by WH40 owners. (issue #202)
+
 ## [1.7.6] - 2026-06-27
 
 ### Fixed

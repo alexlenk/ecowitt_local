@@ -197,6 +197,36 @@ def mock_wh40_live_data() -> Dict[str, Any]:
 
 
 @pytest.fixture
+def mock_wn20_sensor_mapping() -> Dict[str, Any]:
+    """Mock WN20 rain gauge sensor mapping."""
+    return {
+        "id": "2FD4",
+        "img": "wn20",
+        "type": "70",
+        "name": "Rain Mini",
+        "batt": "5",
+        "rssi": "-65",
+        "signal": "4",
+        "idst": "1",
+    }
+
+
+@pytest.fixture
+def mock_wn20_live_data() -> Dict[str, Any]:
+    """Mock WN20 rain gauge live data."""
+    return {
+        "0x0D": "0.0",
+        "0x0E": "0.0",
+        "0x7C": "0.0",
+        "0x10": "0.0",
+        "0x11": "0.3",
+        "0x12": "106.2",
+        "0x13": "106.2",
+        "wn20batt": "5",
+    }
+
+
+@pytest.fixture
 def mock_wh41_sensor_mapping() -> Dict[str, Any]:
     """Mock WH41 PM2.5 sensor mapping."""
     return {
