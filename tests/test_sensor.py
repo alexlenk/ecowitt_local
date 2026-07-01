@@ -314,7 +314,7 @@ def test_rain_sensor_display_precision():
     """
     from custom_components.ecowitt_local.const import SENSOR_TYPES
 
-    mm_rain_keys = ["0x0D", "0x0E", "0x7C", "0x10", "0x11", "0x12", "0x13"]
+    mm_rain_keys = ["0x0D", "0x0E", "0x7D", "0x7C", "0x10", "0x11", "0x12", "0x13"]
     for key in mm_rain_keys:
         assert (
             SENSOR_TYPES[key].get("suggested_display_precision") == 1

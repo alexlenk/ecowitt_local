@@ -607,6 +607,14 @@ def test_ws90_includes_decimal_id_3_and_5():
     assert "5" in keys
 
 
+def test_piezo_devices_include_hourly_rain():
+    """WH90, WS90, and WS85 include 0x7D (hourly rain) from piezoRain block (issue #205)."""
+    mapper = SensorMapper()
+    for sensor_type in ("WH90", "WS90", "wh85"):
+        keys = mapper._generate_live_data_keys(sensor_type, "")
+        assert "0x7D" in keys, f"{sensor_type} should include 0x7D (hourly rain)"
+
+
 def test_wh80_includes_decimal_id_3_and_5():
     """WH80 wind/solar station includes decimal IDs '3' and '5'."""
     mapper = SensorMapper()

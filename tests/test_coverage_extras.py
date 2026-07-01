@@ -1328,6 +1328,7 @@ def test_sensor_mapper_wh85_keys():
     keys = mapper._generate_live_data_keys("wh85", "")
     assert "0x0B" in keys, "WH85 should have wind speed"
     assert "0x0A" in keys, "WH85 should have wind direction"
+    assert "0x7D" in keys, "WH85 should have hourly rain"
     assert "0x13" in keys, "WH85 should have yearly rain"
     assert "ws85batt" in keys, "WH85 should have ws85batt"
     assert "ws85_voltage" in keys, "WH85 should have ws85_voltage"

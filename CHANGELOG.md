@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.8] - 2026-07-01
+
+### Added
+- **WH90/WS90/WS85 hourly rain entity**: Added support for `0x7D` (Hourly Rain) from the `piezoRain` block. Ecowitt piezoelectric rain gauges report a one-hour rainfall accumulation at hex ID `0x7D`, positioned between rain rate (`0x0E`) and 24-hour rain (`0x7C`) in the response. This was a vendor-specific field not in the official spec, observed on GW2000A + WH90 firmware. (issue #205)
+
 ## [1.7.7] - 2026-06-29
 
 ### Added

@@ -378,6 +378,13 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
         "state_class": "measurement",
         "suggested_display_precision": 1,
     },
+    "0x7D": {
+        "name": "Hourly Rain",
+        "unit": "mm",
+        "device_class": "precipitation",
+        "state_class": "total_increasing",
+        "suggested_display_precision": 1,
+    },
     "0x7C": {
         "name": "24-Hour Rain",
         "unit": "mm",
