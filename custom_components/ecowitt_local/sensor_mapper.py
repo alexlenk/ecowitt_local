@@ -394,6 +394,7 @@ class SensorMapper:
                     "0x17",  # UV index
                     "0x0D",  # Rain event
                     "0x0E",  # Rain rate
+                    "0x7D",  # Hourly rain (vendor, piezoRain)
                     "0x7C",  # 24-hour rolling rain
                     "0x10",  # Rain daily
                     "0x11",  # Rain weekly
@@ -455,6 +456,7 @@ class SensorMapper:
                     "0x17",  # UV index
                     "0x0D",  # Rain event
                     "0x0E",  # Rain rate
+                    "0x7D",  # Hourly rain (vendor, piezoRain)
                     "0x7C",  # 24-hour rolling rain
                     "0x10",  # Rain daily
                     "0x11",  # Rain weekly
@@ -569,6 +571,7 @@ class SensorMapper:
                     "0x6D",  # Wind direction avg 10min
                     "0x0D",  # Rain event
                     "0x0E",  # Rain rate
+                    "0x7D",  # Hourly rain (vendor, piezoRain)
                     "0x7C",  # 24-hour rolling rain
                     "0x10",  # Rain daily
                     "0x11",  # Rain weekly
@@ -720,6 +723,7 @@ class SensorMapper:
                 "0x19": "max_daily_gust",
                 "0x6D": "wind_direction_avg",
                 "0x7C": "24h_rain",
+                "0x7D": "hourly_rain",
                 "0xA1": "bgt",
                 "0xA2": "wbgt",
             }
