@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.9] - 2026-07-03
+
+### Changed
+- **Deterministic key ownership using Ecowitt's documented sensor priority order**: When multiple outdoor sensors share the same `common_list` keys (e.g. `0x02` temperature, `0x07` humidity, `0x03` dewpoint) and report equal signal strength, the integration now resolves ownership using Ecowitt's documented priority order — WN32/WH26 > WS90/WH90 > WS80/WH80 > WS69/WH69. A WN32 outdoor T/H sensor paired alongside a WH90/WS90 weather station will reliably own the shared temp/humidity/dewpoint keys rather than sharing them based on iteration order. A higher-priority sensor with signal=0 does not block an active lower-priority sensor (signal strength still beats priority). For sensors with equal priority, the previous poll's stable tie-break (issue #197) continues to apply. (issue #203)
+
 ## [1.7.8] - 2026-07-01
 
 ### Added
