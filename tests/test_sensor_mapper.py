@@ -436,41 +436,44 @@ def test_wh65_wh90_conflict_prefers_stronger_signal():
     assert mapper.get_hardware_id("wh90batt") == "FF9988"
 
 
-def test_conflict_with_equal_signals_preserves_first_wins():
-    """When two sensors claim the same key with equal signal strength the
-    *first* iteration wins.  This keeps the mapping stable across consecutive
-    get_sensors_info polls — without it, alternating list order between polls
-    would flip all entities between two devices, triggering unit-change repair
-    notifications in Home Assistant (issue #192).
+def test_conflict_with_equal_signals_higher_priority_wins():
+    """When two sensors claim the same key with equal signal strength, the
+    higher-priority sensor wins per Ecowitt's documented order (issue #203).
+    WH90 (priority 3) beats WH69 (priority 1) regardless of iteration order,
+    eliminating the flip-flop that triggered unit-change repair notifications
+    in Home Assistant (issue #192).
     """
+    sensors = [
+        {
+            "id": "AAA111",
+            "img": "wh69",
+            "name": "Temp & Humidity & Solar & Wind & Rain",
+            "batt": "0",
+            "signal": "3",
+        },
+        {
+            "id": "BBB222",
+            "img": "wh90",
+            "name": "Temp & Humidity & Solar & Wind & Rain",
+            "batt": "0",
+            "signal": "3",
+        },
+    ]
     mapper = SensorMapper()
-    mapper.update_mapping(
-        [
-            {
-                "id": "AAA111",
-                "img": "wh69",
-                "name": "Temp & Humidity & Solar & Wind & Rain",
-                "batt": "0",
-                "signal": "3",
-            },
-            {
-                "id": "BBB222",
-                "img": "wh90",
-                "name": "Temp & Humidity & Solar & Wind & Rain",
-                "batt": "0",
-                "signal": "3",
-            },
-        ]
-    )
-    assert mapper.get_hardware_id("0x02") == "AAA111"
+    mapper.update_mapping(sensors)
+    assert mapper.get_hardware_id("0x02") == "BBB222"
+
+    # Reversed order: WH90 still wins because priority overrides iteration order.
+    mapper2 = SensorMapper()
+    mapper2.update_mapping(list(reversed(sensors)))
+    assert mapper2.get_hardware_id("0x02") == "BBB222"
 
 
-def test_conflict_with_equal_signal_stays_with_previous_owner_across_polls():
-    """Two real, simultaneously-active sensors (e.g. WH90 and WH32/WN32) can
-    legitimately share common_list keys with equal signal strength. If the
-    gateway returns them in a different order from one poll to the next, the
-    key must keep following the previous poll's owner instead of flipping —
-    otherwise both entities go sporadic/unavailable (issue #197).
+def test_conflict_with_equal_signal_wn32_beats_wh90():
+    """WH26/WN32 (priority 4) beats WH90/WS90 (priority 3) at equal signal per
+    Ecowitt's documented sensor priority order for outdoor measurements (issue #203).
+    The result is deterministic regardless of which sensor appears first in the
+    get_sensors_info response.
     """
     wh90 = {
         "id": "6530",
@@ -487,21 +490,82 @@ def test_conflict_with_equal_signal_stays_with_previous_owner_across_polls():
         "signal": "4",
     }
 
+    # WH90 appears first — WN32/WH26 should still win on priority.
     mapper = SensorMapper()
     mapper.update_mapping([wh90, wh32])
-    first_winner = mapper.get_hardware_id("0x02")
-    assert first_winner == "6530"
-
-    # Reversed order on the next poll, signals unchanged. Without the
-    # previous-owner tie-break this would flip to "A9".
-    mapper.update_mapping([wh32, wh90])
-    assert mapper.get_hardware_id("0x02") == first_winner
-    assert mapper.get_hardware_id("0x07") == first_winner
-    assert mapper.get_hardware_id("0x03") == first_winner
-
-    # If the previous owner drops out entirely, the remaining sensor takes over.
-    mapper.update_mapping([wh32])
     assert mapper.get_hardware_id("0x02") == "A9"
+    assert mapper.get_hardware_id("0x07") == "A9"
+    assert mapper.get_hardware_id("0x03") == "A9"
+
+    # Reversed order — same result.
+    mapper2 = SensorMapper()
+    mapper2.update_mapping([wh32, wh90])
+    assert mapper2.get_hardware_id("0x02") == "A9"
+
+    # Second poll with reversed order: priority still determines winner.
+    mapper.update_mapping([wh32, wh90])
+    assert mapper.get_hardware_id("0x02") == "A9"
+    assert mapper.get_hardware_id("0x07") == "A9"
+    assert mapper.get_hardware_id("0x03") == "A9"
+
+    # If the WN32 drops out entirely, WH90 takes over.
+    mapper.update_mapping([wh90])
+    assert mapper.get_hardware_id("0x02") == "6530"
+
+
+def test_sensor_priority_dead_high_priority_does_not_block_lower():
+    """A higher-priority sensor with signal=0 must not block a lower-priority but
+    active sensor from claiming shared keys — signal strength always beats priority.
+    """
+    mapper = SensorMapper()
+    mapper.update_mapping(
+        [
+            {
+                "id": "DEAD01",
+                "img": "wh26",  # priority=4 but signal=0
+                "name": "Outdoor T&H",
+                "batt": "0",
+                "signal": "0",
+            },
+            {
+                "id": "LIVE02",
+                "img": "wh90",  # priority=3 but signal=4
+                "name": "Temp & Humidity & Solar & Wind & Rain",
+                "batt": "0",
+                "signal": "4",
+            },
+        ]
+    )
+    assert mapper.get_hardware_id("0x02") == "LIVE02"
+    assert mapper.get_hardware_id("0x07") == "LIVE02"
+
+
+def test_sensor_priority_equal_priority_stable_tiebreak():
+    """Two sensors with identical priority use the stable tie-break (previous poll
+    owner keeps the key) rather than flipping on every poll (issue #197 pattern).
+    """
+    sensor_a = {
+        "id": "AAAA",
+        "img": "wh90",
+        "name": "Temp & Humidity & Solar & Wind & Rain",
+        "batt": "0",
+        "signal": "4",
+    }
+    sensor_b = {
+        "id": "BBBB",
+        "img": "wh90",
+        "name": "Temp & Humidity & Solar & Wind & Rain",
+        "batt": "0",
+        "signal": "4",
+    }
+
+    mapper = SensorMapper()
+    mapper.update_mapping([sensor_a, sensor_b])
+    first_winner = mapper.get_hardware_id("0x02")
+
+    # Second poll with reversed order — previous winner keeps the key.
+    mapper.update_mapping([sensor_b, sensor_a])
+    assert mapper.get_hardware_id("0x02") == first_winner
 
 
 def test_conflict_with_unparseable_signal_does_not_crash():
