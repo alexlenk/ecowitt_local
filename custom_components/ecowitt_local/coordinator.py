@@ -1270,15 +1270,18 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         )
                     except (ValueError, TypeError):
                         pass
-                elif unit == "lx" and sensor_key == "solarradiation":
+                elif unit == "lx" and sensor_key in ("solarradiation", "0x15"):
                     # Gateway is in lux mode: rename the primary entity to Solar Illuminance
                     # and add a derived Solar Radiation entity in W/m².
+                    # Applies to both the non-hex 'solarradiation' key (WH68) and the
+                    # hex '0x15' key (WH90/WS90) when the gateway is configured for lux output.
                     sensors_data[entity_id]["name"] = "Solar Illuminance"
                     try:
                         wm2_val = round(float(sensor_value) / 126.7, 1)
                         wm2_entity_id = entity_id.replace(
                             "solar_radiation", "solar_radiation_wm2"
                         )
+                        wm2_sensor_key = f"{sensor_key}_wm2"
                         sensors_data[wm2_entity_id] = {
                             "entity_id": wm2_entity_id,
                             "name": "Solar Radiation",
@@ -1287,11 +1290,11 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                             "device_class": "irradiance",
                             "state_class": "measurement",
                             "category": "sensor",
-                            "sensor_key": "solarradiation_wm2",
+                            "sensor_key": wm2_sensor_key,
                             "hardware_id": hardware_id,
                             "raw_value": str(wm2_val),
                             "attributes": {
-                                "sensor_key": "solarradiation_wm2",
+                                "sensor_key": wm2_sensor_key,
                                 "last_update": datetime.now().isoformat(),
                                 **sensor_details,
                             },

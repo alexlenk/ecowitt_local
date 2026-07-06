@@ -3312,3 +3312,53 @@ async def test_coordinator_solarradiation_lux_mode(coordinator):
     assert wm2_entity["device_class"] == "irradiance"
     # 25340.0 / 126.7 ≈ 200.0
     assert float(wm2_entity["state"]) == pytest.approx(200.0, abs=1.0)
+
+
+@pytest.mark.asyncio
+async def test_coordinator_0x15_lux_mode(coordinator):
+    """Test 0x15 hex key in lux mode: rename to Solar Illuminance, add W/m² entity (issue #198).
+
+    Some WH90/WS90 gateways configured for lux output emit 0x15 with a lx unit
+    instead of W/m². The fix must mirror the solarradiation lux-mode logic.
+    """
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "C3D4E5",
+                "img": "wh90",
+                "type": "48",
+                "name": "Temp & Humidity & Solar & Wind & Rain",
+                "batt": "5",
+                "signal": "4",
+            }
+        ]
+    )
+    mock_live_data = {
+        "common_list": [{"id": "0x15", "val": "25340.0 lx"}],
+    }
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    # Primary entity should be renamed to Solar Illuminance in lx
+    lux_entity = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "0x15"), None
+    )
+    assert lux_entity is not None, "0x15 entity not found"
+    assert lux_entity["name"] == "Solar Illuminance"
+    assert lux_entity["unit_of_measurement"] == "lx"
+    assert lux_entity["device_class"] == "illuminance"
+
+    # Derived W/m² entity should also be present
+    wm2_entity = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "0x15_wm2"),
+        None,
+    )
+    assert wm2_entity is not None, "0x15_wm2 entity not created"
+    assert wm2_entity["name"] == "Solar Radiation"
+    assert wm2_entity["unit_of_measurement"] == "W/m²"
+    assert wm2_entity["device_class"] == "irradiance"
+    # 25340.0 / 126.7 ≈ 200.0
+    assert float(wm2_entity["state"]) == pytest.approx(200.0, abs=1.0)
