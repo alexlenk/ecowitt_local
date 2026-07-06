@@ -1417,3 +1417,30 @@ async def test_solarradiation_lux_mode_invalid_value(coordinator):
         None,
     )
     assert wm2_entity is None
+
+
+@pytest.mark.asyncio
+async def test_0x15_lux_mode_invalid_value(coordinator):
+    """Test 0x15 hex key lux mode handles non-numeric value without crashing (issue #198)."""
+    from unittest.mock import AsyncMock
+
+    mock_live_data = {
+        "common_list": [{"id": "0x15", "val": "not_a_number", "unit": "lx"}],
+    }
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+
+    result = await coordinator._async_update_data()
+    assert result is not None
+    sensors = result["sensors"]
+    # Primary entity is renamed Solar Illuminance but W/m² derived entity is absent
+    lux_entity = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "0x15"), None
+    )
+    assert lux_entity is not None
+    assert lux_entity["name"] == "Solar Illuminance"
+    wm2_entity = next(
+        (s for s in sensors.values() if s.get("sensor_key") == "0x15_wm2"),
+        None,
+    )
+    assert wm2_entity is None
