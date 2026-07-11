@@ -59,6 +59,45 @@ class SensorMapper:
         self._hardware_mapping.clear()
         self._sensor_info.clear()
 
+        # Pre-scan: detect hardware IDs that appear on multiple channels. Two
+        # physical sensors with the same hardware ID (e.g. both WN31 units got
+        # the same ID from the factory, or after a battery replacement) would
+        # silently drop one channel: _sensor_info is keyed by hardware_id, so
+        # the second sensor overwrites the first, and both channels end up with
+        # the same entity ID — only one appears in HA (issue #211).
+        # When a duplicate is found, we use a composite unique_id
+        # ("{hardware_id}_ch{channel}") for ALL channels sharing that ID so each
+        # channel gets its own device and entity.
+        _id_to_channel: Dict[str, str] = {}
+        _duplicate_hardware_ids: set[str] = set()
+        for _s in sensor_mappings:
+            try:
+                _hw = _s.get("id", "").strip()
+                if not _hw or _hw.upper() in ("FFFFFFFF", "FFFFFFFE"):
+                    continue
+                _img = _s.get("img", "").strip()
+                _ch = self._extract_channel_from_name(
+                    _s.get("name", "")
+                ) or self._extract_channel_from_type_num(
+                    _img.lower(), _s.get("type", "")
+                )
+                if _hw in _id_to_channel:
+                    if _ch and _id_to_channel[_hw] != _ch:
+                        if _hw not in _duplicate_hardware_ids:
+                            _LOGGER.warning(
+                                "Hardware ID %s is shared by channels %s and %s — "
+                                "using channel-specific identifiers to prevent entity "
+                                "collision (issue #211)",
+                                _hw,
+                                _id_to_channel[_hw],
+                                _ch,
+                            )
+                        _duplicate_hardware_ids.add(_hw)
+                else:
+                    _id_to_channel[_hw] = _ch
+            except Exception:
+                continue
+
         # Tracks the signal strength and device priority of the sensor that
         # currently owns each mapping key. When two sensor types share live-data
         # keys — most often WH65 (img=wh69) and WH90 both claiming common_list
@@ -102,8 +141,16 @@ class SensorMapper:
 
                 device_priority = _SENSOR_PRIORITY.get(img.lower(), 0)
 
-                # Store sensor information
-                self._sensor_info[hardware_id] = {
+                # When this hardware_id is shared across multiple channels, use a
+                # composite unique_id so each channel gets its own _sensor_info
+                # entry, device, and entity IDs (e.g. "B8_ch3" vs "B8_ch5").
+                if hardware_id in _duplicate_hardware_ids and channel:
+                    unique_id = f"{hardware_id}_ch{channel}"
+                else:
+                    unique_id = hardware_id
+
+                # Store sensor information keyed by unique_id
+                self._sensor_info[unique_id] = {
                     "hardware_id": hardware_id,
                     "sensor_type": sensor_type,
                     "channel": channel,
@@ -113,7 +160,7 @@ class SensorMapper:
                     "raw_data": sensor,
                 }
 
-                # Map live data keys to hardware IDs
+                # Map live data keys to unique_id
                 live_keys = self._generate_live_data_keys(sensor_type, channel)
                 _LOGGER.debug(
                     "Mapping for hardware_id %s (type=%s, channel=%s, signal=%s, priority=%d): keys=%s",
@@ -133,8 +180,8 @@ class SensorMapper:
                         existing_signal is not None
                         and signal_int == existing_signal
                         and device_priority == existing_priority
-                        and previous_mapping.get(key) == hardware_id
-                        and self._hardware_mapping.get(key) != hardware_id
+                        and previous_mapping.get(key) == unique_id
+                        and self._hardware_mapping.get(key) != unique_id
                     )
                     # Priority win: higher-priority sensor claims the key when
                     # signals are equal and both are active (issue #203).
@@ -166,12 +213,12 @@ class SensorMapper:
                                 self._hardware_mapping[key],
                                 existing_signal,
                                 existing_priority,
-                                hardware_id,
+                                unique_id,
                                 signal_int,
                                 device_priority,
                                 reason,
                             )
-                        self._hardware_mapping[key] = hardware_id
+                        self._hardware_mapping[key] = unique_id
                         key_signal[key] = signal_int
                         key_priority[key] = device_priority
                     else:
@@ -181,7 +228,7 @@ class SensorMapper:
                             self._hardware_mapping[key],
                             existing_signal,
                             existing_priority,
-                            hardware_id,
+                            unique_id,
                             signal_int,
                             device_priority,
                         )
