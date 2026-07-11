@@ -717,3 +717,139 @@ def test_pm25_aqi_entity_id_generation():
     assert eid_24h == "sensor.ecowitt_pm25_aqi_24h_ef891"
     assert eid_pm25 == "sensor.ecowitt_pm25_ef891"
     assert len({eid_real, eid_24h, eid_pm25}) == 3
+
+
+def test_duplicate_hardware_id_creates_channel_specific_unique_ids():
+    """Two WN31 sensors on different channels that share the same hardware ID
+    must each get a distinct unique_id so both appear as separate HA devices
+    and entities (issue #211).
+
+    Without the fix, _sensor_info[hardware_id] is overwritten by the second
+    channel, and both channels end up with the same entity ID — only one
+    appears in HA.
+    """
+    mapper = SensorMapper()
+    mapper.update_mapping(
+        [
+            {
+                "id": "B8",
+                "img": "wh31",
+                "name": "Temp & Humidity CH3",
+                "type": "8",  # WH31 CH3: type - 5 = 3
+                "batt": "0",
+                "signal": "4",
+            },
+            {
+                "id": "B8",  # Same hardware ID as CH3
+                "img": "wh31",
+                "name": "Temp & Humidity CH5",
+                "type": "10",  # WH31 CH5: type - 5 = 5
+                "batt": "0",
+                "signal": "3",
+            },
+        ]
+    )
+
+    # Both channels must have distinct unique_ids
+    uid_ch3 = mapper.get_hardware_id("temp3f")
+    uid_ch5 = mapper.get_hardware_id("temp5f")
+    assert uid_ch3 == "B8_ch3"
+    assert uid_ch5 == "B8_ch5"
+    assert uid_ch3 != uid_ch5
+
+    # Both channels must have their own sensor_info entries
+    info_ch3 = mapper.get_sensor_info("B8_ch3")
+    info_ch5 = mapper.get_sensor_info("B8_ch5")
+    assert info_ch3 is not None
+    assert info_ch5 is not None
+    assert info_ch3["channel"] == "3"
+    assert info_ch5["channel"] == "5"
+    # The original hardware_id is preserved inside the entry
+    assert info_ch3["hardware_id"] == "B8"
+    assert info_ch5["hardware_id"] == "B8"
+
+    # get_all_hardware_ids returns both composite IDs
+    all_ids = mapper.get_all_hardware_ids()
+    assert "B8_ch3" in all_ids
+    assert "B8_ch5" in all_ids
+    assert "B8" not in all_ids  # plain ID must NOT exist as a key
+
+    # Entity IDs are distinct
+    eid_ch3, _ = mapper.generate_entity_id("temp3f", uid_ch3)
+    eid_ch5, _ = mapper.generate_entity_id("temp5f", uid_ch5)
+    assert eid_ch3 == "sensor.ecowitt_temperature_b8_ch3"
+    assert eid_ch5 == "sensor.ecowitt_temperature_b8_ch5"
+    assert eid_ch3 != eid_ch5
+
+    # Humidity and battery keys are also routed to the correct channel
+    assert mapper.get_hardware_id("humidity3") == "B8_ch3"
+    assert mapper.get_hardware_id("humidity5") == "B8_ch5"
+    assert mapper.get_hardware_id("batt3") == "B8_ch3"
+    assert mapper.get_hardware_id("batt5") == "B8_ch5"
+
+
+def test_duplicate_hardware_id_channel_extracted_from_type():
+    """Duplicate-ID detection works when the channel comes from the type enum
+    (custom sensor name without 'CH{n}' pattern, e.g. on GW3000A).
+    """
+    mapper = SensorMapper()
+    mapper.update_mapping(
+        [
+            {
+                "id": "FF",
+                "img": "wh31",
+                "name": "Bedroom",  # custom name, no CH{n}
+                "type": "8",  # WH31 CH3
+                "batt": "0",
+                "signal": "4",
+            },
+            {
+                "id": "FF",  # Same ID
+                "img": "wh31",
+                "name": "Kitchen",  # custom name, no CH{n}
+                "type": "10",  # WH31 CH5
+                "batt": "0",
+                "signal": "4",
+            },
+        ]
+    )
+
+    assert mapper.get_hardware_id("temp3f") == "FF_ch3"
+    assert mapper.get_hardware_id("temp5f") == "FF_ch5"
+    info3 = mapper.get_sensor_info("FF_ch3")
+    info5 = mapper.get_sensor_info("FF_ch5")
+    assert info3 is not None and info3["channel"] == "3"
+    assert info5 is not None and info5["channel"] == "5"
+
+
+def test_non_duplicate_hardware_id_unchanged():
+    """Normal sensors (no duplicate hardware ID) continue to use the plain
+    hardware_id as their unique_id — no regression.
+    """
+    mapper = SensorMapper()
+    mapper.update_mapping(
+        [
+            {
+                "id": "A7C42",
+                "img": "wh31",
+                "name": "Temp & Humidity CH1",
+                "type": "6",
+                "batt": "0",
+                "signal": "4",
+            },
+            {
+                "id": "B3D99",
+                "img": "wh31",
+                "name": "Temp & Humidity CH2",
+                "type": "7",
+                "batt": "0",
+                "signal": "4",
+            },
+        ]
+    )
+
+    # Plain hardware_ids — no channel suffix
+    assert mapper.get_hardware_id("temp1f") == "A7C42"
+    assert mapper.get_hardware_id("temp2f") == "B3D99"
+    assert mapper.get_sensor_info("A7C42") is not None
+    assert mapper.get_sensor_info("B3D99") is not None

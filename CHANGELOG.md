@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.11] - 2026-07-11
+
+### Fixed
+- **WN31 (and other channel sensors) silently drop one channel when two sensors share the same hardware ID**: If two physical sensors of the same type (e.g. two WN31 temperature/humidity sensors) report an identical hardware ID to the gateway — which can happen as a factory defect or after a battery replacement — only one of the two channels would appear in Home Assistant. The `_sensor_info` dictionary, keyed by hardware ID, was overwritten by whichever channel was processed last, causing both channels to generate the same entity ID and only the final one to survive. The fix pre-scans the `get_sensors_info` response to detect hardware IDs that appear on multiple channels. When a duplicate is found, a composite identifier (`{hardware_id}_ch{channel}`, e.g. `B8_ch3` and `B8_ch5`) is used for each channel, so both sensors get distinct HA devices and entity IDs. Non-duplicate sensors are unaffected. (issue #211)
+
 ## [1.7.10] - 2026-07-06
 
 ### Fixed
