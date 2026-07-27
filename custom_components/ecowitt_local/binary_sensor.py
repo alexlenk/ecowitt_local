@@ -44,52 +44,74 @@ async def async_setup_entry(
     """Set up Ecowitt Local binary sensor entities."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    # Create binary sensor entities for sensor online/offline status
-    entities = []
+    known_hardware_ids: set[str] = set()
+    known_state_entity_ids: set[str] = set()
+    gateway_entity_added = False
 
-    # Get all hardware IDs with their associated sensors
-    hardware_sensors: Dict[str, List[Dict[str, Any]]] = {}
-    sensor_data = coordinator.get_all_sensors()
-    _LOGGER.debug("Binary sensor setup: Found %d total sensors", len(sensor_data))
+    @callback
+    def _async_add_new_entities() -> None:
+        """Add binary sensors for hardware IDs/keys not seen at a previous poll.
 
-    for entity_id, sensor_info in sensor_data.items():
-        hardware_id = sensor_info.get("hardware_id")
-        category = sensor_info.get("category")
-        _LOGGER.debug(
-            "Binary sensor check: %s -> hardware_id=%s, category=%s",
-            entity_id,
-            hardware_id,
-            category,
-        )
-        if hardware_id and category == "sensor":
-            if hardware_id not in hardware_sensors:
-                hardware_sensors[hardware_id] = []
-            hardware_sensors[hardware_id].append(sensor_info)
+        A sensor with a flaky RF link can be briefly absent from coordinator
+        data at platform setup time; without this, its online/state binary
+        sensor would never be created (issue #207).
+        """
+        nonlocal gateway_entity_added
+        sensor_data = coordinator.get_all_sensors()
 
-    _LOGGER.debug("Hardware sensors found: %s", list(hardware_sensors.keys()))
+        # Get all hardware IDs with their associated sensors
+        hardware_sensors: Dict[str, List[Dict[str, Any]]] = {}
+        for entity_id, sensor_info in sensor_data.items():
+            hardware_id = sensor_info.get("hardware_id")
+            category = sensor_info.get("category")
+            if hardware_id and category == "sensor":
+                if hardware_id not in hardware_sensors:
+                    hardware_sensors[hardware_id] = []
+                hardware_sensors[hardware_id].append(sensor_info)
 
-    # Create online/offline binary sensors for each hardware sensor
-    for hardware_id, sensors in hardware_sensors.items():
-        # Use the first sensor to get basic info
-        primary_sensor = sensors[0]
-        entities.append(
-            EcowittSensorOnlineBinarySensor(coordinator, hardware_id, primary_sensor)
-        )
+        new_entities: List[Any] = []
 
-    # Add gateway online status
-    entities.append(EcowittGatewayOnlineBinarySensor(coordinator))
+        # Add gateway online status once — it doesn't depend on any sensor data
+        if not gateway_entity_added:
+            gateway_entity_added = True
+            new_entities.append(EcowittGatewayOnlineBinarySensor(coordinator))
 
-    # Create moisture/state binary sensors (e.g. srain_piezo)
-    for entity_id, sensor_info in sensor_data.items():
-        if sensor_info.get("category") == "binary":
-            sensor_key = sensor_info.get("sensor_key", "")
-            if sensor_key in BINARY_SENSORS:
-                entities.append(
-                    EcowittStateBinarySensor(coordinator, entity_id, sensor_info)
+        # Create online/offline binary sensors for each new hardware sensor
+        for hardware_id, sensors in hardware_sensors.items():
+            if hardware_id in known_hardware_ids:
+                continue
+            known_hardware_ids.add(hardware_id)
+            # Use the first sensor to get basic info
+            primary_sensor = sensors[0]
+            new_entities.append(
+                EcowittSensorOnlineBinarySensor(
+                    coordinator, hardware_id, primary_sensor
                 )
+            )
 
-    _LOGGER.info("Setting up %d Ecowitt Local binary sensor entities", len(entities))
-    async_add_entities(entities, True)
+        # Create moisture/state binary sensors (e.g. srain_piezo)
+        for entity_id, sensor_info in sensor_data.items():
+            if entity_id in known_state_entity_ids:
+                continue
+            if sensor_info.get("category") == "binary":
+                sensor_key = sensor_info.get("sensor_key", "")
+                if sensor_key in BINARY_SENSORS:
+                    known_state_entity_ids.add(entity_id)
+                    new_entities.append(
+                        EcowittStateBinarySensor(coordinator, entity_id, sensor_info)
+                    )
+
+        if new_entities:
+            _LOGGER.info(
+                "Setting up %d Ecowitt Local binary sensor entities",
+                len(new_entities),
+            )
+            async_add_entities(new_entities, True)
+
+    _async_add_new_entities()
+    config_entry.async_on_unload(
+        coordinator.async_add_listener(_async_add_new_entities)
+    )
 
 
 class EcowittSensorOnlineBinarySensor(

@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.12] - 2026-07-27
+
+### Fixed
+- **A sensor's diagnostic entities (signal strength, online status) permanently stop updating after HA restart or config entry reload if the sensor's data is briefly missing at that exact moment**: Entities were only ever created once, from a single snapshot of coordinator data taken during platform setup. A sensor with a marginal RF link that happens to be mid-dropout at the instant Home Assistant restarts or the config entry reloads would never get an entity created for it — the sensor's primary readings (e.g. soil moisture) could keep updating fine via a previously-created entity, but its `signal_strength` sensor and `_online` binary sensor (created only if present at that same setup snapshot) would be stuck in a stale "restored" state forever, since nothing ever asked to create them once the data reappeared. Reloading the config entry as a workaround just moved the problem to whichever sensor happened to be mid-dropout during *that* reload. The fix adds a coordinator listener to both the sensor and binary_sensor platforms that creates entities for any sensor/hardware ID first seen in a later poll, not just the initial one, so a transiently-missing sensor gets its entities created as soon as its data reappears rather than never. (issue #207)
+
 ## [1.7.11] - 2026-07-11
 
 ### Fixed

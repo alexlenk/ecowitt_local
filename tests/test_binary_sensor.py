@@ -114,6 +114,75 @@ async def test_async_setup_entry(mock_coordinator, mock_config_entry):
     assert len(gateway_entities) == 1
 
 
+@pytest.mark.asyncio
+async def test_async_setup_entry_adds_new_entities_on_later_update(
+    mock_coordinator, mock_config_entry
+):
+    """A sensor absent at setup time is added once it appears in a later poll.
+
+    Regression test for issue #207: a sensor with a flaky RF link can be
+    missing from coordinator data at platform setup, and previously would
+    never get an online/state binary sensor created for it.
+    """
+    hass = Mock(spec=HomeAssistant)
+    hass.data = {DOMAIN: {"test_entry": mock_coordinator}}
+
+    mock_coordinator.get_all_sensors.return_value = {
+        "sensor.test_soil_d8174": {
+            "hardware_id": "D8174",
+            "category": "sensor",
+            "sensor_key": "soilmoisture1",
+            "state": "45",
+        },
+    }
+
+    async_add_entities = Mock()
+    await async_setup_entry(hass, mock_config_entry, async_add_entities)
+
+    assert async_add_entities.call_count == 1
+    first_batch = async_add_entities.call_args_list[0][0][0]
+    assert len(first_batch) == 2  # 1 sensor online + 1 gateway online
+
+    # Capture the listener the coordinator was given so we can simulate a
+    # later poll that now includes a previously-missing sensor.
+    listener = mock_coordinator.async_add_listener.call_args[0][0]
+
+    mock_coordinator.get_all_sensors.return_value = {
+        "sensor.test_soil_d8174": {
+            "hardware_id": "D8174",
+            "category": "sensor",
+            "sensor_key": "soilmoisture1",
+            "state": "46",
+        },
+        "sensor.test_late_temp_d8648": {
+            "hardware_id": "D8648",
+            "category": "sensor",
+            "sensor_key": "temp1f",
+            "state": "72.5",
+        },
+        "ecowitt_rain_state_piezo_abc123": {
+            "hardware_id": "ABC123",
+            "category": "binary",
+            "sensor_key": "srain_piezo",
+            "state": "0",
+            "name": "Rain State Piezo",
+        },
+    }
+    listener()
+
+    # Gateway entity is not re-created; only the two newly-appeared entities
+    # (a new hardware sensor and a new state binary sensor) are added.
+    assert async_add_entities.call_count == 2
+    second_batch = async_add_entities.call_args_list[1][0][0]
+    assert len(second_batch) == 2
+    assert any(isinstance(e, EcowittSensorOnlineBinarySensor) for e in second_batch)
+    assert any(isinstance(e, EcowittStateBinarySensor) for e in second_batch)
+
+    # Firing again with no new keys must not add anything further.
+    listener()
+    assert async_add_entities.call_count == 2
+
+
 def test_sensor_online_binary_sensor_init(mock_coordinator):
     """Test EcowittSensorOnlineBinarySensor initialization."""
     sensor_info = {
