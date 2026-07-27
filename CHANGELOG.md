@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.13] - 2026-07-27
+
+### Fixed
+- **Options flow crashed with `AttributeError: 'OptionsFlowHandler' object has no attribute 'config_entry'`**: A further Home Assistant core change removed the `config_entry` attribute from `OptionsFlow` entirely (a step beyond the read-only-property change already handled for issues #50/#42/#31). Opening the integration's "Configure" dialog raised this error immediately instead of showing the options form. `OptionsFlowHandler` now resolves its config entry via `hass.config_entries.async_get_entry(self.handler)` instead of relying on the removed attribute.
+
 ## [1.7.12] - 2026-07-27
 
 ### Fixed

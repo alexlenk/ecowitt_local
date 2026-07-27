@@ -184,11 +184,22 @@ class ConfigFlow(config_entries.ConfigFlow):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for Ecowitt Local."""
 
+    def _get_config_entry(self) -> config_entries.ConfigEntry:
+        """Look up the config entry this options flow is attached to.
+
+        `OptionsFlow.config_entry` is no longer available on the base class —
+        the entry must be resolved via `handler` (the config entry ID) instead.
+        See issues #50, #42, #31 for the earlier read-only-property regression;
+        newer Home Assistant versions removed the attribute entirely.
+        """
+        entry = self.hass.config_entries.async_get_entry(self.handler)
+        assert entry is not None
+        return entry
+
     def _get_option(self, key: str, default: Any) -> Any:
         """Read from options first, fall back to data, then default."""
-        return self.config_entry.options.get(
-            key, self.config_entry.data.get(key, default)
-        )
+        config_entry = self._get_config_entry()
+        return config_entry.options.get(key, config_entry.data.get(key, default))
 
     async def async_step_init(
         self, user_input: Optional[Dict[str, Any]] = None
