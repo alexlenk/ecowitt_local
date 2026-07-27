@@ -126,6 +126,65 @@ async def test_async_setup_entry(
 
 
 @pytest.mark.asyncio
+async def test_async_setup_entry_adds_new_entities_on_later_update(
+    hass: HomeAssistant, mock_coordinator, mock_config_entry
+):
+    """A sensor absent at setup time is added once it appears in a later poll.
+
+    Regression test for issue #207: a sensor with a flaky RF link can be
+    missing from coordinator data at platform setup, and previously would
+    never get an entity created for it.
+    """
+    hass.data = {DOMAIN: {"test_entry_id": mock_coordinator}}
+
+    mock_coordinator.get_all_sensors.return_value = {
+        "sensor.test_sensor": {
+            "sensor_key": "tempf",
+            "category": "sensor",
+            "name": "Temperature",
+            "state": 72.5,
+        },
+    }
+
+    entities_added = []
+
+    def mock_add_entities(entities, update_before_add):
+        entities_added.extend(entities)
+
+    await async_setup_entry(hass, mock_config_entry, mock_add_entities)
+    assert len(entities_added) == 1
+
+    # Capture the listener the coordinator was given so we can simulate a
+    # later poll that now includes a previously-missing sensor.
+    listener = mock_coordinator.async_add_listener.call_args[0][0]
+
+    mock_coordinator.get_all_sensors.return_value = {
+        "sensor.test_sensor": {
+            "sensor_key": "tempf",
+            "category": "sensor",
+            "name": "Temperature",
+            "state": 73.0,
+        },
+        "sensor.test_late_sensor": {
+            "sensor_key": "signal",
+            "category": "diagnostic",
+            "name": "Signal Strength",
+            "state": 100,
+        },
+    }
+    listener()
+
+    # Only the newly-appeared sensor should have been added; the known one
+    # is not re-created.
+    assert len(entities_added) == 2
+    assert entities_added[1].entity_id == "sensor.test_late_sensor"
+
+    # Firing again with no new keys must not add anything further.
+    listener()
+    assert len(entities_added) == 2
+
+
+@pytest.mark.asyncio
 async def test_sensor_unique_id_with_hardware_id(mock_coordinator):
     """Test sensor unique ID generation with hardware ID."""
     sensor_info = {
