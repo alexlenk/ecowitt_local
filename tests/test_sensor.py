@@ -126,6 +126,72 @@ async def test_async_setup_entry(
 
 
 @pytest.mark.asyncio
+async def test_async_setup_entry_adds_late_appearing_sensors(
+    hass: HomeAssistant, mock_coordinator, mock_config_entry
+):
+    """New entities are added when a sensor key appears on a later update.
+
+    Regression test: a sensor key (e.g. a signal-strength diagnostic entity
+    for a sensor with a weak RF link) can be transiently missing from the
+    coordinator's data on the very first refresh. Entities used to be created
+    only once at setup, so anything missing from that first snapshot was
+    permanently absent for the rest of the HA session even after its data
+    reappeared (issue #207). The platform now re-scans on every coordinator
+    update and adds entities for anything new.
+    """
+    hass.data = {DOMAIN: {"test_entry_id": mock_coordinator}}
+
+    sensor_data = {
+        "sensor.test_sensor": {
+            "sensor_key": "tempf",
+            "category": "sensor",
+            "name": "Temperature",
+            "state": 72.5,
+        },
+    }
+    mock_coordinator.get_all_sensors.return_value = sensor_data
+
+    captured_listener = {}
+
+    def fake_add_listener(callback):
+        captured_listener["callback"] = callback
+        return Mock()
+
+    mock_coordinator.async_add_listener.side_effect = fake_add_listener
+
+    entities_added = []
+
+    def mock_add_entities(entities, update_before_add):
+        entities_added.extend(entities)
+
+    await async_setup_entry(hass, mock_config_entry, mock_add_entities)
+    assert len(entities_added) == 1
+    entities_added.clear()
+
+    # A signal-strength diagnostic entity that was missing at setup shows up
+    # on a later poll (e.g. once the RF link recovers).
+    sensor_data = dict(sensor_data)
+    sensor_data["sensor.test_signal_strength"] = {
+        "sensor_key": "signal_d8174",
+        "category": "diagnostic",
+        "name": "Signal Strength",
+        "state": 75,
+    }
+    mock_coordinator.get_all_sensors.return_value = sensor_data
+
+    # Simulate the coordinator notifying listeners of a refresh.
+    captured_listener["callback"]()
+
+    assert len(entities_added) == 1
+    assert entities_added[0].entity_id == "sensor.test_signal_strength"
+    entities_added.clear()
+
+    # A further update with nothing new must not re-add anything.
+    captured_listener["callback"]()
+    assert entities_added == []
+
+
+@pytest.mark.asyncio
 async def test_sensor_unique_id_with_hardware_id(mock_coordinator):
     """Test sensor unique ID generation with hardware ID."""
     sensor_info = {

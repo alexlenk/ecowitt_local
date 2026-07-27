@@ -68,24 +68,45 @@ async def async_setup_entry(
     """Set up Ecowitt Local sensor entities."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    # Create sensor entities
-    entities = []
+    known_entity_ids: set[str] = set()
 
-    sensor_data = coordinator.get_all_sensors()
-    _LOGGER.debug("Found %d total sensors in coordinator data", len(sensor_data))
-    for entity_id, sensor_info in sensor_data.items():
-        category = sensor_info.get("category")
-        _LOGGER.debug(
-            "Sensor %s: category=%s, sensor_key=%s",
-            entity_id,
-            category,
-            sensor_info.get("sensor_key"),
-        )
-        if category in ("sensor", "battery", "system", "diagnostic"):
-            entities.append(EcowittLocalSensor(coordinator, entity_id, sensor_info))
+    @callback
+    def _async_add_new_sensors() -> None:
+        """Create entities for any sensor keys not yet added to HA.
 
-    _LOGGER.info("Setting up %d Ecowitt Local sensor entities", len(entities))
-    async_add_entities(entities, True)
+        A sensor key can be transiently absent from the coordinator's data on
+        a single poll (e.g. signal strength reads "--" for a sensor with a
+        weak RF link right after a restart). Entities used to be created only
+        once, from whichever keys were present on the very first refresh, so
+        a key missing at that moment never got an entity for the rest of the
+        session even after the data reappeared. Re-scanning on every
+        coordinator update catches sensors that show up late.
+        """
+        sensor_data = coordinator.get_all_sensors()
+        _LOGGER.debug("Found %d total sensors in coordinator data", len(sensor_data))
+        new_entities = []
+        for entity_id, sensor_info in sensor_data.items():
+            if entity_id in known_entity_ids:
+                continue
+            category = sensor_info.get("category")
+            _LOGGER.debug(
+                "Sensor %s: category=%s, sensor_key=%s",
+                entity_id,
+                category,
+                sensor_info.get("sensor_key"),
+            )
+            if category in ("sensor", "battery", "system", "diagnostic"):
+                known_entity_ids.add(entity_id)
+                new_entities.append(
+                    EcowittLocalSensor(coordinator, entity_id, sensor_info)
+                )
+
+        if new_entities:
+            _LOGGER.info("Adding %d Ecowitt Local sensor entities", len(new_entities))
+            async_add_entities(new_entities, True)
+
+    _async_add_new_sensors()
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_sensors))
 
 
 class EcowittLocalSensor(

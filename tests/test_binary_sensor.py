@@ -114,6 +114,81 @@ async def test_async_setup_entry(mock_coordinator, mock_config_entry):
     assert len(gateway_entities) == 1
 
 
+@pytest.mark.asyncio
+async def test_async_setup_entry_adds_late_appearing_sensors(
+    mock_coordinator, mock_config_entry
+):
+    """New entities are added when sensors appear on a later coordinator update.
+
+    Regression test: a sensor key can be transiently absent from the
+    coordinator's data on the very first refresh (e.g. a weak-RF-link
+    hardware ID whose signal reads "--" right after a restart). Entities used
+    to be created only once at setup, so anything missing from that first
+    snapshot was never added for the rest of the session even once its data
+    reappeared (issue #207). The platform now re-scans on every coordinator
+    update and adds entities for anything new.
+    """
+    hass = Mock(spec=HomeAssistant)
+    hass.data = {DOMAIN: {"test_entry": mock_coordinator}}
+
+    sensor_data = {
+        "sensor.test_soil_d8174": {
+            "hardware_id": "D8174",
+            "category": "sensor",
+            "sensor_key": "soilmoisture1",
+            "state": "45",
+        },
+    }
+    mock_coordinator.get_all_sensors.return_value = sensor_data
+
+    captured_listener = {}
+
+    def fake_add_listener(callback):
+        captured_listener["callback"] = callback
+        return Mock()
+
+    mock_coordinator.async_add_listener.side_effect = fake_add_listener
+
+    async_add_entities = AsyncMock()
+    await async_setup_entry(hass, mock_config_entry, async_add_entities)
+
+    # Initial setup only creates entities for what was present at that moment.
+    async_add_entities.assert_called_once()
+    initial_entities = async_add_entities.call_args[0][0]
+    assert len(initial_entities) == 2  # D8174 online + gateway online
+    async_add_entities.reset_mock()
+
+    # A hardware sensor and a binary state sensor show up on a later poll.
+    sensor_data = dict(sensor_data)
+    sensor_data["sensor.test_soil_e243"] = {
+        "hardware_id": "E243",
+        "category": "sensor",
+        "sensor_key": "soilmoisture2",
+        "state": "50",
+    }
+    sensor_data["binary_sensor.test_rain_piezo"] = {
+        "hardware_id": None,
+        "category": "binary",
+        "sensor_key": "srain_piezo",
+        "state": True,
+    }
+    mock_coordinator.get_all_sensors.return_value = sensor_data
+
+    # Simulate the coordinator notifying listeners of a refresh.
+    captured_listener["callback"]()
+
+    async_add_entities.assert_called_once()
+    new_entities = async_add_entities.call_args[0][0]
+    assert len(new_entities) == 2  # E243 online + the new state sensor
+    assert any(isinstance(e, EcowittSensorOnlineBinarySensor) for e in new_entities)
+    assert any(isinstance(e, EcowittStateBinarySensor) for e in new_entities)
+    async_add_entities.reset_mock()
+
+    # A further update with nothing new must not re-add anything.
+    captured_listener["callback"]()
+    async_add_entities.assert_not_called()
+
+
 def test_sensor_online_binary_sensor_init(mock_coordinator):
     """Test EcowittSensorOnlineBinarySensor initialization."""
     sensor_info = {

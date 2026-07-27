@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.12] - 2026-07-27
+
+### Fixed
+- **Diagnostic and status entities (signal strength, hardware ID, channel, and online-status) could go permanently missing for a sensor after a restart or reload**: Home Assistant entities for this integration were created only once, from whatever sensor keys the coordinator happened to return on its very first refresh. A sensor with a weak RF link can transiently report an empty/`"--"` signal value right at that moment (a real, expected condition — the same one that causes normal 10-minute flapping of the signal-strength reading). If that happened to be the case during setup, the corresponding `sensor.ecowitt_signal_strength_*` entity (and, less commonly, other diagnostic or online-status entities) was never created for the rest of the HA session — it showed up as a stuck `unavailable`/`restored` entity even after the gateway started reporting good data again minutes later, because no live entity object existed to receive the update. A config-entry reload could "fix" one sensor this way while breaking a different one that happened to have a bad reading at that new reload's exact moment. The `sensor` and `binary_sensor` platforms now re-scan the coordinator's data on every update (not just at setup) and add entities for any sensor keys that weren't present yet, so a sensor whose data was only briefly unavailable gets its entity created as soon as the data reappears rather than never. (issue #207, reported by @Arise)
+- **Options flow crashed with `AttributeError: 'OptionsFlowHandler' object has no attribute 'config_entry'`**: A further Home Assistant core change removed the `config_entry` attribute from `OptionsFlow` entirely (following on from the read-only-property change already handled for issues #50/#42/#31). Opening the integration's "Configure" dialog would fail outright. `OptionsFlowHandler` now resolves its config entry via `hass.config_entries.async_get_entry(self.handler)` instead of relying on the removed attribute.
+
 ## [1.7.11] - 2026-07-11
 
 ### Fixed
