@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.14] - 2026-07-28
+
+### Fixed
+- **Battery entity icon never adjusts to the actual battery level**: The dynamic battery icon (`mdi:battery-outline` through `mdi:battery`, scaled to the reported percentage) only applied when the entity's `category` was the literal string `"battery"`. In real coordinator output, battery entities are always assigned `category = "diagnostic"` (they were intentionally moved into the diagnostic category), so that condition never matched and every battery entity fell back to the static `mdi:battery` icon regardless of charge level. The fix checks `device_class == SensorDeviceClass.BATTERY` instead of the category string — consistent with how the icon property itself already determines whether an entity is a battery sensor — so the icon now correctly reflects the reported battery percentage. (issue #217)
+
 ## [1.7.13] - 2026-07-27
 
 ### Fixed

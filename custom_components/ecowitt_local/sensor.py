@@ -329,7 +329,10 @@ class EcowittLocalSensor(
             # We no longer propagate the raw batt bar from sensors_info (which was 0-5,
             # not 0-100) because that caused Battery State Card to show e.g. 5% instead
             # of 100% for a full WH90 battery.
-            if self._category == "battery" and self._attr_native_value is not None:
+            if (
+                self.device_class == SensorDeviceClass.BATTERY
+                and self._attr_native_value is not None
+            ):
                 try:
                     extra_attrs[ATTR_BATTERY_LEVEL] = float(self._attr_native_value)
                 except (ValueError, TypeError):

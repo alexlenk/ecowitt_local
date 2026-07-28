@@ -400,7 +400,7 @@ async def test_battery_sensor_attributes(mock_coordinator):
     """Test battery sensor specific attributes."""
     sensor_info = {
         "sensor_key": "soilbatt1",
-        "category": "battery",
+        "category": "diagnostic",
         "name": "Soil Battery",
         "state": 85,
         "device_class": "battery",
@@ -740,7 +740,7 @@ async def test_extra_state_attributes_battery_entity_invalid_state(mock_coordina
     sensor_info = {
         "sensor_key": "soilbatt1",
         "hardware_id": "D8174",
-        "category": "battery",
+        "category": "diagnostic",
         "device_class": "battery",
         "name": "Soil Battery",
         "state": "invalid",
@@ -759,6 +759,33 @@ async def test_extra_state_attributes_battery_entity_invalid_state(mock_coordina
 
     # float("invalid") raises ValueError — battery_level must NOT be in attributes
     assert ATTR_BATTERY_LEVEL not in attributes
+
+
+@pytest.mark.asyncio
+async def test_extra_state_attributes_battery_entity_valid_state(mock_coordinator):
+    """Battery entities are diagnostic-category in real coordinator data (issue #217) —
+    battery_level must be derived from device_class, not category."""
+    sensor_info = {
+        "sensor_key": "soilbatt1",
+        "hardware_id": "D8174",
+        "category": "diagnostic",
+        "device_class": "battery",
+        "name": "Soil Battery",
+        "state": 85,
+        "attributes": {},
+    }
+
+    mock_coordinator.get_sensor_data.return_value = sensor_info
+
+    sensor = EcowittLocalSensor(
+        coordinator=mock_coordinator,
+        entity_id="sensor.test_battery",
+        sensor_info=sensor_info,
+    )
+
+    attributes = sensor.extra_state_attributes
+
+    assert attributes[ATTR_BATTERY_LEVEL] == 85.0
 
 
 @pytest.mark.asyncio
@@ -942,7 +969,7 @@ async def test_icon_battery_levels(mock_coordinator):
         sensor_info = {
             "sensor_key": "soilbatt1",
             "hardware_id": "D8174",
-            "category": "battery",
+            "category": "diagnostic",
             "device_class": "battery",
             "name": "Soil Battery",
             "state": battery_level,
@@ -962,13 +989,13 @@ async def test_icon_battery_levels(mock_coordinator):
 
 @pytest.mark.asyncio
 async def test_icon_battery_no_level(mock_coordinator):
-    """Test icon for battery sensor without level."""
+    """Test icon for battery sensor without a known state (native value is None)."""
     sensor_info = {
         "sensor_key": "soilbatt1",
         "category": "diagnostic",
         "device_class": "battery",
         "name": "Soil Battery",
-        "state": 85,
+        "state": None,
         "attributes": {},
     }
 
