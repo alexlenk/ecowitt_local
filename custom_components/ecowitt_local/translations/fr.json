@@ -1,0 +1,68 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuration d'Ecowitt Local",
+        "description": "Configurez la connexion à votre passerelle Ecowitt. Saisissez l'adresse IP de votre passerelle Ecowitt.",
+        "data": {
+          "host": "Adresse IP de la passerelle",
+          "password": "Mot de passe de la passerelle (facultatif)"
+        },
+        "data_description": {
+          "host": "Adresse IP ou nom d'hôte de la passerelle Ecowitt (ex. : 192.168.1.100)",
+          "password": "Mot de passe pour l'interface web de la passerelle (laisser vide si aucun)"
+        }
+      },
+      "options": {
+        "title": "Options d'Ecowitt Local",
+        "description": "Configurez les intervalles d'interrogation et les options des capteurs.",
+        "data": {
+          "scan_interval": "Intervalle d'interrogation des données en direct (secondes)",
+          "mapping_interval": "Intervalle de mise à jour du mappage des capteurs (secondes)",
+          "include_inactive": "Inclure les capteurs inactifs"
+        },
+        "data_description": {
+          "scan_interval": "Fréquence d'interrogation des données en direct (30 à 300 secondes)",
+          "mapping_interval": "Fréquence de rafraîchissement du mappage des capteurs (300 à 3600 secondes)",
+          "include_inactive": "Inclure les capteurs actuellement hors ligne ou sans données"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Échec de la connexion à la passerelle. Veuillez vérifier l'adresse IP et vous assurer que la passerelle est accessible.",
+      "invalid_auth": "Mot de passe incorrect. Veuillez vérifier le mot de passe de la passerelle.",
+      "unknown": "Une erreur inattendue est survenue. Veuillez réessayer."
+    },
+    "abort": {
+      "already_configured": "Cette passerelle est déjà configurée."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options d'Ecowitt Local",
+        "description": "Configurez les intervalles d'interrogation et les options des capteurs.",
+        "data": {
+          "scan_interval": "Intervalle d'interrogation des données en direct (secondes)",
+          "mapping_interval": "Intervalle de mise à jour du mappage des capteurs (secondes)",
+          "include_inactive": "Inclure les capteurs inactifs"
+        },
+        "data_description": {
+          "scan_interval": "Fréquence d'interrogation des données en direct (30 à 300 secondes)",
+          "mapping_interval": "Fréquence de rafraîchissement du mappage des capteurs (300 à 3600 secondes)",
+          "include_inactive": "Inclure les capteurs actuellement hors ligne ou sans données"
+        }
+      }
+    }
+  },
+  "services": {
+    "refresh_mapping": {
+      "name": "Rafraîchir le mappage des capteurs",
+      "description": "Forcer le rafraîchissement du mappage des identifiants matériels des capteurs depuis la passerelle"
+    },
+    "update_data": {
+      "name": "Mettre à jour les données en direct",
+      "description": "Forcer la mise à jour immédiate des données en direct des capteurs depuis la passerelle"
+    }
+  }
+}
