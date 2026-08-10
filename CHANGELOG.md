@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.16] - 2026-08-10
+
+### Fixed
+- **`last_seen` attribute forced a recorder write on every poll for every entity**: The per-entity `last_seen` attribute (populated from the sensor's `last_update` timestamp) changed on every coordinator poll regardless of whether the underlying sensor value changed, causing Home Assistant's recorder to log a new `states`/`state_attributes` row every poll cycle for every entity. On a busy install this dominated recorder database growth. `last_seen` is now marked as an unrecorded attribute (`_unrecorded_attributes`) on sensor and per-sensor online binary-sensor entities, so it's still visible live in the entity's current state but is no longer persisted to history/logbook on every poll. The attribute itself is unchanged and continues to work in dashboards and templates — this only affects what gets written to the recorder database. (issue #223)
+
 ## [1.7.15] - 2026-08-01
 
 ### Added

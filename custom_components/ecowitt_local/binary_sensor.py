@@ -119,6 +119,11 @@ class EcowittSensorOnlineBinarySensor(
 ):
     """Binary sensor for individual sensor online/offline status."""
 
+    # last_seen changes on every poll regardless of whether the sensor value
+    # changed, which would otherwise force a recorder write every poll for
+    # every entity. HA already tracks per-entity poll times via last_reported.
+    _unrecorded_attributes = frozenset({ATTR_LAST_SEEN})
+
     def __init__(
         self,
         coordinator: EcowittLocalDataUpdateCoordinator,

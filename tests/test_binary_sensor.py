@@ -456,6 +456,11 @@ def test_sensor_extra_state_attributes(mock_coordinator):
     assert attributes[ATTR_LAST_SEEN] == "2023-01-01T12:00:00Z"
 
 
+def test_sensor_online_last_seen_excluded_from_recorder():
+    """last_seen changes every poll; it must not force a recorder write."""
+    assert ATTR_LAST_SEEN in EcowittSensorOnlineBinarySensor._unrecorded_attributes
+
+
 def test_sensor_extra_state_attributes_invalid_values(mock_coordinator):
     """Test extra_state_attributes with invalid battery/signal values."""
     entity = EcowittSensorOnlineBinarySensor(
