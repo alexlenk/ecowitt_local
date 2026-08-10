@@ -670,6 +670,11 @@ async def test_extra_state_attributes_basic(mock_coordinator):
     assert attributes[ATTR_SENSOR_TYPE] == "sensor"
 
 
+def test_last_seen_excluded_from_recorder():
+    """last_seen changes every poll; it must not force a recorder write."""
+    assert ATTR_LAST_SEEN in EcowittLocalSensor._unrecorded_attributes
+
+
 @pytest.mark.asyncio
 async def test_extra_state_attributes_hardware(mock_coordinator):
     """Test extra state attributes with hardware info."""
