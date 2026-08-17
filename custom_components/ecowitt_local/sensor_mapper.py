@@ -851,6 +851,7 @@ class SensorMapper:
             "lightning": "lightning",
             "batt": "battery",
             "cap_volt": "capacitor_voltage",  # must precede generic "volt"
+            "lds_voltage": "lds_voltage",  # must precede generic "volt"
             "volt": "voltage",
             "solar_lux": "solar_lux",  # must precede generic "solar"
             "solar": "solar_radiation",
@@ -870,6 +871,8 @@ class SensorMapper:
             return "pm25_battery"
         elif "leak" in battery_key:
             return "leak_battery"
+        elif "lds" in battery_key:
+            return "lds_battery"
         elif "wh57" in battery_key:
             return "lightning_battery"
         elif "wh40" in battery_key:

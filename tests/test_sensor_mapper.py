@@ -617,6 +617,22 @@ def test_wh54_alias_lds():
     assert "lds_total_heat_ch1" in keys
 
 
+def test_lds_orphan_entity_ids_do_not_collide_with_other_channel_devices():
+    """LDS01/WH54 devices that never appear in get_sensors_info (issue #220) still
+    generate distinct entity IDs for their battery/voltage keys instead of colliding
+    with other unregistered channel-based sensors (e.g. WH34 tf_battN, WH35 leaf_battN)
+    that also fall back to a bare "chN" identifier."""
+    mapper = SensorMapper()
+    battery_entity_id, _ = mapper.generate_entity_id("lds_batt1", None)
+    voltage_entity_id, _ = mapper.generate_entity_id("lds_voltage_ch1", None)
+    assert battery_entity_id == "sensor.ecowitt_lds_battery_ch1"
+    assert voltage_entity_id == "sensor.ecowitt_lds_voltage_ch1"
+
+    tf_battery_entity_id, _ = mapper.generate_entity_id("tf_batt1", None)
+    leaf_battery_entity_id, _ = mapper.generate_entity_id("leaf_batt1", None)
+    assert battery_entity_id not in (tf_battery_entity_id, leaf_battery_entity_id)
+
+
 def test_wh65_uses_wh69_key_list():
     """WH65 with img='wh65' (some firmware variants) maps to the same key list as WH69."""
     mapper = SensorMapper()

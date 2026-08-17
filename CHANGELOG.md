@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.17] - 2026-08-17
+
+### Fixed
+- **LDS01 liquid depth sensor entities could collide with other unregistered channel sensors**: The LDS01 (Ecowitt's current liquid-depth sensor) shares its livedata format with the already-supported WH54, but on some gateways it never appears in `get_sensors_info` at all — not even as an `FFFFFFFE` placeholder — so the integration has no hardware ID to build a dedicated device from. In that case entities fall back to a generic `sensor.ecowitt_<type>_ch{N}` ID. For the LDS battery and voltage keys specifically, that fallback collapsed to the same generic `sensor.ecowitt_battery_ch{N}` / `sensor.ecowitt_voltage_ch{N}` IDs used by other unregistered channel-based sensors (e.g. WH34 temperature-probe battery, WH35 leaf-wetness battery), so an LDS01 sharing a channel number with one of those would silently overwrite or get renamed away from it in the entity registry. LDS battery and voltage keys now resolve to distinct `lds_battery`/`lds_voltage` entity-ID segments (e.g. `sensor.ecowitt_lds_battery_ch1`), so they can no longer collide with another sensor type's fallback entity. (issue #220)
+
 ## [1.7.16] - 2026-08-10
 
 ### Fixed
