@@ -463,9 +463,7 @@ def test_sensor_online_last_seen_excluded_from_recorder():
     writing a `states` row every poll — the attribute has to be absent from
     the dict entirely so unchanged-value polls compare equal (issue #223).
     """
-    assert (
-        ATTR_LAST_SEEN not in EcowittSensorOnlineBinarySensor._unrecorded_attributes
-    )
+    assert ATTR_LAST_SEEN not in EcowittSensorOnlineBinarySensor._unrecorded_attributes
 
 
 def test_sensor_extra_state_attributes_invalid_values(mock_coordinator):
