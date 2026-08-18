@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.18] - 2026-08-18
+
+### Fixed
+- **`last_seen`/`last_update` still forced a recorder `states` row every poll after v1.7.16**: The v1.7.16 fix marked `last_seen` as `_unrecorded_attributes`, which stops the *attribute blob* from being persisted to the `state_attributes` table, but doesn't affect whether Home Assistant considers the poll a state change in the first place — that comparison happens on the full attribute dict before `_unrecorded_attributes` is ever consulted. Since `last_seen` still changed every poll, the attributes dict was never equal to the previous poll's, so HA still emitted a full `state_changed` event and the recorder still wrote a `states` row every poll, even when the sensor's value hadn't moved. The `last_seen` attribute (and the equivalent raw `last_update` value previously leaking through on `EcowittStateBinarySensor`, e.g. `binary_sensor.ecowitt_rain_*`) is now removed from entity attributes entirely instead of merely marked unrecorded, so unchanged-value polls compare equal and take Home Assistant's quiet `last_reported`-only path with no recorder write at all. Home Assistant's built-in `last_reported` timestamp (visible in the entity's more-info dialog, core since 2024.7) already answers "when did we last hear from this sensor" without this problem. (issue #223)
+
 ## [1.7.17] - 2026-08-17
 
 ### Fixed

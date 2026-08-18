@@ -671,8 +671,13 @@ async def test_extra_state_attributes_basic(mock_coordinator):
 
 
 def test_last_seen_excluded_from_recorder():
-    """last_seen changes every poll; it must not force a recorder write."""
-    assert ATTR_LAST_SEEN in EcowittLocalSensor._unrecorded_attributes
+    """last_seen changes every poll and must never appear in attributes.
+
+    Marking it _unrecorded_attributes alone doesn't stop the recorder from
+    writing a `states` row every poll — the attribute has to be absent from
+    the dict entirely so unchanged-value polls compare equal (issue #223).
+    """
+    assert ATTR_LAST_SEEN not in EcowittLocalSensor._unrecorded_attributes
 
 
 @pytest.mark.asyncio
@@ -709,7 +714,7 @@ async def test_extra_state_attributes_hardware(mock_coordinator):
         ATTR_BATTERY_LEVEL not in attributes
     )  # Non-battery entities don't get battery_level
     assert attributes[ATTR_SIGNAL_STRENGTH] == 4
-    assert attributes[ATTR_LAST_SEEN] == "2023-01-01T12:00:00Z"
+    assert ATTR_LAST_SEEN not in attributes
 
 
 @pytest.mark.asyncio
