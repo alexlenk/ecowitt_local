@@ -34,7 +34,6 @@ from .const import (
     ATTR_DEVICE_MODEL,
     ATTR_FIRMWARE_VERSION,
     ATTR_HARDWARE_ID,
-    ATTR_LAST_SEEN,
     ATTR_SENSOR_TYPE,
     ATTR_SIGNAL_STRENGTH,
     DOMAIN,
@@ -107,11 +106,6 @@ class EcowittLocalSensor(
     CoordinatorEntity[EcowittLocalDataUpdateCoordinator], SensorEntity
 ):
     """Representation of an Ecowitt Local sensor."""
-
-    # last_seen changes on every poll regardless of whether the sensor value
-    # changed, which would otherwise force a recorder write every poll for
-    # every entity. HA already tracks per-entity poll times via last_reported.
-    _unrecorded_attributes = frozenset({ATTR_LAST_SEEN})
 
     def __init__(
         self,
@@ -348,10 +342,6 @@ class EcowittLocalSensor(
                     extra_attrs[ATTR_SIGNAL_STRENGTH] = signal_strength
                 except (ValueError, TypeError):
                     pass
-
-        # Add timing information
-        if attributes.get("last_update"):
-            extra_attrs[ATTR_LAST_SEEN] = attributes["last_update"]
 
         # Add sensor type
         extra_attrs[ATTR_SENSOR_TYPE] = self._category

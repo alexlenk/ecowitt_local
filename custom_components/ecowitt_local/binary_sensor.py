@@ -21,7 +21,6 @@ from .const import (
     ATTR_CHANNEL,
     ATTR_DEVICE_MODEL,
     ATTR_HARDWARE_ID,
-    ATTR_LAST_SEEN,
     ATTR_SENSOR_TYPE,
     ATTR_SIGNAL_STRENGTH,
     BINARY_SENSORS,
@@ -118,11 +117,6 @@ class EcowittSensorOnlineBinarySensor(
     CoordinatorEntity[EcowittLocalDataUpdateCoordinator], BinarySensorEntity
 ):
     """Binary sensor for individual sensor online/offline status."""
-
-    # last_seen changes on every poll regardless of whether the sensor value
-    # changed, which would otherwise force a recorder write every poll for
-    # every entity. HA already tracks per-entity poll times via last_reported.
-    _unrecorded_attributes = frozenset({ATTR_LAST_SEEN})
 
     def __init__(
         self,
@@ -293,9 +287,6 @@ class EcowittSensorOnlineBinarySensor(
                         )
                     except (ValueError, TypeError):
                         pass
-                if sensor_attributes.get("last_update"):
-                    attributes[ATTR_LAST_SEEN] = sensor_attributes["last_update"]
-
                 # Only need info from one sensor with this hardware ID
                 break
 
@@ -448,7 +439,11 @@ class EcowittStateBinarySensor(
         attrs = info.get("attributes", {})
         return {
             ATTR_HARDWARE_ID: self._hardware_id,
-            **{k: v for k, v in attrs.items() if k not in ("hardware_id",)},
+            **{
+                k: v
+                for k, v in attrs.items()
+                if k not in ("hardware_id", "last_update")
+            },
         }
 
     @callback

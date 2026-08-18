@@ -453,12 +453,19 @@ def test_sensor_extra_state_attributes(mock_coordinator):
     assert attributes[ATTR_DEVICE_MODEL] == "WH51"
     assert attributes[ATTR_BATTERY_LEVEL] == 85.0
     assert attributes[ATTR_SIGNAL_STRENGTH] == 3
-    assert attributes[ATTR_LAST_SEEN] == "2023-01-01T12:00:00Z"
+    assert ATTR_LAST_SEEN not in attributes
 
 
 def test_sensor_online_last_seen_excluded_from_recorder():
-    """last_seen changes every poll; it must not force a recorder write."""
-    assert ATTR_LAST_SEEN in EcowittSensorOnlineBinarySensor._unrecorded_attributes
+    """last_seen changes every poll and must never appear in attributes.
+
+    Marking it _unrecorded_attributes alone doesn't stop the recorder from
+    writing a `states` row every poll — the attribute has to be absent from
+    the dict entirely so unchanged-value polls compare equal (issue #223).
+    """
+    assert (
+        ATTR_LAST_SEEN not in EcowittSensorOnlineBinarySensor._unrecorded_attributes
+    )
 
 
 def test_sensor_extra_state_attributes_invalid_values(mock_coordinator):
@@ -817,7 +824,7 @@ def test_state_binary_sensor_extra_state_attributes(mock_coordinator):
     attrs = entity.extra_state_attributes
     assert attrs[ATTR_HARDWARE_ID] == "ABC123"
     assert attrs["sensor_key"] == "srain_piezo"
-    assert attrs["last_update"] == "2024-01-01"
+    assert "last_update" not in attrs
 
 
 def test_state_binary_sensor_handle_coordinator_update(mock_coordinator):
