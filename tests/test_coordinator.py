@@ -1634,6 +1634,181 @@ async def test_coordinator_add_diagnostic_sensors(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_add_rssi_and_signal_quality_sensors(coordinator):
+    """Test adding RSSI and Signal Quality sensors from a valid rssi field."""
+    mock_mappings = [
+        {
+            "id": "D8174",
+            "img": "WH51",
+            "name": "Soil moisture CH1",
+            "batt": "85",
+            "signal": "4",
+            "rssi": "-71",
+            "channel": "1",
+        }
+    ]
+
+    coordinator.sensor_mapper.update_mapping(mock_mappings)
+
+    mock_live_data = {"common_list": [{"id": "soilmoisture1", "val": "45"}]}
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=mock_mappings)
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    rssi_found = False
+    quality_found = False
+
+    for sensor_data in sensors.values():
+        sensor_key = sensor_data.get("sensor_key")
+        if sensor_key == "rssi_D8174":
+            rssi_found = True
+            assert sensor_data["state"] == -71
+            assert sensor_data["unit_of_measurement"] == "dBm"
+            assert sensor_data["device_class"] == "signal_strength"
+            assert sensor_data["category"] == "diagnostic"
+        elif sensor_key == "signal_quality_D8174":
+            quality_found = True
+            # 2 * (-71 + 100) = 58
+            assert sensor_data["state"] == 58
+            assert sensor_data["unit_of_measurement"] == "%"
+            assert sensor_data["category"] == "diagnostic"
+
+    assert rssi_found
+    assert quality_found
+
+
+@pytest.mark.asyncio
+async def test_coordinator_rssi_missing_or_dash(coordinator):
+    """Test that no RSSI/Signal Quality sensors are created when rssi is absent or '--'."""
+    mock_mappings = [
+        {
+            "id": "D8174",
+            "img": "WH51",
+            "name": "Soil moisture CH1",
+            "batt": "85",
+            "signal": "4",
+            "rssi": "--",
+            "channel": "1",
+        }
+    ]
+
+    coordinator.sensor_mapper.update_mapping(mock_mappings)
+
+    mock_live_data = {"common_list": [{"id": "soilmoisture1", "val": "45"}]}
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=mock_mappings)
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    for sensor_data in sensors.values():
+        assert sensor_data.get("sensor_key") not in (
+            "rssi_D8174",
+            "signal_quality_D8174",
+        )
+
+
+@pytest.mark.asyncio
+async def test_coordinator_rssi_invalid_value(coordinator):
+    """Test that a non-numeric rssi value is handled gracefully (no sensors created)."""
+    mock_mappings = [
+        {
+            "id": "D8174",
+            "img": "WH51",
+            "name": "Soil moisture CH1",
+            "batt": "85",
+            "signal": "4",
+            "rssi": "not-a-number",
+            "channel": "1",
+        }
+    ]
+
+    coordinator.sensor_mapper.update_mapping(mock_mappings)
+
+    mock_live_data = {"common_list": [{"id": "soilmoisture1", "val": "45"}]}
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=mock_mappings)
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    for sensor_data in sensors.values():
+        assert sensor_data.get("sensor_key") not in (
+            "rssi_D8174",
+            "signal_quality_D8174",
+        )
+
+
+@pytest.mark.asyncio
+async def test_coordinator_signal_quality_clamping(coordinator):
+    """Test signal quality percentage is clamped to 0-100 at the extremes."""
+    mock_mappings = [
+        {
+            "id": "D8174",
+            "img": "WH51",
+            "name": "Soil moisture CH1",
+            "batt": "85",
+            "signal": "4",
+            "rssi": "-30",  # 2*(-30+100) = 140 -> clamps to 100
+            "channel": "1",
+        }
+    ]
+
+    coordinator.sensor_mapper.update_mapping(mock_mappings)
+
+    mock_live_data = {"common_list": [{"id": "soilmoisture1", "val": "45"}]}
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=mock_mappings)
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    for sensor_data in sensors.values():
+        if sensor_data.get("sensor_key") == "signal_quality_D8174":
+            assert sensor_data["state"] == 100
+            return
+    pytest.fail("Signal quality entity not found")
+
+
+@pytest.mark.asyncio
+async def test_coordinator_signal_quality_clamping_lower_bound(coordinator):
+    """Test signal quality percentage clamps to 0 for very weak rssi values."""
+    mock_mappings = [
+        {
+            "id": "D8174",
+            "img": "WH51",
+            "name": "Soil moisture CH1",
+            "batt": "85",
+            "signal": "4",
+            "rssi": "-150",  # 2*(-150+100) = -100 -> clamps to 0
+            "channel": "1",
+        }
+    ]
+
+    coordinator.sensor_mapper.update_mapping(mock_mappings)
+
+    mock_live_data = {"common_list": [{"id": "soilmoisture1", "val": "45"}]}
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=mock_mappings)
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    for sensor_data in sensors.values():
+        if sensor_data.get("sensor_key") == "signal_quality_D8174":
+            assert sensor_data["state"] == 0
+            return
+    pytest.fail("Signal quality entity not found")
+
+
+@pytest.mark.asyncio
 async def test_coordinator_include_inactive_sensors(coordinator):
     """Test including inactive sensors when configured."""
     # Enable include_inactive

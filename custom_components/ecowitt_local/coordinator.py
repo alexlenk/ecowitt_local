@@ -1376,6 +1376,73 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     signal,
                 )
 
+            # Add RSSI and Signal Quality sensors from the raw dBm value in
+            # get_sensors_info. The bucketed "signal" field above (0-4) is too
+            # coarse to distinguish a marginal link from an excellent one — two
+            # sensors can both report signal=4 (100%) while one is at -36 dBm
+            # and the other at -101 dBm (issue #228).
+            raw_rssi = hardware_info.get("rssi")
+            try:
+                rssi_val = (
+                    int(str(raw_rssi).strip())
+                    if raw_rssi not in (None, "", "--")
+                    else None
+                )
+            except (TypeError, ValueError):
+                rssi_val = None
+
+            if rssi_val is not None:
+                rssi_entity_id = f"sensor.ecowitt_rssi_{hardware_id.lower()}"
+                sensors_data[rssi_entity_id] = {
+                    "entity_id": rssi_entity_id,
+                    "name": "RSSI",
+                    "state": rssi_val,
+                    "unit_of_measurement": "dBm",
+                    "device_class": "signal_strength",
+                    "state_class": "measurement",
+                    "category": "diagnostic",
+                    "sensor_key": f"rssi_{hardware_id}",
+                    "hardware_id": hardware_id,
+                    "raw_value": raw_rssi,
+                    "attributes": {
+                        "sensor_key": f"rssi_{hardware_id}",
+                        "last_update": datetime.now().isoformat(),
+                        "hardware_id": hardware_id,
+                        "rssi": raw_rssi,
+                    },
+                }
+
+                quality_pct = max(0, min(100, 2 * (rssi_val + 100)))
+                quality_entity_id = (
+                    f"sensor.ecowitt_signal_quality_{hardware_id.lower()}"
+                )
+                sensors_data[quality_entity_id] = {
+                    "entity_id": quality_entity_id,
+                    "name": "Signal Quality",
+                    "state": quality_pct,
+                    "unit_of_measurement": "%",
+                    "device_class": None,
+                    "state_class": "measurement",
+                    "category": "diagnostic",
+                    "sensor_key": f"signal_quality_{hardware_id}",
+                    "hardware_id": hardware_id,
+                    "raw_value": rssi_val,
+                    "attributes": {
+                        "sensor_key": f"signal_quality_{hardware_id}",
+                        "last_update": datetime.now().isoformat(),
+                        "hardware_id": hardware_id,
+                        "rssi": rssi_val,
+                        "formula": "2*(rssi_dbm+100), clamped 0-100 (linear, -100..-50 dBm)",
+                    },
+                }
+                _LOGGER.debug(
+                    "Added RSSI/signal quality sensors for hardware_id: %s "
+                    "(rssi: %s dBm, quality: %s%%)",
+                    hardware_id,
+                    rssi_val,
+                    quality_pct,
+                )
+
             # Add Hardware ID diagnostic sensor
             hardware_id_entity_id = f"sensor.ecowitt_hardware_id_{hardware_id.lower()}"
             sensors_data[hardware_id_entity_id] = {

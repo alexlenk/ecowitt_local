@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.19] - 2026-08-20
+
+### Added
+- **RSSI and Signal Quality diagnostic sensors**: `get_sensors_info` reports both a coarse `signal` bar (0-4, exposed today as the "Signal Strength" %) and a raw `rssi` dBm value for every sensor, but only `signal` was ever read. The 0-4 scale is too coarse to tell a marginal link from an excellent one — two sensors can both report `signal: 4` (100%) while one sits at -36 dBm and the other at -101 dBm. Two new diagnostic entities now surface the raw value: `sensor.ecowitt_rssi_<hw>` (the raw dBm reading, `device_class: signal_strength`) and `sensor.ecowitt_signal_quality_<hw>` (a linear 0-100% derived from rssi: `2*(rssi_dbm+100)`, clamped, so -100 dBm → 0% and -50 dBm → 100%). Both are skipped when the gateway doesn't report `rssi` for a sensor (missing field or `"--"`) or reports a non-numeric value. (issue #228)
+
 ## [1.7.18] - 2026-08-18
 
 ### Fixed

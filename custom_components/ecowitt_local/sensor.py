@@ -408,6 +408,19 @@ class EcowittLocalSensor(
                     return "mdi:battery"
             return "mdi:battery"
 
+        if self._sensor_key.startswith("signal_quality_"):
+            quality = self._attr_native_value
+            if isinstance(quality, (int, float)):
+                if quality >= 75:
+                    return "mdi:signal-cellular-3"
+                elif quality >= 50:
+                    return "mdi:signal-cellular-2"
+                elif quality >= 25:
+                    return "mdi:signal-cellular-1"
+                else:
+                    return "mdi:signal-cellular-outline"
+            return "mdi:signal-cellular-outline"
+
         # Use device class icons or custom ones
         sensor_icons = {
             "soil": "mdi:sprout",

@@ -119,6 +119,7 @@ class SensorMapper:
                 device_model = img
                 battery = sensor.get("batt", "")
                 signal = sensor.get("signal", "")
+                rssi = sensor.get("rssi", "")
 
                 # Extract channel from name (e.g., "Soil moisture CH2" → "2").
                 # Fall back to the numeric type field when the name has been
@@ -157,6 +158,7 @@ class SensorMapper:
                     "device_model": device_model,
                     "battery": battery,
                     "signal": signal,
+                    "rssi": rssi,
                     "raw_data": sensor,
                 }
 
