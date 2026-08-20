@@ -1021,6 +1021,62 @@ async def test_icon_battery_no_level(mock_coordinator):
 
 
 @pytest.mark.asyncio
+async def test_icon_signal_quality_levels(mock_coordinator):
+    """Test icon selection for different signal quality percentages."""
+    test_cases = [
+        (10, "mdi:signal-cellular-outline"),
+        (25, "mdi:signal-cellular-1"),
+        (50, "mdi:signal-cellular-2"),
+        (75, "mdi:signal-cellular-3"),
+        (100, "mdi:signal-cellular-3"),
+    ]
+
+    for quality, expected_icon in test_cases:
+        sensor_info = {
+            "sensor_key": "signal_quality_D8174",
+            "hardware_id": "D8174",
+            "category": "diagnostic",
+            "device_class": None,
+            "name": "Signal Quality",
+            "state": quality,
+            "attributes": {},
+        }
+
+        mock_coordinator.get_sensor_data.return_value = sensor_info
+
+        sensor = EcowittLocalSensor(
+            coordinator=mock_coordinator,
+            entity_id="sensor.test_signal_quality",
+            sensor_info=sensor_info,
+        )
+
+        assert sensor.icon == expected_icon
+
+
+@pytest.mark.asyncio
+async def test_icon_signal_quality_no_value(mock_coordinator):
+    """Test icon for signal quality sensor without a known numeric state."""
+    sensor_info = {
+        "sensor_key": "signal_quality_D8174",
+        "category": "diagnostic",
+        "device_class": None,
+        "name": "Signal Quality",
+        "state": None,
+        "attributes": {},
+    }
+
+    mock_coordinator.get_sensor_data.return_value = sensor_info
+
+    sensor = EcowittLocalSensor(
+        coordinator=mock_coordinator,
+        entity_id="sensor.test_signal_quality",
+        sensor_info=sensor_info,
+    )
+
+    assert sensor.icon == "mdi:signal-cellular-outline"
+
+
+@pytest.mark.asyncio
 async def test_icon_sensor_types(mock_coordinator):
     """Test icon selection for different sensor types."""
     test_cases = [
