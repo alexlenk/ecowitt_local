@@ -54,6 +54,34 @@ class TestWH68WeatherStation:
             hardware_id = mapper.get_hardware_id(key)
             assert hardware_id == "A1B2C3", f"Key {key} should map to A1B2C3"
 
+    def test_wh68_common_list_hex_keys(self, mock_wh68_sensor_mapping):
+        """Newer gateways (e.g. GW1100A) report WH68 via common_list hex IDs
+        instead of the flat WU-style keys — issue #231. Without these, the
+        WH68 device ends up with zero entities while its readings fall
+        through to the gateway device instead."""
+        mapper = SensorMapper()
+        mapper.update_mapping([mock_wh68_sensor_mapping])
+
+        expected_hex_keys = [
+            "0x02",  # Temperature
+            "0x03",  # Dewpoint
+            "0x04",  # Wind Chill
+            "0x05",  # Heat Index
+            "0x07",  # Humidity
+            "0x0A",  # Wind direction
+            "0x6D",  # Wind direction avg
+            "0x0B",  # Wind speed
+            "0x0C",  # Wind gust
+            "0x19",  # Max daily gust
+            "0x15",  # Solar radiation
+            "0x16",  # UV irradiance
+            "0x17",  # UV index
+        ]
+
+        for key in expected_hex_keys:
+            hardware_id = mapper.get_hardware_id(key)
+            assert hardware_id == "A1B2C3", f"Key {key} should map to A1B2C3"
+
     def test_wh68_entity_id_generation(self, mock_wh68_sensor_mapping):
         """Test WH68 entity ID generation."""
         mapper = SensorMapper()
