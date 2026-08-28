@@ -19,10 +19,7 @@ from custom_components.ecowitt_local.api import (
     AuthenticationError,
 )
 from custom_components.ecowitt_local.api import ConnectionError as APIConnectionError
-from custom_components.ecowitt_local.api import (
-    DataError,
-    EcowittLocalAPI,
-)
+from custom_components.ecowitt_local.api import DataError, EcowittLocalAPI
 from custom_components.ecowitt_local.const import DOMAIN
 from custom_components.ecowitt_local.sensor_mapper import SensorMapper
 
