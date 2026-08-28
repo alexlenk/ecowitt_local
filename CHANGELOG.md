@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.20] - 2026-08-27
+
+### Fixed
+- **WH68 weather station entities were created under the gateway device instead of the WH68 device**: The WH68 sensor-type mapping only generated the legacy flat WU-style live-data keys (`tempf`, `windspeedmph`, `solarradiation`, `uv`, etc.). Newer gateway firmware (e.g. GW1100A) instead reports WH68 readings through `common_list` hex IDs, same as WH69/WS90 but without rain (WH68 has no rain gauge). Since none of those hex IDs were in the WH68 key list, `get_hardware_id()` returned `None` for them, so the readings fell through to the gateway device while the WH68 device itself was created with zero entities. The WH68 key list now also includes the relevant common_list hex IDs (temperature, dew point, wind chill, heat index, humidity, wind direction/speed/gust, max daily gust, solar radiation, UV) alongside the existing flat keys, so WH68 entities are correctly attached to their own device regardless of which format the gateway reports. (issue #231)
+
 ## [1.7.19] - 2026-08-20
 
 ### Added

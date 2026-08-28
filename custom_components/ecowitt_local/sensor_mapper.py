@@ -420,7 +420,10 @@ class SensorMapper:
             sensor_type.lower() in ("wh68", "weather_station")
             or "solar & wind" in sensor_type.lower()
         ):
-            # Main weather station
+            # Main weather station. Older firmware reports these via the flat
+            # WU-style keys below; newer gateways (e.g. GW1100A) instead emit
+            # WH68 readings through common_list hex IDs, same as WH69/WS90 but
+            # without rain (WH68 has no rain gauge) — issue #231.
             keys.extend(
                 [
                     "tempf",
@@ -435,6 +438,19 @@ class SensorMapper:
                     "baromabsin",
                     "solarradiation",
                     "uv",
+                    "0x02",  # Temperature
+                    "0x03",  # Dewpoint
+                    "0x04",  # Wind Chill
+                    "0x05",  # Heat Index
+                    "0x07",  # Humidity
+                    "0x0A",  # Wind direction
+                    "0x6D",  # Wind direction avg
+                    "0x0B",  # Wind speed
+                    "0x0C",  # Wind gust
+                    "0x19",  # Max daily gust
+                    "0x15",  # Solar radiation
+                    "0x16",  # UV irradiance
+                    "0x17",  # UV index
                     "wh68batt",
                 ]
             )

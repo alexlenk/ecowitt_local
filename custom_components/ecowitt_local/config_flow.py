@@ -16,9 +16,7 @@ from .api import (
     AuthenticationError,
 )
 from .api import ConnectionError as APIConnectionError
-from .api import (
-    EcowittLocalAPI,
-)
+from .api import EcowittLocalAPI
 from .const import (
     CONF_INCLUDE_INACTIVE,
     CONF_MAPPING_INTERVAL,
