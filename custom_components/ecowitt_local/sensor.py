@@ -40,6 +40,7 @@ from .const import (
     MANUFACTURER,
 )
 from .coordinator import EcowittLocalDataUpdateCoordinator
+from .device_compat import via_device_kwargs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -268,10 +269,10 @@ class EcowittLocalSensor(
                     name=f"Ecowitt {sensor_type_name} {self._hardware_id}",
                     manufacturer=MANUFACTURER,
                     model=device_model,
-                    via_device=(DOMAIN, gateway_id),
                     suggested_area=(
                         "Outdoor" if self._is_outdoor_sensor(sensor_info) else None
                     ),
+                    **via_device_kwargs(self.hass, gateway_id),
                 )
             else:
                 _LOGGER.debug(
