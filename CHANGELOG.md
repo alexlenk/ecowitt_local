@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.21] - 2026-08-29
+
+### Fixed
+- **Entity creation crashed on newer HA core betas with `RuntimeError: ... calls device_registry.async_get_or_create with a deprecated via_device parameter`**: HA core is removing the `via_device` identifier-tuple parameter (used to link a sensor's device to its gateway) in favor of a pre-resolved `via_device_id`. On HA builds that already enforce this, adding any per-sensor device (e.g. a WS90's Outdoor Temp) raised instead of merely logging a deprecation warning, so the entity was silently dropped. A new compatibility helper detects at runtime whether the installed HA core still expects `via_device` or now requires `via_device_id`, resolving the gateway's registry device id when needed, so device linking keeps working on both older and newer HA core releases. (issue #232)
+
 ## [1.7.20] - 2026-08-27
 
 ### Fixed

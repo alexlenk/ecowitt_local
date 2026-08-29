@@ -16,6 +16,7 @@ from homeassistant.helpers import entity_registry as er
 from .api import EcowittLocalAPI
 from .const import DOMAIN, GATEWAY_SENSORS, SERVICE_REFRESH_MAPPING, SERVICE_UPDATE_DATA
 from .coordinator import EcowittLocalDataUpdateCoordinator
+from .device_compat import via_device_kwargs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,8 +175,8 @@ async def _async_setup_device_registry(
                 name=f"Ecowitt {sensor_type_name} {hardware_id}",
                 manufacturer="Ecowitt",
                 model=device_model,
-                via_device=(DOMAIN, gateway_id),
                 suggested_area="Outdoor" if is_outdoor else None,
+                **via_device_kwargs(hass, gateway_id),
             )
             _LOGGER.debug("Created device for hardware_id: %s", hardware_id)
 
