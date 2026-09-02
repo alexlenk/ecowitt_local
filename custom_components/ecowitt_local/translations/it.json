@@ -1,0 +1,68 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurazione Ecowitt Local",
+        "description": "Configura la connessione al tuo Gateway Ecowitt. Inserisci l'indirizzo IP del dispositivo Gateway Ecowitt.",
+        "data": {
+          "host": "Indirizzo IP del Gateway",
+          "password": "Password del Gateway (opzionale)"
+        },
+        "data_description": {
+          "host": "Indirizzo IP o hostname del Gateway Ecowitt (es. 192.168.1.100)",
+          "password": "Password per l'interfaccia web del Gateway (lasciare vuoto se assente)"
+        }
+      },
+      "options": {
+        "title": "Opzioni Ecowitt Local",
+        "description": "Configura gli intervalli di polling e le opzioni dei sensori.",
+        "data": {
+          "scan_interval": "Intervallo Polling Dati Live (secondi)",
+          "mapping_interval": "Intervallo Aggiornamento Mapping Sensori (secondi)",
+          "include_inactive": "Includi Sensori Inattivi"
+        },
+        "data_description": {
+          "scan_interval": "Ogni quanto interrogare il Gateway per i dati live (30-300 secondi)",
+          "mapping_interval": "Ogni quanto aggiornare il mapping dei sensori (300-3600 secondi)",
+          "include_inactive": "Includi i sensori attualmente offline o senza dati"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Connessione al Gateway non riuscita. Verifica l'indirizzo IP e assicurati che il Gateway sia raggiungibile.",
+      "invalid_auth": "Password non valida. Verifica la password del Gateway.",
+      "unknown": "Si è verificato un errore imprevisto. Riprova."
+    },
+    "abort": {
+      "already_configured": "Questo Gateway è già configurato."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opzioni Ecowitt Local",
+        "description": "Configura gli intervalli di polling e le opzioni dei sensori.",
+        "data": {
+          "scan_interval": "Intervallo Polling Dati Live (secondi)",
+          "mapping_interval": "Intervallo Aggiornamento Mapping Sensori (secondi)",
+          "include_inactive": "Includi Sensori Inattivi"
+        },
+        "data_description": {
+          "scan_interval": "Ogni quanto interrogare il Gateway per i dati live (30-300 secondi)",
+          "mapping_interval": "Ogni quanto aggiornare il mapping dei sensori (300-3600 secondi)",
+          "include_inactive": "Includi i sensori attualmente offline o senza dati"
+        }
+      }
+    }
+  },
+  "services": {
+    "refresh_mapping": {
+      "name": "Aggiorna Mapping Sensori",
+      "description": "Forza l'aggiornamento del mapping degli ID hardware dei sensori dal Gateway"
+    },
+    "update_data": {
+      "name": "Aggiorna Dati Live",
+      "description": "Forza l'aggiornamento immediato dei dati sensori live dal Gateway"
+    }
+  }
+}
