@@ -1,0 +1,68 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Opsætning af Ecowitt Local",
+        "description": "Konfigurer forbindelsen til din Ecowitt-gateway. Indtast IP-adressen på din Ecowitt-gateway.",
+        "data": {
+          "host": "Gatewayens IP-adresse",
+          "password": "Gatewayens adgangskode (valgfri)"
+        },
+        "data_description": {
+          "host": "Ecowitt-gatewayens IP-adresse eller værtsnavn (f.eks. 192.168.1.100)",
+          "password": "Adgangskode til gatewayens webinterface (lad feltet stå tomt, hvis der ikke er en adgangskode)"
+        }
+      },
+      "options": {
+        "title": "Indstillinger for Ecowitt Local",
+        "description": "Konfigurer forespørgselsintervaller og sensorindstillinger.",
+        "data": {
+          "scan_interval": "Forespørgselsinterval for aktuelle data (sekunder)",
+          "mapping_interval": "Opdateringsinterval for sensorkortlægning (sekunder)",
+          "include_inactive": "Medtag inaktive sensorer"
+        },
+        "data_description": {
+          "scan_interval": "Hvor ofte der forespørges efter aktuelle data (30-300 sekunder)",
+          "mapping_interval": "Hvor ofte sensorkortlægningen opdateres (300-3600 sekunder)",
+          "include_inactive": "Medtag sensorer, der i øjeblikket er offline eller ikke har data"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kunne ikke oprette forbindelse til gatewayen. Kontrollér IP-adressen, og sørg for, at gatewayen er tilgængelig.",
+      "invalid_auth": "Ugyldig adgangskode. Kontrollér gatewayens adgangskode.",
+      "unknown": "Der opstod en uventet fejl. Prøv igen."
+    },
+    "abort": {
+      "already_configured": "Denne gateway er allerede konfigureret."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Indstillinger for Ecowitt Local",
+        "description": "Konfigurer forespørgselsintervaller og sensorindstillinger.",
+        "data": {
+          "scan_interval": "Forespørgselsinterval for aktuelle data (sekunder)",
+          "mapping_interval": "Opdateringsinterval for sensorkortlægning (sekunder)",
+          "include_inactive": "Medtag inaktive sensorer"
+        },
+        "data_description": {
+          "scan_interval": "Hvor ofte der forespørges efter aktuelle data (30-300 sekunder)",
+          "mapping_interval": "Hvor ofte sensorkortlægningen opdateres (300-3600 sekunder)",
+          "include_inactive": "Medtag sensorer, der i øjeblikket er offline eller ikke har data"
+        }
+      }
+    }
+  },
+  "services": {
+    "refresh_mapping": {
+      "name": "Opdater sensorkortlægning",
+      "description": "Tving en opdatering af kortlægningen af sensorernes hardware-id'er fra gatewayen"
+    },
+    "update_data": {
+      "name": "Opdater aktuelle data",
+      "description": "Tving en øjeblikkelig opdatering af aktuelle sensordata fra gatewayen"
+    }
+  }
+}
