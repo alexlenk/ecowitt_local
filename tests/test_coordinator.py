@@ -2284,6 +2284,61 @@ async def test_coordinator_rain_uses_wn20batt_when_no_wh69_or_wh40(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_rain_uses_wn20batt_over_wh69batt_when_both_mapped(
+    coordinator,
+):
+    """Test that the rain block attributes to WN20, not WH69, when both are registered (issue #239).
+
+    WH69 already reports its own rain readings via common_list hex IDs, so when a
+    separate physical WN20 rain gauge is also present, the top-level "rain" block
+    belongs to the WN20, not the WH69.
+    """
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "AABBCC",
+                "img": "wh69",
+                "type": "1",
+                "name": "WH69",
+                "batt": "3",
+                "signal": "4",
+            },
+            {
+                "id": "2FD4",
+                "img": "wn20",
+                "type": "70",
+                "name": "Rain Mini",
+                "batt": "5",
+                "signal": "4",
+            },
+        ]
+    )
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "rain": [{"id": "0x13", "val": "100.0 mm", "battery": "5"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wn20_battery_found = any(
+        sensors[k].get("sensor_key") == "wn20batt" for k in sensors
+    )
+    assert (
+        wn20_battery_found
+    ), "wn20batt should be used when both WH69 and WN20 are registered"
+
+    wh69_battery_from_rain_block = any(
+        sensors[k].get("sensor_key") == "wh69batt"
+        and sensors[k].get("hardware_id") == "2FD4"
+        for k in sensors
+    )
+    assert (
+        not wh69_battery_from_rain_block
+    ), "wh69batt should NOT be used for the rain block when a WN20 is also registered"
+
+
+@pytest.mark.asyncio
 async def test_coordinator_ch_pm25_empty_handling(coordinator):
     """Test coordinator handles empty or missing ch_pm25 gracefully."""
     for ch_pm25_val in [[], None]:
