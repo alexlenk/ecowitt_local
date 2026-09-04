@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.23] - 2026-09-04
+
+### Fixed
+- **WN20 rain gauge showed zero entities when a WH69 was also present on the same gateway**: The top-level `rain` block's readings were force-attributed to the WH69 device whenever a WH69 was registered, ahead of WN20, on the assumption that WH69 is always the tipping-bucket source for that block. But WH69 already reports its own rain readings via `common_list` hex IDs, so when a separate physical WN20 rain gauge is also paired, the `rain` block actually belongs to the WN20 — not the WH69. All of the WN20's readings (and its battery) were silently merged into the WH69 device instead of creating the WN20's own entities, leaving the WN20 device with none. The priority order now checks WN20 first, so it correctly claims the `rain` block when present; WH69 remains the fallback for gateways that report WH69's rain only through this block and have no WN20 (issue #95), and WH40 remains the last fallback. (issue #239)
+
 ## [1.7.22] - 2026-09-02
 
 ### Added

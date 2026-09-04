@@ -215,13 +215,19 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         rain_list = raw_data.get("rain", [])
         if rain_list:
             _LOGGER.debug("Found rain data with %d items", len(rain_list))
-            # Force rain-array items to the tipping-bucket device (WH40, WH69, or WN20)
+            # Force rain-array items to the tipping-bucket device (WN20, WH40, or WH69)
             # so they are never mis-attributed to a piezoelectric sensor (WH90/WS90/WS85)
             # that registers the same hex IDs (0x0D–0x13) for its piezoRain data.
+            # WN20 takes priority over WH69 because WH69 already reports its own rain
+            # readings via common_list hex IDs — when a WN20 is also present, the
+            # top-level "rain" block belongs to the separate physical WN20 gauge, not
+            # WH69 (issue #239). When no WN20 is registered, WH69 still wins over
+            # WH40 for gateways that report WH69's rain only through this block
+            # (issue #95).
             _rain_hw_id = (
-                self.sensor_mapper.get_hardware_id("wh69batt")
+                self.sensor_mapper.get_hardware_id("wn20batt")
+                or self.sensor_mapper.get_hardware_id("wh69batt")
                 or self.sensor_mapper.get_hardware_id("wh40batt")
-                or self.sensor_mapper.get_hardware_id("wn20batt")
             )
             for item in rain_list:
                 if (
@@ -233,11 +239,12 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     if _rain_hw_id:
                         entry["_force_hardware_id"] = _rain_hw_id
                     all_sensor_items.append(entry)
-                    # Extract WH40/WH69 battery from the 0x13 (yearly rain) item which carries it.
-                    # Battery uses binary encoding: "0" = full (100%), "1" = low (10%).
-                    # Use wh69batt if a WH69 is registered (links battery to WH69 device),
-                    # wn20batt if a WN20 is registered, otherwise default to wh40batt
-                    # for standalone WH40 rain gauges (or when nothing is registered).
+                    # Extract WH40/WH69/WN20 battery from the 0x13 (yearly rain) item which
+                    # carries it. Battery uses binary encoding: "0" = full (100%), "1" = low
+                    # (10%). Use wn20batt if a WN20 is registered (the "rain" block belongs
+                    # to the separate physical WN20 gauge — issue #239), wh69batt if a WH69
+                    # is registered, otherwise default to wh40batt for standalone WH40 rain
+                    # gauges (or when nothing is registered).
                     if item.get("id") == "0x13" and item.get("battery"):
                         # WH40/WN20 use 0-5 bar scale; WH69 uses binary (0=full, 1=low).
                         # Detect scale: values > 1 are clearly 0-5 bar scale.
@@ -247,10 +254,10 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                             battery_pct = str(batt_val * 20)  # 0-5 bar scale
                         else:
                             battery_pct = "100" if batt_str == "0" else "10"  # binary
-                        if self.sensor_mapper.get_hardware_id("wh69batt") is not None:
-                            battery_key = "wh69batt"
-                        elif self.sensor_mapper.get_hardware_id("wn20batt") is not None:
+                        if self.sensor_mapper.get_hardware_id("wn20batt") is not None:
                             battery_key = "wn20batt"
+                        elif self.sensor_mapper.get_hardware_id("wh69batt") is not None:
+                            battery_key = "wh69batt"
                         else:
                             battery_key = "wh40batt"
                         all_sensor_items.append({"id": battery_key, "val": battery_pct})
