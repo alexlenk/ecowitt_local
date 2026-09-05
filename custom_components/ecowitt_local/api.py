@@ -344,6 +344,27 @@ class EcowittLocalAPI:
         """
         return await self._make_request("/get_version")
 
+    async def get_network_info(self) -> Dict[str, Any]:
+        """Get gateway network information.
+
+        Includes the gateway's MAC address, which — unlike the IP address —
+        does not change when the gateway gets a new DHCP lease, making it a
+        good basis for a stable identifier. Not all gateway models are
+        confirmed to expose this endpoint.
+
+        The response also includes the configured Wi-Fi password (base64
+        encoded). Callers must only read the fields they need (e.g. `mac`)
+        and must never log or persist the full response.
+
+        Returns:
+            Network info dict; notably the `mac` field.
+
+        Raises:
+            ConnectionError: Network error
+            DataError: Invalid response data
+        """
+        return await self._make_request("/get_network_info")
+
     async def get_soil_calibration(self) -> List[Dict[str, Any]]:
         """Get soil moisture sensor calibration data including AD values.
 

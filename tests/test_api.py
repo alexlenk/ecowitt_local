@@ -208,6 +208,28 @@ async def test_get_version():
 
 
 @pytest.mark.asyncio
+async def test_get_network_info():
+    """Test getting network information (used for the gateway's MAC address)."""
+    api = EcowittLocalAPI("192.168.1.100", "")
+
+    mock_data = {
+        "mac": "24:4C:AB:6C:37:D1",
+        "ssid": "MyWiFi",
+        "wifi_ip": "192.168.1.100",
+    }
+
+    with aioresponses() as m:
+        m.get("http://192.168.1.100/get_network_info", payload=mock_data)
+
+        result = await api.get_network_info()
+
+        assert result == mock_data
+        assert result["mac"] == "24:4C:AB:6C:37:D1"
+
+    await api.close()
+
+
+@pytest.mark.asyncio
 async def test_test_connection():
     """Test connection test."""
     api = EcowittLocalAPI("192.168.1.100", "")
