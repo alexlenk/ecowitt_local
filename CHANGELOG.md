@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.24] - 2026-09-05
+
+### Added
+- **Reconfigure flow**: the gateway's IP address (and password) can now be updated from the Home Assistant UI without removing and re-adding the integration, so existing devices, entities, and any automations that reference them are preserved. Previously the only way to move to a new IP after a DHCP lease change was to delete and recreate the config entry.
+- **MAC-based unique ID**: when the gateway exposes its network info (`/get_network_info`), its MAC address — stable across IP changes, unlike the host address previously used — becomes the config entry's unique ID. Gateways where this isn't available fall back to the previous model+host scheme. Existing (legacy) entries transparently adopt the MAC-based ID the first time they're reconfigured; the strict "same physical device" check only applies once both the old and new IDs are MAC-based, so this upgrade never triggers a false "wrong device" abort.
+
+### Fixed
+- **Gateway model always showed as "Unknown" in the config flow on gateways that omit `stationtype` from `/get_version`**: some real-world gateways report only a `version` string (e.g. `"Version: GW1100A_V2.4.5"`) with no dedicated `stationtype` field. The config flow now falls back to parsing the model out of that string, reusing the same parsing already relied on elsewhere in the integration for the live gateway device info.
+
 ## [1.7.23] - 2026-09-04
 
 ### Fixed

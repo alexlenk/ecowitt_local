@@ -26,6 +26,18 @@
           "mapping_interval": "How often to refresh sensor mappings (300-3600 seconds)",
           "include_inactive": "Include sensors that are currently offline or have no data"
         }
+      },
+      "reconfigure": {
+        "title": "Update Ecowitt Gateway Connection",
+        "description": "Update the connection details for this gateway, for example after its IP address changed.",
+        "data": {
+          "host": "Gateway IP Address",
+          "password": "Gateway Password (optional)"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the Ecowitt gateway (e.g., 192.168.1.100)",
+          "password": "Password for the gateway web interface (leave blank if none)"
+        }
       }
     },
     "error": {
@@ -34,7 +46,9 @@
       "unknown": "Unexpected error occurred. Please try again."
     },
     "abort": {
-      "already_configured": "This gateway is already configured."
+      "already_configured": "This gateway is already configured.",
+      "reconfigure_successful": "The gateway connection was updated successfully.",
+      "wrong_device": "This IP address belongs to a different gateway than the one currently configured for this entry. Double-check the address, or remove this integration and add the other gateway separately."
     }
   },
   "options": {

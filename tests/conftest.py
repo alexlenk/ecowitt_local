@@ -402,6 +402,11 @@ def mock_ecowitt_api():
     mock_instance.get_all_sensor_mappings = AsyncMock(return_value=[])
     mock_instance.get_soil_calibration = AsyncMock(return_value=[])
     mock_instance.get_lds_config = AsyncMock(return_value=[])
+    # No MAC by default — an unconfigured mock would otherwise auto-generate
+    # a truthy MagicMock for `.get("mac")`, which would be misread as a real
+    # MAC address by config_flow.validate_input. Tests that exercise the
+    # MAC-based unique_id path override this explicitly.
+    mock_instance.get_network_info = AsyncMock(return_value={})
 
     return mock_instance
 
