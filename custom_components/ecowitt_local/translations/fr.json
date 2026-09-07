@@ -26,6 +26,18 @@
           "mapping_interval": "Fréquence de rafraîchissement du mappage des capteurs (300 à 3600 secondes)",
           "include_inactive": "Inclure les capteurs actuellement hors ligne ou sans données"
         }
+      },
+      "reconfigure": {
+        "title": "Mettre à jour la connexion à la passerelle Ecowitt",
+        "description": "Mettez à jour les détails de connexion de cette passerelle, par exemple après un changement de son adresse IP.",
+        "data": {
+          "host": "Adresse IP de la passerelle",
+          "password": "Mot de passe de la passerelle (facultatif)"
+        },
+        "data_description": {
+          "host": "Adresse IP ou nom d'hôte de la passerelle Ecowitt (ex. : 192.168.1.100)",
+          "password": "Mot de passe pour l'interface web de la passerelle (laisser vide si aucun)"
+        }
       }
     },
     "error": {
@@ -34,7 +46,9 @@
       "unknown": "Une erreur inattendue est survenue. Veuillez réessayer."
     },
     "abort": {
-      "already_configured": "Cette passerelle est déjà configurée."
+      "already_configured": "Cette passerelle est déjà configurée.",
+      "reconfigure_successful": "La connexion à la passerelle a été mise à jour avec succès.",
+      "wrong_device": "Cette adresse IP appartient à une passerelle différente de celle actuellement configurée pour cette entrée. Vérifiez l'adresse, ou supprimez cette intégration et ajoutez l'autre passerelle séparément."
     }
   },
   "options": {

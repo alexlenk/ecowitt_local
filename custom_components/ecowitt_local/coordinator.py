@@ -37,6 +37,36 @@ from .sensor_mapper import SensorMapper
 _LOGGER = logging.getLogger(__name__)
 
 
+def extract_model_from_firmware(firmware_version: str) -> str:
+    """Extract gateway model from firmware version string.
+
+    Args:
+        firmware_version: Firmware version string (e.g., "GW1100A_V2.4.3")
+
+    Returns:
+        Gateway model (e.g., "GW1100A") or "Unknown" if extraction fails
+    """
+    if not firmware_version or firmware_version == "Unknown":
+        return "Unknown"
+
+    try:
+        # Some gateways prepend "Version: " to the version string (e.g. "Version: GW1100A_V2.4.3")
+        # Search for the GW model anywhere in the string to handle these cases.
+        # The model name ends at the first delimiter: underscore, dot, whitespace, or end of string.
+        match = re.search(r"\b(GW\w+?)(?=[_.\s]|$)", firmware_version)
+        if match:
+            return match.group(1)
+
+    except Exception as err:  # pragma: no cover
+        _LOGGER.debug(
+            "Error extracting model from firmware version '%s': %s",
+            firmware_version,
+            err,
+        )
+
+    return "Unknown"
+
+
 class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
     """Data coordinator for Ecowitt Local."""
 
@@ -1700,25 +1730,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         Returns:
             Gateway model (e.g., "GW1100A") or "Unknown" if extraction fails
         """
-        if not firmware_version or firmware_version == "Unknown":
-            return "Unknown"
-
-        try:
-            # Some gateways prepend "Version: " to the version string (e.g. "Version: GW1100A_V2.4.3")
-            # Search for the GW model anywhere in the string to handle these cases.
-            # The model name ends at the first delimiter: underscore, dot, whitespace, or end of string.
-            match = re.search(r"\b(GW\w+?)(?=[_.\s]|$)", firmware_version)
-            if match:
-                return match.group(1)
-
-        except Exception as err:  # pragma: no cover
-            _LOGGER.debug(
-                "Error extracting model from firmware version '%s': %s",
-                firmware_version,
-                err,
-            )
-
-        return "Unknown"
+        return extract_model_from_firmware(firmware_version)
 
     async def async_refresh_mapping(self) -> None:
         """Force refresh of sensor mapping."""

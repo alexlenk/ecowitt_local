@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, Dict, Optional
 
 import homeassistant.helpers.config_validation as cv
@@ -11,12 +12,13 @@ from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import device_registry as dr
 
 from .api import (
     AuthenticationError,
 )
 from .api import ConnectionError as APIConnectionError
-from .api import EcowittLocalAPI
+from .api import EcowittLocalAPI, EcowittLocalAPIError
 from .const import (
     CONF_INCLUDE_INACTIVE,
     CONF_MAPPING_INTERVAL,
@@ -29,6 +31,7 @@ from .const import (
     ERROR_INVALID_AUTH,
     ERROR_UNKNOWN,
 )
+from .coordinator import extract_model_from_firmware
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +54,18 @@ STEP_OPTIONS_DATA_SCHEMA = vol.Schema(
     }
 )
 
+# A previously-generated unique_id that is a normalized MAC address, used to
+# tell a fresh MAC-based identifier apart from a legacy model+host one when
+# reconfiguring (see ConfigFlow.async_step_reconfigure).
+_MAC_UNIQUE_ID_RE = re.compile(r"^([0-9a-f]{2}:){5}[0-9a-f]{2}$")
+
+
+def _looks_like_mac(unique_id: Optional[str]) -> bool:
+    """Return True if unique_id is a normalized MAC address."""
+    if not unique_id:
+        return False
+    return bool(_MAC_UNIQUE_ID_RE.match(unique_id))
+
 
 async def validate_input(hass: HomeAssistant, data: Dict[str, Any]) -> Dict[str, Any]:
     """Validate the user input allows us to connect.
@@ -69,17 +84,39 @@ async def validate_input(hass: HomeAssistant, data: Dict[str, Any]) -> Dict[str,
         # Get basic info to validate the device
         version_info = await api.get_version()
 
-        # Extract gateway information
-        gateway_id = version_info.get("stationtype", "unknown")
-        model = version_info.get("stationtype", "Unknown")
+        # Older firmware (and this integration's test fixtures) reports a
+        # dedicated `stationtype` field. Gateways observed in the field
+        # instead omit it entirely and embed the model in the `version`
+        # string, e.g. "Version: GW1100A_V2.4.5".
+        stationtype = version_info.get("stationtype")
+        model = stationtype or extract_model_from_firmware(
+            version_info.get("version", "")
+        )
         firmware_version = version_info.get("version", "Unknown")
+
+        # The gateway's MAC address is a stable hardware identifier that
+        # survives IP address changes (e.g. a DHCP lease renewal), unlike
+        # the host-based identifier used as a fallback below. Not all
+        # gateway models are confirmed to support this endpoint, so a
+        # failure here is not fatal for the whole flow.
+        mac: Optional[str] = None
+        try:
+            network_info = await api.get_network_info()
+            raw_mac = network_info.get("mac")
+            if raw_mac:
+                mac = dr.format_mac(raw_mac)
+        except EcowittLocalAPIError:
+            mac = None
+
+        unique_id = mac if mac else f"{model}_{host}"
 
         return {
             "title": f"Ecowitt Gateway ({host})",
-            "gateway_id": gateway_id,
+            "unique_id": unique_id,
             "model": model,
             "firmware_version": firmware_version,
             "host": host,
+            "mac": mac,
         }
 
     except AuthenticationError:
@@ -123,7 +160,7 @@ class ConfigFlow(config_entries.ConfigFlow):
                 errors = {"base": ERROR_UNKNOWN}
             else:
                 # Check if already configured
-                await self.async_set_unique_id(f"{info['gateway_id']}_{info['host']}")
+                await self.async_set_unique_id(info["unique_id"])
                 self._abort_if_unique_id_configured()
 
                 # Store the validated info
@@ -168,6 +205,78 @@ class ConfigFlow(config_entries.ConfigFlow):
                 "scan_interval_desc": "How often to poll for live data (30-300 seconds)",
                 "mapping_interval_desc": "How often to refresh sensor mappings (5-60 minutes)",
                 "inactive_desc": "Include sensors that are currently offline",
+            },
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> FlowResult:
+        """Handle reconfiguration of an existing entry.
+
+        Lets the user update the gateway's IP address (and password) —
+        e.g. after a DHCP lease change — without removing and re-adding
+        the integration. Devices, entities, and any automations that
+        reference them are preserved.
+        """
+        errors: Optional[Dict[str, str]] = None
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors = {"base": ERROR_CANNOT_CONNECT}
+            except InvalidAuth:
+                errors = {"base": ERROR_INVALID_AUTH}
+            except Exception:
+                _LOGGER.exception("Unexpected exception during reconfigure")
+                errors = {"base": ERROR_UNKNOWN}
+            else:
+                # The gateway's local HTTP API exposes a MAC address on
+                # most models (via /get_network_info), used here as a
+                # stable hardware identifier — but some older or
+                # unconfirmed models may not support that endpoint, and
+                # entries created before this identifier existed still
+                # carry the legacy model+host unique_id. Only apply the
+                # strict "same physical device" check when both the
+                # existing and the newly computed unique_id are
+                # MAC-based; otherwise this is either a gateway with no
+                # stable identifier, or a legacy entry being upgraded to
+                # one for the first time, and the unique_id is expected
+                # to change.
+                new_unique_id = info["unique_id"]
+                if info.get("mac") and _looks_like_mac(reconfigure_entry.unique_id):
+                    await self.async_set_unique_id(new_unique_id)
+                    self._abort_if_unique_id_mismatch(reason="wrong_device")
+                else:
+                    for entry in self._async_current_entries():
+                        if (
+                            entry.entry_id != reconfigure_entry.entry_id
+                            and entry.unique_id == new_unique_id
+                        ):
+                            return self.async_abort(reason="already_configured")
+
+                self.hass.config_entries.async_update_entry(
+                    reconfigure_entry,
+                    unique_id=new_unique_id,
+                    title=info["title"],
+                    data={**reconfigure_entry.data, **user_input},
+                )
+                await self.hass.config_entries.async_reload(reconfigure_entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                {
+                    CONF_HOST: reconfigure_entry.data.get(CONF_HOST, ""),
+                    CONF_PASSWORD: reconfigure_entry.data.get(CONF_PASSWORD, ""),
+                },
+            ),
+            errors=errors,
+            description_placeholders={
+                "host_example": "192.168.1.100",
             },
         )
 
