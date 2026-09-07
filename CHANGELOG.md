@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.26] - 2026-09-07
+
+### Fixed
+- **WH69 lost its rain and battery entities when a WN20 was also registered on the same gateway**: v1.7.23 fixed WN20 having no entities by always attributing the top-level `rain` block to WN20 whenever one was registered, ahead of WH69. That static priority broke the setup it was meant to fix for other users: when a WH69 is the genuinely active tipping-bucket source and a WN20 is also registered (but not actually reporting rain), the `rain` block was forced onto WN20 anyway, taking away WH69's rain readings and its only source of battery data. The rain block is now attributed to whichever registered candidate (WN20, WH69, WH40) reports the strongest signal, so a real, actively-reporting WH69 is no longer starved by a WN20 that merely exists in the sensor list; the WN20 > WH69 > WH40 order is now only a tie-break when signal can't distinguish them. Additionally, whichever device doesn't win the rain block now still gets its own battery entity sourced directly from `get_sensors_info`'s `batt` field, instead of losing its battery entity entirely. (issue #239)
+
 ## [1.7.24] - 2026-09-05
 
 ### Added

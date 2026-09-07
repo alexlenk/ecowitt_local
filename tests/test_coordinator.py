@@ -2339,6 +2339,164 @@ async def test_coordinator_rain_uses_wn20batt_over_wh69batt_when_both_mapped(
 
 
 @pytest.mark.asyncio
+async def test_coordinator_rain_prefers_stronger_signal_over_static_priority(
+    coordinator,
+):
+    """Test that the rain block goes to whichever device has the stronger signal.
+
+    Regression test for the issue #239 follow-up: forcing the rain block to
+    WN20 whenever one is registered (regardless of signal) incorrectly took
+    rain and battery away from a genuinely active WH69 whose WN20 sibling was
+    registered but not actually the live source.
+    """
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "AABBCC",
+                "img": "wh69",
+                "type": "1",
+                "name": "WH69",
+                "batt": "3",
+                "signal": "4",
+            },
+            {
+                "id": "2FD4",
+                "img": "wn20",
+                "type": "70",
+                "name": "Rain Mini",
+                "batt": "5",
+                "signal": "0",
+            },
+        ]
+    )
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "rain": [{"id": "0x13", "val": "100.0 mm", "battery": "0"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wh69_battery_found = any(
+        sensors[k].get("sensor_key") == "wh69batt"
+        and sensors[k].get("hardware_id") == "AABBCC"
+        for k in sensors
+    )
+    assert (
+        wh69_battery_found
+    ), "wh69batt should win the rain block when WH69's signal is stronger than WN20's"
+
+    wn20_battery_found = any(
+        sensors[k].get("sensor_key") == "wn20batt" for k in sensors
+    )
+    assert (
+        not wn20_battery_found
+    ), "wn20batt should NOT be used for the rain block when its signal is weaker"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_rain_falls_back_to_priority_on_unparseable_signal(
+    coordinator,
+):
+    """Test the rain block falls back to the WN20 > WH69 > WH40 order on bad signal.
+
+    When neither candidate reports a usable numeric signal (e.g. "--"), the
+    signal comparison can't distinguish them, so the fixed priority order is
+    used as a tie-break, same as before this behavior became signal-aware.
+    """
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "AABBCC",
+                "img": "wh69",
+                "type": "1",
+                "name": "WH69",
+                "batt": "3",
+                "signal": "--",
+            },
+            {
+                "id": "2FD4",
+                "img": "wn20",
+                "type": "70",
+                "name": "Rain Mini",
+                "batt": "5",
+                "signal": "--",
+            },
+        ]
+    )
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "rain": [{"id": "0x13", "val": "100.0 mm", "battery": "5"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wn20_battery_found = any(
+        sensors[k].get("sensor_key") == "wn20batt" for k in sensors
+    )
+    assert (
+        wn20_battery_found
+    ), "wn20batt should win the tie-break when neither signal is parseable"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_rain_losing_device_still_gets_own_battery(coordinator):
+    """Test that the device that loses the rain block still gets its own battery.
+
+    WH69 shares outdoor temperature via common_list, separately from the rain
+    block. When WN20 wins the rain block's battery, WH69 should still get its
+    own battery entity sourced from get_sensors_info's own "batt" field
+    (issue #239 follow-up) instead of losing its battery entirely.
+    """
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "AABBCC",
+                "img": "wh69",
+                "type": "1",
+                "name": "WH69",
+                "batt": "3",
+                "signal": "4",
+            },
+            {
+                "id": "2FD4",
+                "img": "wn20",
+                "type": "70",
+                "name": "Rain Mini",
+                "batt": "5",
+                "signal": "4",
+            },
+        ]
+    )
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "common_list": [{"id": "0x02", "val": "25.0°C"}],
+        "rain": [{"id": "0x13", "val": "100.0 mm", "battery": "5"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wh69_temp_found = any(sensors[k].get("hardware_id") == "AABBCC" for k in sensors)
+    assert wh69_temp_found, "WH69 should still own its own common_list temperature key"
+
+    wh69_battery = next(
+        (
+            sensors[k]
+            for k in sensors
+            if sensors[k].get("sensor_key") == "wh69batt"
+            and sensors[k].get("hardware_id") == "AABBCC"
+        ),
+        None,
+    )
+    assert (
+        wh69_battery is not None
+    ), "WH69 should get a battery entity from sensors_info even when WN20 wins the rain block"
+    assert wh69_battery["state"] == "60", "bar-scale batt=3 should give 60%"
+
+
+@pytest.mark.asyncio
 async def test_coordinator_ch_pm25_empty_handling(coordinator):
     """Test coordinator handles empty or missing ch_pm25 gracefully."""
     for ch_pm25_val in [[], None]:
