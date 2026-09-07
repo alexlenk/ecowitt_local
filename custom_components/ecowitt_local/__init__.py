@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from typing import Any, Dict
 
 from homeassistant.config_entries import ConfigEntry
@@ -196,10 +197,18 @@ async def _async_setup_device_registry(
             # Determine if outdoor sensor for suggested area
             is_outdoor = _is_outdoor_sensor(sensor_type)
 
+            device_name = f"Ecowitt {sensor_type_name} {hardware_id}"
+            raw_name = str(sensor_info.get("raw_data", {}).get("name", "")).strip()
+            # A raw name without "CH{n}" means the user renamed the sensor on the
+            # gateway itself (e.g. "Deep Freezer") rather than leaving the
+            # default "Temp & Humidity CH2" — use it as the device name (issue #243).
+            if raw_name and not re.search(r"CH\d+", raw_name, re.IGNORECASE):
+                device_name = raw_name
+
             device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
                 identifiers={(DOMAIN, hardware_id)},
-                name=f"Ecowitt {sensor_type_name} {hardware_id}",
+                name=device_name,
                 manufacturer="Ecowitt",
                 model=device_model,
                 suggested_area="Outdoor" if is_outdoor else None,
