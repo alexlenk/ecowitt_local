@@ -1313,3 +1313,68 @@ async def test_unknown_decimal_id_skipped_in_processing(
         if ent.unique_id.endswith("_4")
     ]
     assert decimal_4_entities == [], "Unknown decimal-id '4' must not produce an entity"
+
+
+async def test_async_remove_config_entry_device_gateway_denied(
+    hass: HomeAssistant, setup_integration
+):
+    """The gateway device itself can never be removed via the UI trash icon."""
+    from homeassistant.helpers import device_registry as dr
+
+    from custom_components.ecowitt_local import async_remove_config_entry_device
+
+    config_entry = setup_integration
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    gateway_id = coordinator.gateway_info.get("gateway_id", "unknown")
+
+    device_registry = dr.async_get(hass)
+    gateway_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, gateway_id)}
+    )
+
+    assert (
+        await async_remove_config_entry_device(hass, config_entry, gateway_device)
+        is False
+    )
+
+
+async def test_async_remove_config_entry_device_active_sensor_denied(
+    hass: HomeAssistant, setup_integration
+):
+    """A hardware_id still reported by get_sensors_info cannot be removed."""
+    from homeassistant.helpers import device_registry as dr
+
+    from custom_components.ecowitt_local import async_remove_config_entry_device
+
+    config_entry = setup_integration
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    hardware_id = coordinator.sensor_mapper.get_all_hardware_ids()[0]
+
+    device_registry = dr.async_get(hass)
+    sensor_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, hardware_id)}
+    )
+
+    assert (
+        await async_remove_config_entry_device(hass, config_entry, sensor_device)
+        is False
+    )
+
+
+async def test_async_remove_config_entry_device_stale_sensor_allowed(
+    hass: HomeAssistant, setup_integration
+):
+    """A hardware_id no longer present in the mapping can be removed manually."""
+    from types import SimpleNamespace
+
+    from custom_components.ecowitt_local import async_remove_config_entry_device
+
+    config_entry = setup_integration
+
+    stale_device = SimpleNamespace(
+        identifiers={("other_domain", "unrelated"), (DOMAIN, "STALE1234")}
+    )
+
+    assert (
+        await async_remove_config_entry_device(hass, config_entry, stale_device) is True
+    )

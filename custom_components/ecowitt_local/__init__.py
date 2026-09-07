@@ -100,6 +100,31 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return False
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Allow manual removal of a sensor device no longer reported by the gateway.
+
+    The gateway device itself, and any hardware_id the gateway is still
+    actively reporting via get_sensors_info, cannot be removed this way —
+    deleting an active sensor would just have it reappear on the next
+    mapping poll. A hardware_id that's no longer in the current mapping
+    (sensor unpaired/removed on the gateway) can be removed manually to
+    clean up the device registry (issue #245).
+    """
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    gateway_id = coordinator.gateway_info.get("gateway_id", "unknown")
+
+    for domain, identifier in device_entry.identifiers:
+        if domain != DOMAIN:
+            continue
+        if identifier == gateway_id:
+            return False
+        if coordinator.sensor_mapper.get_sensor_info(identifier) is not None:
+            return False
+    return True
+
+
 async def _async_setup_device_registry(
     hass: HomeAssistant,
     entry: ConfigEntry,
