@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.25] - 2026-09-07
+
+### Added
+- **"Resync Sensor Mappings" button**: Each gateway device now has a diagnostic button entity (`button.ecowitt_gateway_<id>_resync_mapping`) that immediately re-runs the `get_sensors_info` mapping refresh and a full data refresh, instead of waiting for the periodic mapping-update interval. Useful when changing sensor assignments (adding/removing/moving/renaming a sensor) on the gateway and wanting Home Assistant to pick it up right away. Reuses the existing `async_refresh_mapping()` coordinator method that already backs the `ecowitt_local.refresh_mapping` service. (issue #246)
+
+### Fixed
+- **Deprecated `device_registry.async_get_device()` calls**: Newer Home Assistant core releases warn (and will eventually stop working) when integrations call `async_get_device(identifiers=...)`, since device identifiers are no longer guaranteed unique across config entries. All five call sites (`__init__.py` gateway/ghost-device lookups and migration logic, `device_compat.py`'s via-device resolution) now use a small identifier-scoped lookup helper instead, avoiding the deprecated method entirely. (issue #241)
+
 ## [1.7.23] - 2026-09-04
 
 ### Fixed

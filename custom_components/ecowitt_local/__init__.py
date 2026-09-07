@@ -16,11 +16,11 @@ from homeassistant.helpers import entity_registry as er
 from .api import EcowittLocalAPI
 from .const import DOMAIN, GATEWAY_SENSORS, SERVICE_REFRESH_MAPPING, SERVICE_UPDATE_DATA
 from .coordinator import EcowittLocalDataUpdateCoordinator
-from .device_compat import via_device_kwargs
+from .device_compat import async_get_device_by_identifier, via_device_kwargs
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -129,7 +129,9 @@ async def _async_setup_device_registry(
     # fallback was introduced (v1.6.8). If the real gateway_id is now known, move any
     # entities that are still pointing at the old ghost device to the real one.
     if gateway_id != "unknown":
-        old_device = device_registry.async_get_device(identifiers={(DOMAIN, "unknown")})
+        old_device = async_get_device_by_identifier(
+            device_registry, (DOMAIN, "unknown")
+        )
         if old_device and entry.entry_id in old_device.config_entries:
             entity_registry = er.async_get(hass)
             for entity in er.async_entries_for_device(
@@ -269,7 +271,7 @@ def _async_cleanup_decimal_id_orphans(
             break
 
     outdoor_device = (
-        device_registry.async_get_device(identifiers={(DOMAIN, outdoor_hardware_id)})
+        async_get_device_by_identifier(device_registry, (DOMAIN, outdoor_hardware_id))
         if outdoor_hardware_id
         else None
     )
@@ -488,8 +490,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                         and coordinator.sensor_mapper.get_sensor_info(hardware_id)
                     ):
                         # Find the new device for this hardware_id
-                        new_device = device_registry.async_get_device(
-                            identifiers={(DOMAIN, hardware_id)}
+                        new_device = async_get_device_by_identifier(
+                            device_registry, (DOMAIN, hardware_id)
                         )
                         if new_device:
                             # Update entity to point to new device
@@ -513,8 +515,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             # v1.3 Migration: Move gateway sensors back to gateway device
             if config_entry.minor_version < 3:
                 gateway_id = coordinator.gateway_info.get("gateway_id", "unknown")
-                gateway_device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, gateway_id)}
+                gateway_device = async_get_device_by_identifier(
+                    device_registry, (DOMAIN, gateway_id)
                 )
 
                 if gateway_device:

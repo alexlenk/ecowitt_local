@@ -11,6 +11,22 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN
 
 
+def async_get_device_by_identifier(
+    device_registry: Any, identifier: tuple[str, str]
+) -> Any:
+    """Look up a device by identifier without the deprecated async_get_device().
+
+    HA core is deprecating `async_get_device(identifiers=...)` because device
+    identifiers are no longer unique across config entries. Iterating the
+    registry directly avoids depending on a specific replacement method name
+    and works across HA versions.
+    """
+    for device in device_registry.devices.values():
+        if identifier in device.identifiers:
+            return device
+    return None
+
+
 def via_device_kwargs(hass: Optional[HomeAssistant], gateway_id: str) -> Dict[str, Any]:
     """Return the correct via-device kwarg for the installed HA core version.
 
@@ -30,8 +46,8 @@ def via_device_kwargs(hass: Optional[HomeAssistant], gateway_id: str) -> Dict[st
         "via_device_id"
         in inspect.signature(device_registry.async_get_or_create).parameters
     ):
-        gateway_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, gateway_id)}
+        gateway_device = async_get_device_by_identifier(
+            device_registry, (DOMAIN, gateway_id)
         )
         return {"via_device_id": gateway_device.id} if gateway_device else {}
     return {"via_device": (DOMAIN, gateway_id)}
