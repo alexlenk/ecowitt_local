@@ -15,6 +15,7 @@ htmlcov/
 venv/
 env/
 .venv/
+.venv-wsl/
 
 # IDE files
 .vscode/

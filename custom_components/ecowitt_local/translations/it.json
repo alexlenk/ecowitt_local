@@ -26,6 +26,18 @@
           "mapping_interval": "Ogni quanto aggiornare il mapping dei sensori (300-3600 secondi)",
           "include_inactive": "Includi i sensori attualmente offline o senza dati"
         }
+      },
+      "reconfigure": {
+        "title": "Aggiorna Connessione Gateway Ecowitt",
+        "description": "Aggiorna i dettagli di connessione di questo Gateway, ad esempio dopo un cambio del suo indirizzo IP.",
+        "data": {
+          "host": "Indirizzo IP del Gateway",
+          "password": "Password del Gateway (opzionale)"
+        },
+        "data_description": {
+          "host": "Indirizzo IP o hostname del Gateway Ecowitt (es. 192.168.1.100)",
+          "password": "Password per l'interfaccia web del Gateway (lasciare vuoto se assente)"
+        }
       }
     },
     "error": {
@@ -34,7 +46,9 @@
       "unknown": "Si è verificato un errore imprevisto. Riprova."
     },
     "abort": {
-      "already_configured": "Questo Gateway è già configurato."
+      "already_configured": "Questo Gateway è già configurato.",
+      "reconfigure_successful": "La connessione al Gateway è stata aggiornata con successo.",
+      "wrong_device": "Questo indirizzo IP appartiene a un Gateway diverso da quello attualmente configurato per questa voce. Verifica l'indirizzo, oppure rimuovi questa integrazione e aggiungi l'altro Gateway separatamente."
     }
   },
   "options": {

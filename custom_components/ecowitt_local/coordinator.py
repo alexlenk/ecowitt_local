@@ -37,6 +37,36 @@ from .sensor_mapper import SensorMapper
 _LOGGER = logging.getLogger(__name__)
 
 
+def extract_model_from_firmware(firmware_version: str) -> str:
+    """Extract gateway model from firmware version string.
+
+    Args:
+        firmware_version: Firmware version string (e.g., "GW1100A_V2.4.3")
+
+    Returns:
+        Gateway model (e.g., "GW1100A") or "Unknown" if extraction fails
+    """
+    if not firmware_version or firmware_version == "Unknown":
+        return "Unknown"
+
+    try:
+        # Some gateways prepend "Version: " to the version string (e.g. "Version: GW1100A_V2.4.3")
+        # Search for the GW model anywhere in the string to handle these cases.
+        # The model name ends at the first delimiter: underscore, dot, whitespace, or end of string.
+        match = re.search(r"\b(GW\w+?)(?=[_.\s]|$)", firmware_version)
+        if match:
+            return match.group(1)
+
+    except Exception as err:  # pragma: no cover
+        _LOGGER.debug(
+            "Error extracting model from firmware version '%s': %s",
+            firmware_version,
+            err,
+        )
+
+    return "Unknown"
+
+
 class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
     """Data coordinator for Ecowitt Local."""
 
@@ -218,17 +248,36 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             # Force rain-array items to the tipping-bucket device (WN20, WH40, or WH69)
             # so they are never mis-attributed to a piezoelectric sensor (WH90/WS90/WS85)
             # that registers the same hex IDs (0x0D–0x13) for its piezoRain data.
-            # WN20 takes priority over WH69 because WH69 already reports its own rain
-            # readings via common_list hex IDs — when a WN20 is also present, the
-            # top-level "rain" block belongs to the separate physical WN20 gauge, not
-            # WH69 (issue #239). When no WN20 is registered, WH69 still wins over
-            # WH40 for gateways that report WH69's rain only through this block
-            # (issue #95).
-            _rain_hw_id = (
-                self.sensor_mapper.get_hardware_id("wn20batt")
-                or self.sensor_mapper.get_hardware_id("wh69batt")
-                or self.sensor_mapper.get_hardware_id("wh40batt")
-            )
+            # When more than one tipping-bucket device is registered (e.g. a WH69 and a
+            # separate WN20 both paired to the same gateway), only one of them is
+            # actually the live source for this block. Pick whichever registered
+            # candidate reports the strongest signal instead of assuming a fixed
+            # device always wins — a static WN20-always-wins rule incorrectly starved
+            # a genuinely active WH69 of its rain and battery entities when a WN20
+            # was also registered but not the true source (issue #239). Ties (equal
+            # signal, or no usable signal for either) fall back to the
+            # WN20 > WH69 > WH40 priority order used previously.
+            _rain_hw_id: Optional[str] = None
+            battery_key = "wh40batt"
+            _best_rank = (-1, -1)
+            for _batt_key, _priority in (
+                ("wn20batt", 2),
+                ("wh69batt", 1),
+                ("wh40batt", 0),
+            ):
+                _hw = self.sensor_mapper.get_hardware_id(_batt_key)
+                if not _hw:
+                    continue
+                _info = self.sensor_mapper.get_sensor_info(_hw) or {}
+                try:
+                    _signal_int = int(str(_info.get("signal", "")).strip())
+                except (TypeError, ValueError):
+                    _signal_int = -1
+                _rank = (_signal_int, _priority)
+                if _rank > _best_rank:
+                    _best_rank = _rank
+                    _rain_hw_id = _hw
+                    battery_key = _batt_key
             for item in rain_list:
                 if (
                     isinstance(item, dict)
@@ -239,12 +288,8 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     if _rain_hw_id:
                         entry["_force_hardware_id"] = _rain_hw_id
                     all_sensor_items.append(entry)
-                    # Extract WH40/WH69/WN20 battery from the 0x13 (yearly rain) item which
-                    # carries it. Battery uses binary encoding: "0" = full (100%), "1" = low
-                    # (10%). Use wn20batt if a WN20 is registered (the "rain" block belongs
-                    # to the separate physical WN20 gauge — issue #239), wh69batt if a WH69
-                    # is registered, otherwise default to wh40batt for standalone WH40 rain
-                    # gauges (or when nothing is registered).
+                    # Extract WH40/WH69/WN20 battery from the 0x13 (yearly rain) item,
+                    # attributed to whichever device won the rain block above.
                     if item.get("id") == "0x13" and item.get("battery"):
                         # WH40/WN20 use 0-5 bar scale; WH69 uses binary (0=full, 1=low).
                         # Detect scale: values > 1 are clearly 0-5 bar scale.
@@ -254,12 +299,6 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                             battery_pct = str(batt_val * 20)  # 0-5 bar scale
                         else:
                             battery_pct = "100" if batt_str == "0" else "10"  # binary
-                        if self.sensor_mapper.get_hardware_id("wn20batt") is not None:
-                            battery_key = "wn20batt"
-                        elif self.sensor_mapper.get_hardware_id("wh69batt") is not None:
-                            battery_key = "wh69batt"
-                        else:
-                            battery_key = "wh40batt"
                         all_sensor_items.append({"id": battery_key, "val": battery_pct})
                         _LOGGER.debug(
                             "Added rain battery: %s = %s%%", battery_key, battery_pct
@@ -1472,10 +1511,24 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             # key in livedata (e.g. WH80 sends wh80batt via sensors_info only).
             # Devices that handle battery in livedata (WS90, WH90, WS85, WH26, etc.)
             # already have battery entities from _process_live_data — skip them.
+            #
+            # WH69/WH65/WN20/WH40 are also listed here even though they normally get
+            # their battery from the "rain" livedata block's 0x13 item: only whichever
+            # one of them wins that block's signal-based tie-break (see rain_list
+            # handling above) gets a battery entity from there. When more than one of
+            # these tipping-bucket devices is registered on the same gateway, the
+            # ones that don't win still report their own "batt" field in
+            # get_sensors_info, so this fallback (gated by the "already exists" check
+            # below) gives them a battery entity too instead of none at all — the
+            # regression reported in issue #239.
             _SENSORS_INFO_BATTERY_KEYS: Dict[str, str] = {
                 "WH80": "wh80batt",
                 "WS80": "wh80batt",
                 "WN38": "wn38batt",
+                "WH69": "wh69batt",
+                "WH65": "wh69batt",
+                "WN20": "wn20batt",
+                "WH40": "wh40batt",
             }
             sensor_type = hardware_info.get("sensor_type", "")
             fallback_batt_key = _SENSORS_INFO_BATTERY_KEYS.get(sensor_type.upper())
@@ -1700,25 +1753,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         Returns:
             Gateway model (e.g., "GW1100A") or "Unknown" if extraction fails
         """
-        if not firmware_version or firmware_version == "Unknown":
-            return "Unknown"
-
-        try:
-            # Some gateways prepend "Version: " to the version string (e.g. "Version: GW1100A_V2.4.3")
-            # Search for the GW model anywhere in the string to handle these cases.
-            # The model name ends at the first delimiter: underscore, dot, whitespace, or end of string.
-            match = re.search(r"\b(GW\w+?)(?=[_.\s]|$)", firmware_version)
-            if match:
-                return match.group(1)
-
-        except Exception as err:  # pragma: no cover
-            _LOGGER.debug(
-                "Error extracting model from firmware version '%s': %s",
-                firmware_version,
-                err,
-            )
-
-        return "Unknown"
+        return extract_model_from_firmware(firmware_version)
 
     async def async_refresh_mapping(self) -> None:
         """Force refresh of sensor mapping."""

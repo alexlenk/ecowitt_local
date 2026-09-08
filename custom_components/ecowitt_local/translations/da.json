@@ -26,6 +26,18 @@
           "mapping_interval": "Hvor ofte sensorkortlægningen opdateres (300-3600 sekunder)",
           "include_inactive": "Medtag sensorer, der i øjeblikket er offline eller ikke har data"
         }
+      },
+      "reconfigure": {
+        "title": "Opdater forbindelse til Ecowitt-gateway",
+        "description": "Opdater forbindelsesoplysningerne for denne gateway, for eksempel efter at dens IP-adresse er ændret.",
+        "data": {
+          "host": "Gatewayens IP-adresse",
+          "password": "Gatewayens adgangskode (valgfri)"
+        },
+        "data_description": {
+          "host": "Ecowitt-gatewayens IP-adresse eller værtsnavn (f.eks. 192.168.1.100)",
+          "password": "Adgangskode til gatewayens webinterface (lad feltet stå tomt, hvis der ikke er en adgangskode)"
+        }
       }
     },
     "error": {
@@ -34,7 +46,9 @@
       "unknown": "Der opstod en uventet fejl. Prøv igen."
     },
     "abort": {
-      "already_configured": "Denne gateway er allerede konfigureret."
+      "already_configured": "Denne gateway er allerede konfigureret.",
+      "reconfigure_successful": "Forbindelsen til gatewayen blev opdateret.",
+      "wrong_device": "Denne IP-adresse tilhører en anden gateway end den, der aktuelt er konfigureret for denne post. Kontrollér adressen, eller fjern denne integration, og tilføj den anden gateway separat."
     }
   },
   "options": {

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.7.25] - 2026-09-07
+## [1.7.27] - 2026-09-08
 
 ### Added
 - **"Resync Sensor Mappings" button**: Each gateway device now has a diagnostic button entity (`button.ecowitt_gateway_<id>_resync_mapping`) that immediately re-runs the `get_sensors_info` mapping refresh and a full data refresh, instead of waiting for the periodic mapping-update interval. Useful when changing sensor assignments (adding/removing/moving/renaming a sensor) on the gateway and wanting Home Assistant to pick it up right away. Reuses the existing `async_refresh_mapping()` coordinator method that already backs the `ecowitt_local.refresh_mapping` service. (issue #246)
@@ -14,6 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Deprecated `device_registry.async_get_device()` calls**: Newer Home Assistant core releases warn (and will eventually stop working) when integrations call `async_get_device(identifiers=...)`, since device identifiers are no longer guaranteed unique across config entries. All five call sites (`__init__.py` gateway/ghost-device lookups and migration logic, `device_compat.py`'s via-device resolution) now use a small identifier-scoped lookup helper instead, avoiding the deprecated method entirely. (issue #241)
+
+## [1.7.26] - 2026-09-07
+
+### Fixed
+- **WH69 lost its rain and battery entities when a WN20 was also registered on the same gateway**: v1.7.23 fixed WN20 having no entities by always attributing the top-level `rain` block to WN20 whenever one was registered, ahead of WH69. That static priority broke the setup it was meant to fix for other users: when a WH69 is the genuinely active tipping-bucket source and a WN20 is also registered (but not actually reporting rain), the `rain` block was forced onto WN20 anyway, taking away WH69's rain readings and its only source of battery data. The rain block is now attributed to whichever registered candidate (WN20, WH69, WH40) reports the strongest signal, so a real, actively-reporting WH69 is no longer starved by a WN20 that merely exists in the sensor list; the WN20 > WH69 > WH40 order is now only a tie-break when signal can't distinguish them. Additionally, whichever device doesn't win the rain block now still gets its own battery entity sourced directly from `get_sensors_info`'s `batt` field, instead of losing its battery entity entirely. (issue #239)
+
+## [1.7.24] - 2026-09-05
+
+### Added
+- **Reconfigure flow**: the gateway's IP address (and password) can now be updated from the Home Assistant UI without removing and re-adding the integration, so existing devices, entities, and any automations that reference them are preserved. Previously the only way to move to a new IP after a DHCP lease change was to delete and recreate the config entry.
+- **MAC-based unique ID**: when the gateway exposes its network info (`/get_network_info`), its MAC address — stable across IP changes, unlike the host address previously used — becomes the config entry's unique ID. Gateways where this isn't available fall back to the previous model+host scheme. Existing (legacy) entries transparently adopt the MAC-based ID the first time they're reconfigured; the strict "same physical device" check only applies once both the old and new IDs are MAC-based, so this upgrade never triggers a false "wrong device" abort.
+
+### Fixed
+- **Gateway model always showed as "Unknown" in the config flow on gateways that omit `stationtype` from `/get_version`**: some real-world gateways report only a `version` string (e.g. `"Version: GW1100A_V2.4.5"`) with no dedicated `stationtype` field. The config flow now falls back to parsing the model out of that string, reusing the same parsing already relied on elsewhere in the integration for the live gateway device info.
 
 ## [1.7.23] - 2026-09-04
 
