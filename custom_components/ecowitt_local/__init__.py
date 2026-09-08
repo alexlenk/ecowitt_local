@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from typing import Any, Dict
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,11 +17,11 @@ from homeassistant.helpers import entity_registry as er
 from .api import EcowittLocalAPI
 from .const import DOMAIN, GATEWAY_SENSORS, SERVICE_REFRESH_MAPPING, SERVICE_UPDATE_DATA
 from .coordinator import EcowittLocalDataUpdateCoordinator
-from .device_compat import via_device_kwargs
+from .device_compat import async_get_device_by_identifier, via_device_kwargs
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -100,6 +101,31 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return False
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Allow manual removal of a sensor device no longer reported by the gateway.
+
+    The gateway device itself, and any hardware_id the gateway is still
+    actively reporting via get_sensors_info, cannot be removed this way —
+    deleting an active sensor would just have it reappear on the next
+    mapping poll. A hardware_id that's no longer in the current mapping
+    (sensor unpaired/removed on the gateway) can be removed manually to
+    clean up the device registry (issue #245).
+    """
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    gateway_id = coordinator.gateway_info.get("gateway_id", "unknown")
+
+    for domain, identifier in device_entry.identifiers:
+        if domain != DOMAIN:
+            continue
+        if identifier == gateway_id:
+            return False
+        if coordinator.sensor_mapper.get_sensor_info(identifier) is not None:
+            return False
+    return True
+
+
 async def _async_setup_device_registry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -129,7 +155,9 @@ async def _async_setup_device_registry(
     # fallback was introduced (v1.6.8). If the real gateway_id is now known, move any
     # entities that are still pointing at the old ghost device to the real one.
     if gateway_id != "unknown":
-        old_device = device_registry.async_get_device(identifiers={(DOMAIN, "unknown")})
+        old_device = async_get_device_by_identifier(
+            device_registry, (DOMAIN, "unknown")
+        )
         if old_device and entry.entry_id in old_device.config_entries:
             entity_registry = er.async_get(hass)
             for entity in er.async_entries_for_device(
@@ -169,10 +197,18 @@ async def _async_setup_device_registry(
             # Determine if outdoor sensor for suggested area
             is_outdoor = _is_outdoor_sensor(sensor_type)
 
+            device_name = f"Ecowitt {sensor_type_name} {hardware_id}"
+            raw_name = str(sensor_info.get("raw_data", {}).get("name", "")).strip()
+            # A raw name without "CH{n}" means the user renamed the sensor on the
+            # gateway itself (e.g. "Deep Freezer") rather than leaving the
+            # default "Temp & Humidity CH2" — use it as the device name (issue #243).
+            if raw_name and not re.search(r"CH\d+", raw_name, re.IGNORECASE):
+                device_name = raw_name
+
             device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
                 identifiers={(DOMAIN, hardware_id)},
-                name=f"Ecowitt {sensor_type_name} {hardware_id}",
+                name=device_name,
                 manufacturer="Ecowitt",
                 model=device_model,
                 suggested_area="Outdoor" if is_outdoor else None,
@@ -269,7 +305,7 @@ def _async_cleanup_decimal_id_orphans(
             break
 
     outdoor_device = (
-        device_registry.async_get_device(identifiers={(DOMAIN, outdoor_hardware_id)})
+        async_get_device_by_identifier(device_registry, (DOMAIN, outdoor_hardware_id))
         if outdoor_hardware_id
         else None
     )
@@ -488,8 +524,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                         and coordinator.sensor_mapper.get_sensor_info(hardware_id)
                     ):
                         # Find the new device for this hardware_id
-                        new_device = device_registry.async_get_device(
-                            identifiers={(DOMAIN, hardware_id)}
+                        new_device = async_get_device_by_identifier(
+                            device_registry, (DOMAIN, hardware_id)
                         )
                         if new_device:
                             # Update entity to point to new device
@@ -513,8 +549,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             # v1.3 Migration: Move gateway sensors back to gateway device
             if config_entry.minor_version < 3:
                 gateway_id = coordinator.gateway_info.get("gateway_id", "unknown")
-                gateway_device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, gateway_id)}
+                gateway_device = async_get_device_by_identifier(
+                    device_registry, (DOMAIN, gateway_id)
                 )
 
                 if gateway_device:

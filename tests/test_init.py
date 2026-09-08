@@ -1313,3 +1313,125 @@ async def test_unknown_decimal_id_skipped_in_processing(
         if ent.unique_id.endswith("_4")
     ]
     assert decimal_4_entities == [], "Unknown decimal-id '4' must not produce an entity"
+
+
+async def test_async_remove_config_entry_device_gateway_denied(
+    hass: HomeAssistant, setup_integration
+):
+    """The gateway device itself can never be removed via the UI trash icon."""
+    from homeassistant.helpers import device_registry as dr
+
+    from custom_components.ecowitt_local import async_remove_config_entry_device
+
+    config_entry = setup_integration
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    gateway_id = coordinator.gateway_info.get("gateway_id", "unknown")
+
+    device_registry = dr.async_get(hass)
+    gateway_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, gateway_id)}
+    )
+
+    assert (
+        await async_remove_config_entry_device(hass, config_entry, gateway_device)
+        is False
+    )
+
+
+async def test_async_remove_config_entry_device_active_sensor_denied(
+    hass: HomeAssistant, setup_integration
+):
+    """A hardware_id still reported by get_sensors_info cannot be removed."""
+    from homeassistant.helpers import device_registry as dr
+
+    from custom_components.ecowitt_local import async_remove_config_entry_device
+
+    config_entry = setup_integration
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    hardware_id = coordinator.sensor_mapper.get_all_hardware_ids()[0]
+
+    device_registry = dr.async_get(hass)
+    sensor_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, hardware_id)}
+    )
+
+    assert (
+        await async_remove_config_entry_device(hass, config_entry, sensor_device)
+        is False
+    )
+
+
+async def test_async_remove_config_entry_device_stale_sensor_allowed(
+    hass: HomeAssistant, setup_integration
+):
+    """A hardware_id no longer present in the mapping can be removed manually."""
+    from types import SimpleNamespace
+
+    from custom_components.ecowitt_local import async_remove_config_entry_device
+
+    config_entry = setup_integration
+
+    stale_device = SimpleNamespace(
+        identifiers={("other_domain", "unrelated"), (DOMAIN, "STALE1234")}
+    )
+
+    assert (
+        await async_remove_config_entry_device(hass, config_entry, stale_device) is True
+    )
+
+
+async def test_gateway_custom_sensor_name_used_as_device_name(
+    hass: HomeAssistant, mock_config_entry, mock_ecowitt_api
+):
+    """A user-assigned gateway sensor name (no CH{n}) becomes the device name.
+
+    Ecowitt lets users rename a sensor on the gateway itself (e.g. "Deep
+    Freezer"). Renamed sensors don't contain the default "CH{n}" pattern, so
+    that's used as the signal to prefer the gateway name over the generated
+    "Ecowitt <type> <hardware_id>" fallback. (issue #243)
+    """
+    from homeassistant.helpers import device_registry as dr
+
+    mock_ecowitt_api.test_connection.return_value = True
+    mock_ecowitt_api.get_version.return_value = {
+        "stationtype": "GW1100A",
+        "version": "1.7.3",
+    }
+    mock_ecowitt_api.get_live_data.return_value = {"common_list": []}
+    mock_ecowitt_api.get_all_sensor_mappings.return_value = [
+        {
+            "id": "D8174",
+            "img": "wh51",
+            "type": "15",
+            "name": "Deep Freezer",
+            "batt": "1",
+            "signal": "4",
+        },
+        {
+            "id": "D8648",
+            "img": "wh51",
+            "type": "16",
+            "name": "Soil moisture CH2",
+            "batt": "1",
+            "signal": "4",
+        },
+    ]
+
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "custom_components.ecowitt_local.coordinator.EcowittLocalAPI",
+        return_value=mock_ecowitt_api,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device_registry = dr.async_get(hass)
+
+    renamed_device = device_registry.async_get_device(identifiers={(DOMAIN, "D8174")})
+    assert renamed_device is not None
+    assert renamed_device.name == "Deep Freezer"
+
+    default_device = device_registry.async_get_device(identifiers={(DOMAIN, "D8648")})
+    assert default_device is not None
+    assert default_device.name != "Soil moisture CH2"
+    assert "D8648" in default_device.name

@@ -38,7 +38,10 @@ def test_via_device_kwargs_resolves_via_device_id():
 
     registry = MagicMock()
     registry.async_get_or_create = new_async_get_or_create
-    registry.async_get_device.return_value = SimpleNamespace(id="gateway-device-id")
+    gateway_device = SimpleNamespace(
+        id="gateway-device-id", identifiers={(DOMAIN, "GW1100A")}
+    )
+    registry.devices = {"gateway-device-id": gateway_device}
 
     with patch(
         "custom_components.ecowitt_local.device_compat.dr.async_get",
@@ -47,7 +50,6 @@ def test_via_device_kwargs_resolves_via_device_id():
         result = via_device_kwargs(MagicMock(), "GW1100A")
 
     assert result == {"via_device_id": "gateway-device-id"}
-    registry.async_get_device.assert_called_once_with(identifiers={(DOMAIN, "GW1100A")})
 
 
 def test_via_device_kwargs_new_ha_device_not_yet_registered():
@@ -58,7 +60,7 @@ def test_via_device_kwargs_new_ha_device_not_yet_registered():
 
     registry = MagicMock()
     registry.async_get_or_create = new_async_get_or_create
-    registry.async_get_device.return_value = None
+    registry.devices = {}
 
     with patch(
         "custom_components.ecowitt_local.device_compat.dr.async_get",
