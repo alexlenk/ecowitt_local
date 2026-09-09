@@ -2497,6 +2497,59 @@ async def test_coordinator_rain_losing_device_still_gets_own_battery(coordinator
 
 
 @pytest.mark.asyncio
+async def test_coordinator_rain_losing_wh69_binary_battery_from_sensors_info(
+    coordinator,
+):
+    """Test WH69's sensors_info fallback battery uses binary encoding (issue #239 follow-up).
+
+    Unlike WN20/WH40, WH69/WH65 report a binary battery ("0"=normal, "1"=low)
+    even via get_sensors_info, not the 0-5 bar scale used by the other
+    tipping-bucket devices. A WH69 with batt="0" (normal) was previously shown
+    as 0% because the fallback multiplied it by 20 like a bar-scale reading.
+    """
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "AABBCC",
+                "img": "wh69",
+                "type": "1",
+                "name": "WH69",
+                "batt": "0",
+                "signal": "4",
+            },
+            {
+                "id": "2FD4",
+                "img": "wn20",
+                "type": "70",
+                "name": "Rain Mini",
+                "batt": "5",
+                "signal": "4",
+            },
+        ]
+    )
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "common_list": [{"id": "0x02", "val": "25.0°C"}],
+        "rain": [{"id": "0x13", "val": "100.0 mm", "battery": "5"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wh69_battery = next(
+        (
+            sensors[k]
+            for k in sensors
+            if sensors[k].get("sensor_key") == "wh69batt"
+            and sensors[k].get("hardware_id") == "AABBCC"
+        ),
+        None,
+    )
+    assert wh69_battery is not None, "WH69 should get a battery entity"
+    assert wh69_battery["state"] == "100", "binary batt=0 should give 100% (normal)"
+
+
+@pytest.mark.asyncio
 async def test_coordinator_ch_pm25_empty_handling(coordinator):
     """Test coordinator handles empty or missing ch_pm25 gracefully."""
     for ch_pm25_val in [[], None]:

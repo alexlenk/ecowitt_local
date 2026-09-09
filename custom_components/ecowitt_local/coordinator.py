@@ -1541,11 +1541,22 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     for s in sensors_data.values()
                 )
                 if not existing:
-                    battery_pct = (
-                        str(int(battery_raw) * 20)
-                        if battery_raw.isdigit()
-                        else battery_raw
-                    )
+                    # WH69/WH65 battery is binary (0=full, 1=low) even via
+                    # get_sensors_info, unlike WN20/WH40/WH80/WN38 which use the
+                    # documented 0-5 bar scale — same distinction already made for
+                    # the rain-block battery above (issue #239 follow-up).
+                    if sensor_type.upper() in ("WH69", "WH65"):
+                        _batt_val = int(battery_raw) if battery_raw.isdigit() else -1
+                        if _batt_val > 1:
+                            battery_pct = str(_batt_val * 20)  # 0-5 bar scale
+                        else:
+                            battery_pct = "100" if battery_raw == "0" else "10"
+                    else:
+                        battery_pct = (
+                            str(int(battery_raw) * 20)
+                            if battery_raw.isdigit()
+                            else battery_raw
+                        )
                     batt_entity_id, batt_name = self.sensor_mapper.generate_entity_id(
                         fallback_batt_key, hardware_id
                     )

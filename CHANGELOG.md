@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.28] - 2026-09-09
+
+### Fixed
+- **WH69 sensors_info fallback battery showed 0% instead of normal**: The v1.7.26 fix that gives the losing side of the rain-block tie-break (WH69/WH65/WN20/WH40) its own battery entity from `get_sensors_info`'s `batt` field assumed the 0-5 bar scale for all of them. WH69/WH65 actually report a binary battery value ("0"=normal, "1"=low) even via `get_sensors_info`, the same encoding already handled for the rain-block-derived battery — a WH69 reporting `batt: "0"` (normal) was being multiplied by 20 into a 0% reading instead of 100%. The sensors_info fallback now applies the same binary-vs-bar detection already used for the rain-block battery, so WH69/WH65 batteries read correctly. (issue #239)
+
 ## [1.7.27] - 2026-09-08
 
 ### Added
