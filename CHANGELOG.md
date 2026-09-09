@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.28] - 2026-09-09
+
+### Fixed
+- **WH69 battery showed 0% (Ecowitt's own dashboard reported "normal")**: v1.7.26's fallback that gives the losing device in a WN20/WH69/WH40 rain-block tie-break its own battery entity from `get_sensors_info`'s `batt` field always treated that value as a 0-5 bar scale (`batt × 20%`). WH69/WH65 (and, per the spec, WH40/WN20 as well) can instead report raw binary battery (0=normal, 1=low) through this field, so a `batt` of `"0"` was read as 0 bars (0%) instead of "normal" (100%). The fallback now applies the same binary-vs-bar-scale heuristic already used for the direct rain-block battery extraction: a raw `"0"` or `"1"` from `get_sensors_info` is treated as binary for these tipping-bucket devices, instead of being unconditionally multiplied by 20. (issue #239)
+
 ## [1.7.27] - 2026-09-08
 
 ### Added

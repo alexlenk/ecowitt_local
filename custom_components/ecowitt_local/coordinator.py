@@ -1541,11 +1541,22 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     for s in sensors_data.values()
                 )
                 if not existing:
-                    battery_pct = (
-                        str(int(battery_raw) * 20)
-                        if battery_raw.isdigit()
-                        else battery_raw
-                    )
+                    if fallback_batt_key in (
+                        "wh69batt",
+                        "wn20batt",
+                        "wh40batt",
+                    ) and battery_raw in ("0", "1"):
+                        # WH40/WN20 normally use 0-5 bar scale, WH69/WH65 use binary
+                        # (0=full, 1=low), but get_sensors_info's "batt" field doesn't
+                        # reliably normalize this for these tipping-bucket devices
+                        # (issue #239) - a raw value of 0 or 1 is ambiguous with the
+                        # bottom of the bar scale, so treat it as binary like the
+                        # rain-block extraction above does.
+                        battery_pct = "100" if battery_raw == "0" else "10"
+                    elif battery_raw.isdigit():
+                        battery_pct = str(int(battery_raw) * 20)
+                    else:
+                        battery_pct = battery_raw
                     batt_entity_id, batt_name = self.sensor_mapper.generate_entity_id(
                         fallback_batt_key, hardware_id
                     )
