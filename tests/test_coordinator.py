@@ -3165,6 +3165,136 @@ async def test_coordinator_fallback_battery_from_sensors_info_wn38(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_fallback_battery_wh69_binary_zero_is_normal(coordinator):
+    """WH69's sensors_info batt can be raw binary, not 0-5 bar scale (issue #239).
+
+    A user reported WH69 showing 0% battery (via this fallback) right after
+    v1.7.26, while the Ecowitt dashboard reported "normal" for the same
+    sensor. get_sensors_info's "batt" field doesn't reliably normalize to the
+    0-5 bar scale for WH69/WH65/WN20/WH40 - a raw "0" or "1" should be treated
+    as binary (0=normal=100%, 1=low=10%), matching the rain-block heuristic.
+    """
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "AABBCC",
+                "img": "wh69",
+                "type": "1",
+                "name": "WH69",
+                "batt": "0",
+                "signal": "4",
+            },
+            {
+                "id": "2FD4",
+                "img": "wn20",
+                "type": "70",
+                "name": "Rain Mini",
+                "batt": "5",
+                "signal": "5",
+            },
+        ]
+    )
+    coordinator._include_inactive = True
+
+    # WN20 wins the rain block (stronger signal); WH69 falls back to its own
+    # sensors_info batt for its battery entity.
+    raw_data = {
+        "common_list": [{"id": "0x02", "val": "25.0°C"}],
+        "rain": [{"id": "0x13", "val": "100.0 mm", "battery": "5"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wh69_battery = next(
+        (
+            sensors[k]
+            for k in sensors
+            if sensors[k].get("sensor_key") == "wh69batt"
+            and sensors[k].get("hardware_id") == "AABBCC"
+        ),
+        None,
+    )
+    assert wh69_battery is not None, "WH69 should get its own fallback battery entity"
+    assert wh69_battery["state"] == "100", "raw binary batt=0 means normal (100%)"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_fallback_battery_wh40_binary_one_is_low(coordinator):
+    """WH40's sensors_info batt of "1" should be treated as binary-low (10%).
+
+    The rain block's 0x13 item can arrive without an embedded "battery"
+    field, in which case the direct rain-block extraction is skipped and the
+    get_sensors_info fallback is the only source of WH40's battery.
+    """
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "112233",
+                "img": "wh40",
+                "type": "3",
+                "name": "WH40",
+                "batt": "1",
+                "signal": "4",
+            }
+        ]
+    )
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "rain": [{"id": "0x13", "val": "100.0 mm"}],
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wh40_battery = next(
+        (
+            sensors[k]
+            for k in sensors
+            if sensors[k].get("sensor_key") == "wh40batt"
+            and sensors[k].get("hardware_id") == "112233"
+        ),
+        None,
+    )
+    assert wh40_battery is not None, "WH40 should get its own fallback battery entity"
+    assert wh40_battery["state"] == "10", "raw binary batt=1 means low (10%)"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_fallback_battery_non_digit_passthrough(coordinator):
+    """A non-digit, non-empty sensors_info batt value is passed through as-is."""
+    coordinator.sensor_mapper.update_mapping(
+        [
+            {
+                "id": "9E62BB",
+                "img": "wh80",
+                "type": "5",
+                "name": "WH80",
+                "batt": "unknown",
+                "signal": "4",
+            }
+        ]
+    )
+    coordinator._include_inactive = True
+
+    raw_data = {
+        "common_list": [
+            {"id": "0x02", "val": "25.0°C"},
+        ]
+    }
+    processed = await coordinator._process_live_data(raw_data)
+    sensors = processed["sensors"]
+
+    wh80_battery = next(
+        (sensors[k] for k in sensors if sensors[k].get("sensor_key") == "wh80batt"),
+        None,
+    )
+    assert wh80_battery is not None, "wh80batt should be created from sensors_info batt"
+    assert (
+        wh80_battery["state"] == "unknown"
+    ), "non-digit batt should be passed through unchanged"
+
+
+@pytest.mark.asyncio
 async def test_coordinator_soil_ad_data(coordinator):
     """Test processing soil AD (analog-to-digital) calibration data."""
     mock_live_data = {
