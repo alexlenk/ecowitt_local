@@ -13,8 +13,36 @@ This file defines the autonomous behavior for a Claude Code agent working on thi
 3. For each issue (open and recently-updated closed), read the full body and **every comment** in chronological order
 4. If any comment contains an image URL, download and view it (images often contain critical data like entity lists or raw API JSON)
 5. Build a list of actionable vs. non-actionable items (see decision tree below)
-6. Implement all actionable items in a single release
-7. If nothing is actionable, do nothing — do not create empty releases
+6. Fetch open pull requests from external contributors: `gh pr list --state open`. Skip any PR opened by the bot itself (`claude/**` branches, `claude/release-*`) — those are handled by the release pipeline, not this step.
+7. For each external PR, read the full diff and description, then decide whether it's mergeable (see "External Pull Requests" below)
+8. Implement all actionable issue items **and** merge all mergeable external PRs in the same release
+9. If nothing is actionable and no PR is mergeable, do nothing — do not create empty releases
+
+---
+
+## External Pull Requests — What is mergeable?
+
+Community PRs (translations, docs, small fixes) show up from forks. GitHub blocks Actions workflows on a fork PR from a first-time or outside contributor until a maintainer approves them (`action_required` conclusion on every check, PR status stuck on `pending`) — there is no API access in this environment to click "Approve and run workflows", so **never wait on or try to force those checks to run**. Evaluate the PR on its diff alone instead.
+
+### Merge it (fold into the current release)
+
+| Situation | Why it's safe |
+|---|---|
+| New translation file (`translations/xx.json`) that mirrors `en.json`'s exact key structure | Additive, isolated, no code path touches it besides HA's own translation loader |
+| Documentation-only change (README, comments) with no factual errors | No runtime effect |
+| A small, obviously-correct fix that follows an existing pattern in this file's decision tree (e.g. a one-line device-type-string match identical to the WH90 pattern) | Same bar as a bot-authored fix |
+
+To merge one of these: **do not use the GitHub merge button** (branch protection requires the blocked status checks to pass). Instead, port the PR's file contents onto the current `claude/release-vX.Y.Z` branch as a normal commit — same version-bump-and-release flow as any other change in this file — crediting the author and PR number in the commit message and CHANGELOG entry. This runs the change through this repo's own CI instead of the fork's blocked one. Once the release ships, comment on the original PR thanking the contributor and linking the release, then close it (it was never merged via GitHub's merge mechanism, so close rather than expecting "Merged" status).
+
+### Do not merge — leave a comment instead
+
+| Situation | Action |
+|---|---|
+| Touches `coordinator.py`, `sensor_mapper.py`, or any core entity-creation/mapping logic | Too risky to fold in without the same scrutiny as a hand-written fix — read it carefully, and only merge if you would have written the identical diff yourself to fix a specific issue in the tracker. Otherwise say what additional testing/evidence you'd need. |
+| Adds a new dependency, new service, or changes `manifest.json` requirements | Out of scope for an unattended merge — comment explaining why |
+| Adds WH77 support | Never — same rule as everywhere else in this file |
+| Diff doesn't apply cleanly (real conflict, not just a stale base) | Comment asking the author to rebase |
+| Unclear intent, missing description, or behavior you can't verify against the spec/architecture | Ask a clarifying question in a comment, don't merge speculatively |
 
 ---
 
@@ -161,6 +189,8 @@ gh release list --limit 3            # release should exist
 6. **Minimal changes**: Fix the specific problem. Don't refactor surrounding code, add docstrings, or improve unrelated things.
 7. **No force pushes to main**: Never. Main is protected.
 8. **One release per session**: Batch all fixes from the current scan into a single version bump and release.
+9. **Never merge an external PR via the GitHub merge button**: Fork PRs from outside contributors have blocked/unapproved checks — port the content onto the release branch instead (see "External Pull Requests" above) so it runs through this repo's own CI.
+10. **Never fold in a PR touching core mapping/entity-creation logic without the same scrutiny as a hand-written fix**: When in doubt, comment instead of merging.
 
 ---
 
@@ -179,5 +209,7 @@ At the end of a successful run:
 - All fixed issues have a comment with the version number and what changed
 - The CHANGELOG has a new entry
 - Fixed issues are closed with a comment linking to the release
+- Any mergeable external PRs were ported into the release (credited in the commit/CHANGELOG), commented on with thanks + release link, and closed
+- Non-mergeable external PRs got an explanatory comment, not silence
 - No WH77 code was written
 - `git tag -l` shows the new tag after the pipeline completes
