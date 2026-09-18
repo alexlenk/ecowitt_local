@@ -9,6 +9,15 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # Skip the redundant pull_request run for our own auto-generated release PRs:
+    # they're opened via GITHUB_TOKEN (gh pr create in auto-pr.yml), and GitHub's
+    # loop-prevention rule for GITHUB_TOKEN-authored events means that run can
+    # never actually start a job - it just completes with conclusion "failure"
+    # and 0 jobs, even though the identical commit already passed CI on push.
+    # That spurious failure becomes the newest workflow run and drags down the
+    # README badge. The commit was already fully tested by the push trigger, so
+    # skip (not fail) instead of re-running.
+    if: github.event_name != 'pull_request' || github.actor != 'github-actions[bot]'
     strategy:
       matrix:
         python-version: ["3.13"]
