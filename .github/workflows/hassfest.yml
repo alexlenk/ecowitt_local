@@ -9,6 +9,9 @@ on:
 jobs:
   validate:
     runs-on: "ubuntu-latest"
+    # See ci.yml for why: skips the doomed pull_request run on our own
+    # GITHUB_TOKEN-authored auto-release PRs instead of letting it fail.
+    if: github.event_name != 'pull_request' || github.actor != 'github-actions[bot]'
     steps:
       - uses: "actions/checkout@v4"
       - uses: home-assistant/actions/hassfest@master
