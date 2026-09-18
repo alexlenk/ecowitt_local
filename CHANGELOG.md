@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.29] - 2026-09-18
+
+### Fixed
+- **Deprecated `device_registry.devices` mapping usage**: `device_compat.py`'s identifier-lookup helper (used by every gateway/ghost-device lookup and the migration logic in `__init__.py`) iterated `device_registry.devices.values()` to find a device by identifier. HA core now deprecates treating `device_registry.devices` as a mapping (`.values()`, `.items()`, `[key]`, `in`) and warns this will stop working in HA 2027.9.0. The helper now uses the registry's own `get_entry(identifiers=...)` lookup method instead — the identifier-indexed lookup the mapping behavior used to provide — which predates this deprecation and works across HA versions. (issue #251)
+
 ## [1.7.28] - 2026-09-09
 
 ### Fixed

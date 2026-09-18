@@ -17,14 +17,14 @@ def async_get_device_by_identifier(
     """Look up a device by identifier without the deprecated async_get_device().
 
     HA core is deprecating `async_get_device(identifiers=...)` because device
-    identifiers are no longer unique across config entries. Iterating the
-    registry directly avoids depending on a specific replacement method name
-    and works across HA versions.
+    identifiers are no longer unique across config entries. HA core also
+    deprecates treating `device_registry.devices` as a mapping (`.values()`,
+    `.items()`, `[key]`, `in`), so use its `get_entry()` lookup helper
+    instead of iterating — it's the identifier-indexed lookup the mapping
+    behavior used to provide, and it predates both deprecations, so it works
+    across HA versions.
     """
-    for device in device_registry.devices.values():
-        if identifier in device.identifiers:
-            return device
-    return None
+    return device_registry.devices.get_entry(identifiers={identifier}, connections=None)
 
 
 def via_device_kwargs(hass: Optional[HomeAssistant], gateway_id: str) -> Dict[str, Any]:
