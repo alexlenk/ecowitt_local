@@ -17,14 +17,29 @@ def async_get_device_by_identifier(
     """Look up a device by identifier without the deprecated async_get_device().
 
     HA core is deprecating `async_get_device(identifiers=...)` because device
-    identifiers are no longer unique across config entries. HA core also
-    deprecates treating `device_registry.devices` as a mapping (`.values()`,
-    `.items()`, `[key]`, `in`), so use its `get_entry()` lookup helper
-    instead of iterating — it's the identifier-indexed lookup the mapping
-    behavior used to provide, and it predates both deprecations, so it works
-    across HA versions.
+    identifiers are no longer unique across config entries. It's tempting to
+    replace it with `device_registry.devices.get_entry(...)`, but that's a
+    trap on HA 2026.9+: `device_registry.devices` there is a
+    `_DeprecatedDeviceRegistryItemsView` whose `__getattr__` reports the
+    *same* deprecation warning for any attribute access other than
+    `__iter__`/`__len__`/`__contains__`/`__getitem__` — including
+    `.get_entry`/`.values()`.
+
+    Iterating it is the one access that's safe on every supported HA
+    version, but what it yields differs by version:
+    - HA 2026.9+: `.devices` is that deprecated view, and its `__iter__` is
+      overridden to yield `DeviceEntry` objects directly.
+    - Older HA (our minimum is 2026.1.0): `.devices` is a plain
+      `dict[str, DeviceEntry]`-like container, so iterating it yields device
+      *id strings* — `.devices[device_id]` resolves the entry, which is a
+      plain (non-deprecated) dict lookup on these older versions.
     """
-    return device_registry.devices.get_entry(identifiers={identifier}, connections=None)
+    for device in device_registry.devices:
+        if isinstance(device, str):
+            device = device_registry.devices[device]
+        if identifier in device.identifiers:
+            return device
+    return None
 
 
 def via_device_kwargs(hass: Optional[HomeAssistant], gateway_id: str) -> Dict[str, Any]:
