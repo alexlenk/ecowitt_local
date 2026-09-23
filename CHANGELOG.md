@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.30] - 2026-09-21
+
+### Fixed
+- **v1.7.29's `device_registry.devices` deprecation fix didn't actually fix it**: v1.7.29 replaced `device_registry.devices.values()` with `device_registry.devices.get_entry(...)`, but on HA 2026.9+ `device_registry.devices` is a `_DeprecatedDeviceRegistryItemsView` whose `__getattr__` reports the exact same deprecation warning for *any* attribute access other than `__iter__`/`__len__`/`__contains__`/`__getitem__` — including `.get_entry`. So the warning fired from the same line, for the same reason, just via a different method name. (Thanks to @olympia for the detailed root-cause writeup, including why the existing test's `MagicMock` masked the bug — it resolves any attribute name and can't reproduce the view's `__getattr__` semantics.) The helper now iterates `device_registry.devices` instead, which is the one access pattern the deprecated view doesn't warn on. What that iteration yields differs by HA version, so the helper handles both shapes: HA 2026.9+'s view yields `DeviceEntry` objects directly, while older HA (back to this integration's minimum supported 2026.1.0) has `.devices` as a plain dict-like container where iterating yields device-id strings that still need a `[]` lookup to resolve to the entry — a lookup that isn't deprecated on those older versions, since the deprecated view doesn't exist there yet. The regression test now uses a fake object that reproduces the deprecated view's real `__getattr__` behavior instead of a bare `MagicMock`, so a future regression to `.get_entry()`/`.values()` would fail the test instead of passing silently. (issue #251)
+
 ## [1.7.29] - 2026-09-18
 
 ### Fixed
