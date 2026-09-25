@@ -23,13 +23,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Searching for open release PRs from claude/release-* branches..."
+          echo "Searching for open release PRs opened by auto-pr.yml..."
 
+          # auto-pr.yml is the only workflow that opens PRs against main, always
+          # titled "Release vX.Y.Z" and always authored by github-actions[bot] via
+          # GITHUB_TOKEN. Match on that instead of the head branch name: the head
+          # branch is whatever the working claude/** session branch happened to be
+          # (e.g. claude/release-v1.7.9, or a session's own claude/lucid-davinci-*
+          # branch), and filtering on a claude/release-* prefix silently stranded
+          # release PRs opened from any other claude/** branch (see PR #254, #256).
           PR_NUMBER=$(gh pr list \
             --base main \
             --state open \
-            --json number,headRefName,title \
-            --jq '[.[] | select(.headRefName | startswith("claude/release-")) | select(.title | startswith("Release v"))] | .[0].number // empty' \
+            --json number,title,author \
+            --jq '[.[] | select(.author.login == "github-actions[bot]") | select(.title | startswith("Release v"))] | .[0].number // empty' \
             --repo "${{ github.repository }}")
 
           if [ -z "$PR_NUMBER" ]; then
