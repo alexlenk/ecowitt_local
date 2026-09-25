@@ -336,8 +336,8 @@ async def test_rain_sensor_state_classes(mock_coordinator):
     rain_cases = [
         # (sensor_key, state_class_from_coordinator, expected_state_class)
         ("rainratein", "measurement", SensorStateClass.MEASUREMENT),
-        ("eventrainin", "total", SensorStateClass.TOTAL),
-        ("hourlyrainin", "total_increasing", SensorStateClass.TOTAL_INCREASING),
+        ("eventrainin", "total_increasing", SensorStateClass.TOTAL_INCREASING),
+        ("hourlyrainin", "measurement", SensorStateClass.MEASUREMENT),
         ("dailyrainin", "total_increasing", SensorStateClass.TOTAL_INCREASING),
         ("weeklyrainin", "total_increasing", SensorStateClass.TOTAL_INCREASING),
         ("monthlyrainin", "total_increasing", SensorStateClass.TOTAL_INCREASING),
@@ -362,6 +362,52 @@ async def test_rain_sensor_state_classes(mock_coordinator):
         assert (
             sensor.state_class == expected
         ), f"{sensor_key}: expected {expected}, got {sensor.state_class}"
+
+
+def test_sensor_types_cumulative_state_classes():
+    """Only true cumulative counters may use a cumulative state class.
+
+    Regression test: rolling-window rain sensors (hourly, 24-hour) were declared
+    total_increasing although their value drops as old rain leaves the window. HA
+    logged "state is not strictly increasing" and larger drops were recorded as
+    meter resets, corrupting the statistics sum. Event rain was "total", which
+    subtracts the drop to 0 at the end of each event from the sum.
+    """
+    from custom_components.ecowitt_local.const import SENSOR_TYPES
+
+    rolling_keys = ["hourlyrainin", "0x7D", "0x7C"]
+    for key in rolling_keys:
+        assert (
+            SENSOR_TYPES[key]["state_class"] == "measurement"
+        ), f"{key} is a rolling-window value and must be measurement"
+
+    cumulative_keys = {
+        "eventrainin",
+        "dailyrainin",
+        "weeklyrainin",
+        "monthlyrainin",
+        "yearlyrainin",
+        "totalrainin",
+        "0x0D",
+        "0x10",
+        "0x11",
+        "0x12",
+        "0x13",
+        "0x14",
+        *(f"lds_total_heat_ch{ch}" for ch in range(1, 5)),
+    }
+    for key in cumulative_keys:
+        assert (
+            SENSOR_TYPES[key]["state_class"] == "total_increasing"
+        ), f"{key} is a restarting counter and must be total_increasing"
+
+    cumulative_classes = {"total", "total_increasing"}
+    unexpected = {
+        key
+        for key, info in SENSOR_TYPES.items()
+        if info.get("state_class") in cumulative_classes and key not in cumulative_keys
+    }
+    assert not unexpected, f"unreviewed cumulative state_class on: {sorted(unexpected)}"
 
 
 def test_rain_sensor_display_precision():
