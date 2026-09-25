@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.31] - 2026-09-25
+
+### Fixed
+- **Rolling-window rain sensors declared the wrong state class**: `hourlyrainin`/`0x7D` (Hourly Rain) and `0x7C` (24-Hour Rain) are rolling-window totals that drop as older rain leaves the window, but were declared `total_increasing`, which Home Assistant expects to be strictly non-decreasing. Small drops logged `"state is not strictly increasing"`; larger drops (≥10%) were interpreted by the recorder as a meter reset, corrupting the long-term statistics sum. They're now `measurement`, which correctly tracks a value that can go up or down without implying a cumulative sum. Event Rain (`eventrainin`/`0x0D`) was declared `total`, under which a decrease is subtracted from the running sum — so the drop to 0 at the end of every rain event canceled that event's rain out of the long-term total. It's now `total_increasing`, treating each drop to 0 as the start of a new counter cycle instead of a negative delta. Daily/weekly/monthly/yearly/total rain were already correct and are unchanged. A new test (`test_sensor_types_cumulative_state_classes`) asserts every rolling-window key is `measurement` and every restarting-counter key is `total_increasing`, and fails if any other sensor is given a cumulative state class without being reviewed. Credit to @olympia for the report, fix, and tests (PR #255). Home Assistant will show a one-time repair on Developer Tools → Statistics for the affected entities after updating, since their state class changed — this is expected; resolve it there (e.g. by clearing the old statistics).
+
 ## [1.7.30] - 2026-09-21
 
 ### Fixed

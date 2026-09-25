@@ -145,18 +145,22 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
         "state_class": "measurement",
         "suggested_display_precision": 2,
     },
+    # Resets to 0 when the rain event ends: a restarting counter, so each drop is a
+    # new meter cycle rather than a negative change (plain "total" subtracts it).
     "eventrainin": {
         "name": "Event Rain",
         "unit": "in",
         "device_class": "precipitation",
-        "state_class": "total",
+        "state_class": "total_increasing",
         "suggested_display_precision": 2,
     },
+    # Rolling-window total: decreases as older rain leaves the window, so it is not
+    # monotonic and must not be total_increasing (HA reports it as a meter reset).
     "hourlyrainin": {
         "name": "Hourly Rain",
         "unit": "in",
         "device_class": "precipitation",
-        "state_class": "total_increasing",
+        "state_class": "measurement",
         "suggested_display_precision": 2,
     },
     "dailyrainin": {
@@ -364,11 +368,13 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
         "state_class": "measurement",
     },
     "0x17": {"name": "UV Index", "unit": "UV Index", "icon": "mdi:weather-sunny-alert"},
+    # Resets to 0 when the rain event ends: a restarting counter, so each drop is a
+    # new meter cycle rather than a negative change (plain "total" subtracts it).
     "0x0D": {
         "name": "Rain Event",
         "unit": "mm",
         "device_class": "precipitation",
-        "state_class": "total",
+        "state_class": "total_increasing",
         "suggested_display_precision": 1,
     },
     "0x0E": {
@@ -378,18 +384,22 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
         "state_class": "measurement",
         "suggested_display_precision": 1,
     },
+    # Rolling-window total: decreases as older rain leaves the window, so it is not
+    # monotonic and must not be total_increasing (HA reports it as a meter reset).
     "0x7D": {
         "name": "Hourly Rain",
         "unit": "mm",
         "device_class": "precipitation",
-        "state_class": "total_increasing",
+        "state_class": "measurement",
         "suggested_display_precision": 1,
     },
+    # Rolling-window total: decreases as older rain leaves the window, so it is not
+    # monotonic and must not be total_increasing (HA reports it as a meter reset).
     "0x7C": {
         "name": "24-Hour Rain",
         "unit": "mm",
         "device_class": "precipitation",
-        "state_class": "total_increasing",
+        "state_class": "measurement",
         "suggested_display_precision": 1,
     },
     "0x10": {
