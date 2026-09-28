@@ -1150,6 +1150,17 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     pass
                 embedded_unit = "lx"
 
+            # Handle kilo foot-candles: some gateways report solar radiation in
+            # Kfc when configured to use foot-candle units. Convert to lux
+            # (1 Kfc = 10763.91 lx) for Home Assistant, same as the Klux case above.
+            if embedded_unit and embedded_unit.upper() == "KFC":
+                try:
+                    sensor_value = str(float(sensor_value) * 10763.91)
+                    numeric_value = sensor_value
+                except (ValueError, TypeError):
+                    pass
+                embedded_unit = "lx"
+
             # Get hardware ID for this sensor (only for non-gateway sensors).
             # Items from rain/piezoRain may carry a _force_hardware_id to resolve
             # conflicts when tipping-bucket (WH40/WH69) and piezoelectric (WH90/WS90/WS85)
