@@ -1559,6 +1559,65 @@ async def test_coordinator_klux_zero_value(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_kfc_solar_radiation(coordinator):
+    """Test solar radiation reported in Kfc (kilo foot-candles) is converted to lux.
+
+    Some Ecowitt gateways allow the solar radiation unit to be configured as
+    foot-candles. When Kfc is reported, the coordinator must:
+    - Convert value ×10763.91 (e.g., 2.0 Kfc → 21527.82 lx)
+    - Override device_class from "irradiance" to "illuminance"
+    Reported in issue #259.
+    """
+    mock_live_data = {
+        "common_list": [
+            {"id": "0x15", "val": "2.0 Kfc"},
+        ]
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    solar_found = False
+    for entity_id, sensor_data in sensors.items():
+        if sensor_data.get("sensor_key") == "0x15":
+            solar_found = True
+            assert (
+                sensor_data["state"] == 21527.82
+            ), f"Expected 21527.82 lx, got {sensor_data['state']}"
+            assert sensor_data["unit_of_measurement"] == "lx"
+            assert sensor_data["device_class"] == "illuminance"
+            break
+    assert solar_found, "Solar radiation entity (0x15) not found"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_kfc_zero_value(coordinator):
+    """Test 0 Kfc is correctly converted to 0 lx (night-time condition)."""
+    mock_live_data = {
+        "common_list": [
+            {"id": "0x15", "val": "0.00 Kfc"},
+        ]
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+
+    result = await coordinator._async_update_data()
+    sensors = result["sensors"]
+
+    for entity_id, sensor_data in sensors.items():
+        if sensor_data.get("sensor_key") == "0x15":
+            assert sensor_data["state"] == 0.0
+            assert sensor_data["unit_of_measurement"] == "lx"
+            assert sensor_data["device_class"] == "illuminance"
+            return
+    pytest.fail("Solar radiation entity (0x15) not found")
+
+
+@pytest.mark.asyncio
 async def test_coordinator_solar_wm2_unchanged(coordinator):
     """Regression: W/m² solar radiation must not be affected by the Klux fix."""
     mock_live_data = {

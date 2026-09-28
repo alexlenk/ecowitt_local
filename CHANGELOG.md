@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.32] - 2026-09-28
+
+### Fixed
+- **Solar radiation showed an invalid unit ("Kfc") for the `irradiance` device class**: some gateways can be configured to report solar radiation in kilo foot-candles instead of W/m² or lux, embedding the unit directly in the value string (e.g. `"2.0 Kfc"`). `Kfc` was passed straight through as `unit_of_measurement`, which Home Assistant rejects for the `irradiance` device class (it only accepts `W/m²` or `BTU/(h⋅ft²)`), producing the "native unit of measurement 'Kfc' is not a valid unit for the device class" warning. `Kfc` is now converted the same way the existing `Klux` case already is: the value is multiplied by 10763.91 to get lux, and the entity's `device_class` switches from `irradiance` to `illuminance` to match. (issue #259)
+
 ## [1.7.31] - 2026-09-25
 
 ### Fixed

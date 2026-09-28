@@ -398,6 +398,27 @@ async def test_coordinator_klux_conversion_valueerror(coordinator):
 
 
 @pytest.mark.asyncio
+async def test_coordinator_kfc_conversion_valueerror(coordinator):
+    """Test Kfc conversion ValueError is handled gracefully."""
+    mock_live_data = {
+        "common_list": [
+            {"id": "0x15", "val": "invalid_value", "unit": "Kfc"},
+        ],
+    }
+
+    coordinator.api.get_live_data = AsyncMock(return_value=mock_live_data)
+    coordinator.api.get_all_sensor_mappings = AsyncMock(return_value=[])
+    coordinator.api.get_version = AsyncMock(
+        return_value={"stationtype": "GW1100A", "version": "1.7.3"}
+    )
+    coordinator._include_inactive = True
+
+    # Should not raise; invalid Kfc value is kept as-is
+    result = await coordinator._async_update_data()
+    assert result is not None
+
+
+@pytest.mark.asyncio
 async def test_coordinator_system_sensor_category(coordinator):
     """Test system sensor (runtime/heap) gets 'system' category (lines 442-444)."""
     mock_live_data = {
