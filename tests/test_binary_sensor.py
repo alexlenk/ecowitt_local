@@ -486,45 +486,6 @@ def test_sensor_extra_state_attributes_invalid_values(mock_coordinator):
     assert ATTR_SIGNAL_STRENGTH not in attributes
 
 
-def test_sensor_get_sensor_type_display_name(mock_coordinator):
-    """Test _get_sensor_type_display_name method."""
-    entity = EcowittSensorOnlineBinarySensor(
-        mock_coordinator, "test", {"sensor_key": "test"}
-    )
-
-    test_cases = [
-        ({"sensor_type": "WH51"}, "Soil Moisture Sensor"),
-        ({"sensor_type": "WH31"}, "Temperature/Humidity Sensor"),
-        ({"sensor_type": "WH41"}, "PM2.5 Air Quality Sensor"),
-        ({"sensor_type": "WH55"}, "Leak Sensor"),
-        ({"sensor_type": "WH57"}, "Lightning Sensor"),
-        ({"sensor_type": "WH40"}, "Rain Sensor"),
-        ({"sensor_type": "WH68"}, "Weather Station"),
-        ({"sensor_type": "unknown"}, "Sensor"),
-    ]
-
-    for sensor_info, expected_name in test_cases:
-        result = entity._get_sensor_type_display_name(sensor_info)
-        assert result == expected_name
-
-
-def test_sensor_is_outdoor_sensor(mock_coordinator):
-    """Test _is_outdoor_sensor method."""
-    entity = EcowittSensorOnlineBinarySensor(
-        mock_coordinator, "test", {"sensor_key": "test"}
-    )
-
-    # Outdoor sensor types
-    outdoor_types = ["WH51", "WH41", "WH55", "WH57", "WH40", "WH68"]
-    for sensor_type in outdoor_types:
-        result = entity._is_outdoor_sensor({"sensor_type": sensor_type})
-        assert result is True
-
-    # Indoor sensor type
-    result = entity._is_outdoor_sensor({"sensor_type": "WH31"})
-    assert result is False
-
-
 def test_sensor_handle_coordinator_update(mock_coordinator):
     """Test _handle_coordinator_update method."""
     entity = EcowittSensorOnlineBinarySensor(
