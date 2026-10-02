@@ -96,7 +96,7 @@ All built-in gateway sensors (indoor temperature/humidity/pressure, wind, rain) 
 Each physical sensor gets its own Home Assistant device with relevant entities:
 
 ```
-🌱 Ecowitt Soil Moisture D8174
+🌱 Ecowitt Soil Moisture Sensor D8174
 ├── 💧 Soil Moisture (24%)          [Sensor]
 ├── 🔋 Battery (85%)                [Diagnostic]
 ├── 📶 Signal Strength              [Diagnostic]
@@ -104,6 +104,8 @@ Each physical sensor gets its own Home Assistant device with relevant entities:
 ```
 
 Battery, signal strength, and online status are grouped under **Diagnostic** so they stay out of your main dashboard view.
+
+For multi-channel sensors (WH31, WH34, WH35, WH41, WH51, WH52, WH54, WH55) the device name is shown in front of the entity name, e.g. `Ecowitt Soil Moisture Sensor D8174 Soil Moisture`. If you give a multi-channel sensor a custom name on the gateway (e.g. "Deep Freezer" instead of "Temp & Humidity CH2"), that name becomes the device name, giving `Deep Freezer Temperature` (not yet supported for WH52). Names you set in Home Assistant always take precedence.
 
 ## 🔧 Services
 

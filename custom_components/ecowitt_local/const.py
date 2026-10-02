@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Final
+from typing import Any, Dict, Final, Optional
 
 # Integration domain
 DOMAIN: Final = "ecowitt_local"
@@ -46,7 +46,11 @@ GATEWAY_SENSORS: Final = {
 
 
 def _generate_channel_sensors(
-    base_key: str, name_template: str, sensor_def: Dict[str, Any], max_channels: int
+    base_key: str,
+    name_template: str,
+    sensor_def: Dict[str, Any],
+    max_channels: int,
+    entity_name: Optional[str] = None,
 ) -> Dict[str, Dict[str, Any]]:
     """Generate numbered channel sensors dynamically.
 
@@ -55,6 +59,8 @@ def _generate_channel_sensors(
         name_template: Name template with {ch} placeholder
         sensor_def: Base sensor definition dict
         max_channels: Maximum number of channels to generate
+        entity_name: Channel-free entity name (issue #244); defaults to
+            name_template without " CH{ch}"
 
     Returns:
         Dictionary of sensor definitions
@@ -75,7 +81,13 @@ def _generate_channel_sensors(
         # Note: "leafwetness_ch" also contains "_ch", so the if "_ch" branch above handles it
 
         name = name_template.format(ch=i)
-        sensors[key] = {**sensor_def, "name": name}
+        # entity_name is the channel-free name used when the entity sits on its own
+        # hardware-ID device: HA then prefixes it with the device name (issue #244).
+        sensors[key] = {
+            **sensor_def,
+            "name": name,
+            "entity_name": entity_name or name_template.replace(" CH{ch}", ""),
+        }
     return sensors
 
 
@@ -512,7 +524,11 @@ SENSOR_TYPES.update(
         4,
     )
 )
-SENSOR_TYPES.update(_generate_channel_sensors("leak_ch", "Leak Sensor CH{ch}", {}, 4))
+SENSOR_TYPES.update(
+    _generate_channel_sensors(
+        "leak_ch", "Leak Sensor CH{ch}", {}, 4, entity_name="Leak"
+    )
+)
 SENSOR_TYPES.update(
     _generate_channel_sensors(
         "leafwetness_ch",
@@ -690,7 +706,12 @@ def _generate_battery_sensors(
         key = f"{base_key}{i}"
         name = name_template.format(ch=i)
         sensor_key = sensor_key_template.format(ch=i)
-        sensors[key] = {"name": name, "sensor_key": sensor_key}
+        # See _generate_channel_sensors: the device name already identifies the sensor.
+        sensors[key] = {
+            "name": name,
+            "sensor_key": sensor_key,
+            "entity_name": "Battery",
+        }
     return sensors
 
 
