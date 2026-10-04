@@ -80,8 +80,10 @@ def device_belongs_to_entry(device: Any, entry_id: str) -> bool:
     """
     config_entry_id = getattr(device, "config_entry_id", None)
     if config_entry_id is not None:
-        return config_entry_id == entry_id
-    return entry_id in device.config_entries
+        matches: bool = config_entry_id == entry_id
+        return matches
+    config_entries: set[str] = device.config_entries
+    return entry_id in config_entries
 
 
 def async_get_entry_id_for_device(hass: HomeAssistant, device_id: str) -> Optional[str]:
@@ -97,12 +99,16 @@ def async_get_entry_id_for_device(hass: HomeAssistant, device_id: str) -> Option
     lookup = getattr(dr, "async_get_device_and_config_entry_for_domain", None)
     if lookup is not None:
         _device, config_entry = lookup(hass, device_id, domain=DOMAIN)
-        return config_entry.entry_id if config_entry is not None else None
+        if config_entry is None:
+            return None
+        owner_entry_id: str = config_entry.entry_id
+        return owner_entry_id
 
     device = dr.async_get(hass).async_get(device_id)
     if device is None:
         return None
-    for entry_id in device.config_entries:
+    candidate_entry_ids: set[str] = device.config_entries
+    for entry_id in candidate_entry_ids:
         config_entry = hass.config_entries.async_get_entry(entry_id)
         if config_entry is not None and config_entry.domain == DOMAIN:
             return entry_id
