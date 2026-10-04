@@ -1,4 +1,4 @@
-"""Tests for the via_device -> via_device_id HA core compatibility helper."""
+"""Tests for the HA core device registry compatibility helpers."""
 
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -6,6 +6,8 @@ from unittest.mock import MagicMock, patch
 from custom_components.ecowitt_local.const import DOMAIN
 from custom_components.ecowitt_local.device_compat import (
     async_get_device_by_identifier,
+    async_get_entry_id_for_device,
+    device_belongs_to_entry,
     via_device_kwargs,
 )
 
@@ -143,3 +145,78 @@ def test_async_get_device_by_identifier_legacy_dict_like_devices():
     result = async_get_device_by_identifier(registry, (DOMAIN, "GW1100A"))
 
     assert result is gateway_device
+
+
+class SingleEntryDevice:
+    """A HA 2026.8+ `DeviceEntry`: reading `config_entries` is deprecated.
+
+    The property raises here so a regression back to the deprecated read
+    fails the test instead of passing silently.
+    """
+
+    def __init__(self, config_entry_id):
+        self.config_entry_id = config_entry_id
+
+    @property
+    def config_entries(self):
+        raise AssertionError("deprecated DeviceEntry.config_entries was read")
+
+
+def test_device_belongs_to_entry_single_entry_device():
+    """HA 2026.8+ devices are matched on config_entry_id alone."""
+    device = SingleEntryDevice("entry-1")
+    assert device_belongs_to_entry(device, "entry-1") is True
+    assert device_belongs_to_entry(device, "entry-2") is False
+
+
+def test_device_belongs_to_entry_legacy_device():
+    """Older HA cores (no config_entry_id) fall back to config_entries."""
+    device = SimpleNamespace(config_entries={"entry-1", "other-entry"})
+    assert device_belongs_to_entry(device, "entry-1") is True
+    assert device_belongs_to_entry(device, "entry-2") is False
+
+
+def test_entry_id_for_device_uses_domain_lookup_helper():
+    """HA 2026.9+ resolves the owning entry through the registry helper."""
+    lookup = MagicMock(
+        return_value=(SingleEntryDevice("entry-1"), SimpleNamespace(entry_id="entry-1"))
+    )
+    hass = MagicMock()
+    with patch(
+        "custom_components.ecowitt_local.device_compat.dr",
+        SimpleNamespace(async_get_device_and_config_entry_for_domain=lookup),
+    ):
+        assert async_get_entry_id_for_device(hass, "device-1") == "entry-1"
+    lookup.assert_called_once_with(hass, "device-1", domain=DOMAIN)
+
+
+def test_entry_id_for_device_not_ours():
+    """A device owned by no Ecowitt Local entry resolves to None."""
+    lookup = MagicMock(return_value=(SingleEntryDevice("other-entry"), None))
+    with patch(
+        "custom_components.ecowitt_local.device_compat.dr",
+        SimpleNamespace(async_get_device_and_config_entry_for_domain=lookup),
+    ):
+        assert async_get_entry_id_for_device(MagicMock(), "device-1") is None
+
+
+def test_entry_id_for_device_legacy_core():
+    """Older HA cores scan config_entries for the entry of our domain."""
+    entries = {
+        "other-entry": SimpleNamespace(domain="other_domain"),
+        "entry-1": SimpleNamespace(domain=DOMAIN),
+    }
+    hass = MagicMock()
+    hass.config_entries.async_get_entry.side_effect = entries.get
+    registry = MagicMock()
+    registry.async_get.side_effect = lambda device_id: (
+        SimpleNamespace(config_entries=set(entries))
+        if device_id == "device-1"
+        else None
+    )
+    with patch(
+        "custom_components.ecowitt_local.device_compat.dr",
+        SimpleNamespace(async_get=lambda _hass: registry),
+    ):
+        assert async_get_entry_id_for_device(hass, "device-1") == "entry-1"
+        assert async_get_entry_id_for_device(hass, "unknown-device") is None
