@@ -17,7 +17,12 @@ from homeassistant.helpers import entity_registry as er
 from .api import EcowittLocalAPI
 from .const import DOMAIN, GATEWAY_SENSORS, SERVICE_REFRESH_MAPPING, SERVICE_UPDATE_DATA
 from .coordinator import EcowittLocalDataUpdateCoordinator
-from .device_compat import async_get_device_by_identifier, via_device_kwargs
+from .device_compat import (
+    async_get_device_by_identifier,
+    async_get_entry_id_for_device,
+    device_belongs_to_entry,
+    via_device_kwargs,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,7 +163,7 @@ async def _async_setup_device_registry(
         old_device = async_get_device_by_identifier(
             device_registry, (DOMAIN, "unknown")
         )
-        if old_device and entry.entry_id in old_device.config_entries:
+        if old_device and device_belongs_to_entry(old_device, entry.entry_id):
             entity_registry = er.async_get(hass)
             for entity in er.async_entries_for_device(
                 entity_registry, old_device.id, include_disabled_entities=True
@@ -370,15 +375,14 @@ async def _async_register_services(hass: HomeAssistant) -> None:
 
         if device_id:
             # Find coordinator for specific device
-            device_registry = dr.async_get(hass)
             # Handle case where device_id might be passed as a list
             if isinstance(device_id, list):
                 device_id = device_id[0] if device_id else None
-            device = device_registry.async_get(device_id) if device_id else None
-            if device:
-                for entry_id in device.config_entries:
-                    if entry_id in hass.data.get(DOMAIN, {}):
-                        coordinators.append(hass.data[DOMAIN][entry_id])
+            entry_id = (
+                async_get_entry_id_for_device(hass, device_id) if device_id else None
+            )
+            if entry_id in hass.data.get(DOMAIN, {}):
+                coordinators.append(hass.data[DOMAIN][entry_id])
         else:
             # Refresh all coordinators
             coordinators = list(hass.data.get(DOMAIN, {}).values())
@@ -402,15 +406,14 @@ async def _async_register_services(hass: HomeAssistant) -> None:
 
         if device_id:
             # Find coordinator for specific device
-            device_registry = dr.async_get(hass)
             # Handle case where device_id might be passed as a list
             if isinstance(device_id, list):
                 device_id = device_id[0] if device_id else None
-            device = device_registry.async_get(device_id) if device_id else None
-            if device:
-                for entry_id in device.config_entries:
-                    if entry_id in hass.data.get(DOMAIN, {}):
-                        coordinators.append(hass.data[DOMAIN][entry_id])
+            entry_id = (
+                async_get_entry_id_for_device(hass, device_id) if device_id else None
+            )
+            if entry_id in hass.data.get(DOMAIN, {}):
+                coordinators.append(hass.data[DOMAIN][entry_id])
         else:
             # Update all coordinators
             coordinators = list(hass.data.get(DOMAIN, {}).values())

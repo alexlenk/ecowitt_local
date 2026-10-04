@@ -160,6 +160,91 @@ async def test_update_data_service(hass: HomeAssistant, setup_integration):
     coordinator.async_request_refresh.assert_called_once()
 
 
+async def test_refresh_mapping_service_for_device(
+    hass: HomeAssistant, setup_integration, caplog: pytest.LogCaptureFixture
+):
+    """A device_id refreshes the mapping of the entry that owns the device."""
+    from unittest.mock import AsyncMock
+
+    from homeassistant.helpers import device_registry as dr
+
+    from custom_components.ecowitt_local.const import SERVICE_REFRESH_MAPPING
+
+    coordinator = hass.data[DOMAIN][setup_integration.entry_id]
+    coordinator.async_refresh_mapping = AsyncMock()
+    device = dr.async_entries_for_config_entry(
+        dr.async_get(hass), setup_integration.entry_id
+    )[0]
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_MAPPING,
+        {"device_id": device.id},
+        blocking=True,
+    )
+
+    coordinator.async_refresh_mapping.assert_called_once()
+    # Home Assistant 2026.10+ logs every read of the deprecated property.
+    assert "DeviceEntry.config_entries" not in caplog.text
+
+
+async def test_update_data_service_for_device(
+    hass: HomeAssistant, setup_integration, caplog: pytest.LogCaptureFixture
+):
+    """A device_id refreshes the data of the entry that owns the device."""
+    from unittest.mock import AsyncMock
+
+    from homeassistant.helpers import device_registry as dr
+
+    from custom_components.ecowitt_local.const import SERVICE_UPDATE_DATA
+
+    coordinator = hass.data[DOMAIN][setup_integration.entry_id]
+    coordinator.async_request_refresh = AsyncMock()
+    device = dr.async_entries_for_config_entry(
+        dr.async_get(hass), setup_integration.entry_id
+    )[0]
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_DATA,
+        {"device_id": [device.id]},
+        blocking=True,
+    )
+
+    coordinator.async_request_refresh.assert_called_once()
+    assert "DeviceEntry.config_entries" not in caplog.text
+
+
+async def test_service_ignores_device_of_another_integration(
+    hass: HomeAssistant, setup_integration
+):
+    """A device that no Ecowitt Local entry owns refreshes nothing."""
+    from unittest.mock import AsyncMock
+
+    from homeassistant.helpers import device_registry as dr
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    from custom_components.ecowitt_local.const import SERVICE_REFRESH_MAPPING
+
+    coordinator = hass.data[DOMAIN][setup_integration.entry_id]
+    coordinator.async_refresh_mapping = AsyncMock()
+    other_entry = MockConfigEntry(domain="other_domain")
+    other_entry.add_to_hass(hass)
+    other_device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other_domain", "other-device")},
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_MAPPING,
+        {"device_id": other_device.id},
+        blocking=True,
+    )
+
+    coordinator.async_refresh_mapping.assert_not_called()
+
+
 async def test_service_error_handling(hass: HomeAssistant, setup_integration):
     """Test service error handling."""
     from unittest.mock import AsyncMock
