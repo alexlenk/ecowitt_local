@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.34] - 2026-10-05
+
+### Fixed
+- **Deprecation warnings from `DeviceEntry.config_entries` on Home Assistant 2026.10**: the stale "unknown" gateway clean-up at setup and the `update_data` / `refresh_mapping` services no longer read the deprecated property (removed in HA 2027.10). New `device_compat` helpers use `config_entry_id` / `async_get_device_and_config_entry_for_domain` where available and fall back to `config_entries` on older HA. Credit to @RavenX447l (issue #267, PR #268).
+
 ## [1.7.33] - 2026-09-30
 
 ### Fixed
