@@ -16,7 +16,8 @@ This file defines the autonomous behavior for a Claude Code agent working on thi
 6. Fetch open pull requests from external contributors: `gh pr list --state open`. Skip any PR opened by the bot itself (`claude/**` branches, `claude/release-*`) — those are handled by the release pipeline, not this step.
 7. For each external PR, read the full diff and description, then decide whether it's mergeable (see "External Pull Requests" below)
 8. Implement all actionable issue items **and** merge all mergeable external PRs in the same release
-9. If nothing is actionable and no PR is mergeable, do nothing — do not create empty releases
+9. Check CI health: the latest runs on `main` (`gh run list --branch main --limit 10`, including scheduled hassfest/HACS) and on any unmerged `claude/release-*` branch from a previous run. A red check there is actionable even when no issue mentions it — fix it per "Fixing CI failures" (on a still-unmerged previous release branch, fix it there; otherwise include the fix in this run's release)
+10. If nothing is actionable, no PR is mergeable, and CI is green, do nothing — do not create empty releases
 
 ---
 
@@ -55,7 +56,7 @@ To merge one of these: **do not use the GitHub merge button** (branch protection
 | User posts `get_livedata_info` or `get_sensors_info` JSON for an unsupported device | Add device support |
 | User reports a bug with reproducible description (wrong value, missing entity, error) | Fix the bug |
 | User confirms a previous fix worked | Close the issue |
-| CI failed on a previous push | Fix the failure before anything else |
+| CI failed on a previous push, or a scheduled check (hassfest/HACS) is red on `main` | Fix the failure before anything else — see "Fixing CI failures" |
 | User reports an entity has the wrong name, unit, or device class | Fix the metadata in `const.py` |
 
 ### Respond only (post a comment, no code change):
@@ -132,8 +133,25 @@ git push origin claude/release-vX.Y.Z
 gh run list --branch claude/release-vX.Y.Z --limit 5
 ```
 - Wait for all CI checks to complete
-- If **any check fails**, fix it and push again before doing anything else
+- If **any check fails**, fix it and push again before doing anything else — including failures your code did not cause (see "Fixing CI failures" below)
 - Only proceed to step 7 after CI is fully green
+
+### Fixing CI failures
+
+A red check is never a reason to end the run with "needs a human" until every case below has been tried. Start by reading the failed log (`gh run view <run-id> --log-failed`) and checking whether the same check is also red on `main` (`gh run list --branch main --limit 10`), including the scheduled hassfest/HACS runs.
+
+| Failure | What to do |
+|---|---|
+| Your change broke a test, lint, mypy, or coverage | Fix the code/tests. Never weaken the check. |
+| A validator or tool tightened its rules and the failure also shows on `main` (e.g. hassfest started rejecting `aiohttp` in `manifest.json` requirements, a new black/mypy release) | In scope — fix it on the release branch and add a CHANGELOG line. |
+| A third-party service step fails while tests/lint/mypy/coverage passed (e.g. Codecov upload crashing with `EPROTO ... SSL alert number 40` despite `fail_ci_if_error: false`, network/TLS errors, rate limits, a download from an external host) | 1. Re-run the failed job once (`gh run rerun <run-id> --failed`). 2. If the re-run is not possible (e.g. HTTP 403) or fails again, edit `.github/workflows/*.yml` to make **only that third-party step** non-blocking (`continue-on-error: true` with a comment explaining why), and bump the action to its current major if it targets a deprecated runtime (e.g. Node 20). Push, then add a CHANGELOG line. |
+
+You are explicitly authorized to edit files under `.github/workflows/` for the cases above. Hard limits:
+- Never put `continue-on-error` on, remove, or skip the test, black, isort, flake8, mypy, coverage, hassfest, or HACS steps.
+- Never skip, delete, or xfail a test to get green; never lower the coverage requirement.
+- Never push an empty commit to re-trigger CI.
+
+Only if none of the above applies, or the fix was blocked, end the run reporting exactly which check failed, the log line, what you tried, and what is blocking. File a GitHub issue for any out-of-scope follow-up you noticed (e.g. other actions on a deprecated runtime).
 
 ### 7. Comment on the fixed issues
 For each issue that was addressed, post a comment:
