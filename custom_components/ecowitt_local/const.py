@@ -228,6 +228,7 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
         "name": "Lightning Strikes",
         "unit": "strikes",
         "icon": "mdi:flash",
+        "state_class": "total_increasing",
     },
     "lightning_time": {"name": "Last Lightning", "device_class": "timestamp"},
     "lightning": {

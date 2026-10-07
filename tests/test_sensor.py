@@ -395,6 +395,7 @@ def test_sensor_types_cumulative_state_classes():
         "0x13",
         "0x14",
         *(f"lds_total_heat_ch{ch}" for ch in range(1, 5)),
+        "lightning_num",
     }
     for key in cumulative_keys:
         assert (

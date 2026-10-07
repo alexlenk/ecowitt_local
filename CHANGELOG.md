@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.35] - 2026-10-07
+
+### Changed
+- **CI**: bumped `actions/checkout` to v5 and `actions/setup-python` to v6 to move off the deprecated Node 20 runtime (issue #270).
+
+## [1.7.34] - 2026-10-05
+
+### Fixed
+- **Deprecation warnings from `DeviceEntry.config_entries` on Home Assistant 2026.10**: the stale "unknown" gateway clean-up at setup and the `update_data` / `refresh_mapping` services no longer read the deprecated property (removed in HA 2027.10). New `device_compat` helpers use `config_entry_id` / `async_get_device_and_config_entry_for_domain` where available and fall back to `config_entries` on older HA. Credit to @RavenX447l (issue #267, PR #268).
+- **hassfest failure**: removed `aiohttp` from the manifest `requirements`; hassfest now rejects it because it is a Home Assistant core dependency.
+
+## [1.7.33] - 2026-09-30
+
+### Fixed
+- **Lightning Strikes had no `state_class`, so Home Assistant kept no long-term statistics for it**: `lightning_num` (WH57) is now `total_increasing`, matching Home Assistant core's `ecowitt` integration. A drop back to 0 is recorded as a new counter cycle rather than a negative change. Credit to @olympia (issue #264).
+
 ## [1.7.32] - 2026-09-28
 
 ### Fixed

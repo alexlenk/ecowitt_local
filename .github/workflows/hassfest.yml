@@ -13,5 +13,5 @@ jobs:
     # GITHUB_TOKEN-authored auto-release PRs instead of letting it fail.
     if: github.event_name != 'pull_request' || github.actor != 'github-actions[bot]'
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: "actions/checkout@v5"
       - uses: home-assistant/actions/hassfest@master

@@ -1,4 +1,4 @@
-"""Compatibility helper for the HA core via_device -> via_device_id migration."""
+"""Compatibility helpers for HA core device registry migrations."""
 
 from __future__ import annotations
 
@@ -66,3 +66,50 @@ def via_device_kwargs(hass: Optional[HomeAssistant], gateway_id: str) -> Dict[st
         )
         return {"via_device_id": gateway_device.id} if gateway_device else {}
     return {"via_device": (DOMAIN, gateway_id)}
+
+
+def device_belongs_to_entry(device: Any, entry_id: str) -> bool:
+    """Return whether a device belongs to the given config entry.
+
+    HA 2026.8 restricted a device to a single config entry, exposed as
+    `DeviceEntry.config_entry_id`, and deprecated `DeviceEntry.config_entries`.
+    From HA 2026.10 reading `config_entries` logs a deprecation warning for
+    custom integrations, and it is removed in HA 2027.10. Older HA (our
+    minimum is 2026.1.0) has no `config_entry_id`, so fall back to
+    `config_entries` there, where reading it is not deprecated.
+    """
+    config_entry_id = getattr(device, "config_entry_id", None)
+    if config_entry_id is not None:
+        matches: bool = config_entry_id == entry_id
+        return matches
+    config_entries: set[str] = device.config_entries
+    return entry_id in config_entries
+
+
+def async_get_entry_id_for_device(hass: HomeAssistant, device_id: str) -> Optional[str]:
+    """Return the id of the Ecowitt Local config entry that owns a device.
+
+    HA 2026.9+ provides `dr.async_get_device_and_config_entry_for_domain()`,
+    which reads `config_entry_id` and also resolves a device id stored before
+    the HA 2026.8 device split (e.g. in an automation calling one of our
+    services) to the split device owned by this domain. Older HA has no such
+    helper; scan the device's config entries for one of ours there, where
+    reading `DeviceEntry.config_entries` is not yet deprecated.
+    """
+    lookup = getattr(dr, "async_get_device_and_config_entry_for_domain", None)
+    if lookup is not None:
+        _device, config_entry = lookup(hass, device_id, domain=DOMAIN)
+        if config_entry is None:
+            return None
+        owner_entry_id: str = config_entry.entry_id
+        return owner_entry_id
+
+    device = dr.async_get(hass).async_get(device_id)
+    if device is None:
+        return None
+    candidate_entry_ids: set[str] = device.config_entries
+    for entry_id in candidate_entry_ids:
+        config_entry = hass.config_entries.async_get_entry(entry_id)
+        if config_entry is not None and config_entry.domain == DOMAIN:
+            return entry_id
+    return None

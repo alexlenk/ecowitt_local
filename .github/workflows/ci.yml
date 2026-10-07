@@ -23,10 +23,10 @@ jobs:
         python-version: ["3.13"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           
@@ -57,9 +57,13 @@ jobs:
           PYTHONPATH="$PWD" pytest tests/ --cov=custom_components.ecowitt_local --cov-report=xml --cov-report=term-missing
           
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
+        # fail_ci_if_error: false does not cover a crash in the action itself
+        # (e.g. the 2026-10-05 Codecov TLS handshake failure), so make the
+        # upload advisory - tests and the coverage report above still gate CI.
+        continue-on-error: true
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
