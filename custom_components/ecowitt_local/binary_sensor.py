@@ -29,6 +29,7 @@ from .const import (
 )
 from .coordinator import EcowittLocalDataUpdateCoordinator
 from .device_compat import via_device_kwargs
+from .device_naming import device_name, is_outdoor_sensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -232,15 +233,15 @@ class EcowittSensorOnlineBinarySensor(
                 device_model = sensor_info.get("device_model") or sensor_info.get(
                     "sensor_type", "Unknown"
                 )
-                sensor_type_name = self._get_sensor_type_display_name(sensor_info)
-
                 return DeviceInfo(
                     identifiers={(DOMAIN, self._hardware_id)},
-                    name=f"Ecowitt {sensor_type_name} {self._hardware_id}",
+                    name=device_name(self._hardware_id, sensor_info),
                     manufacturer=MANUFACTURER,
                     model=device_model,
                     suggested_area=(
-                        "Outdoor" if self._is_outdoor_sensor(sensor_info) else None
+                        "Outdoor"
+                        if is_outdoor_sensor(sensor_info.get("sensor_type", ""))
+                        else None
                     ),
                     **via_device_kwargs(self.hass, gateway_id),
                 )
@@ -292,52 +293,6 @@ class EcowittSensorOnlineBinarySensor(
                 break
 
         return attributes
-
-    def _get_sensor_type_display_name(self, sensor_info: Dict[str, Any]) -> str:
-        """Get display name for sensor type."""
-        sensor_type = sensor_info.get("sensor_type", "").lower()
-
-        type_names = {
-            "wh51": "Soil Moisture Sensor",
-            "wh31": "Temperature/Humidity Sensor",
-            "wh41": "PM2.5 Air Quality Sensor",
-            "wh55": "Leak Sensor",
-            "wh57": "Lightning Sensor",
-            "wh40": "Rain Sensor",
-            "wn20": "Rain Gauge",
-            "wh68": "Weather Station",
-            "soil": "Soil Moisture Sensor",
-            "temp_hum": "Temperature/Humidity Sensor",
-            "pm25": "PM2.5 Air Quality Sensor",
-            "leak": "Leak Sensor",
-            "lightning": "Lightning Sensor",
-            "rain": "Rain Sensor",
-            "weather_station": "Weather Station",
-        }
-
-        return type_names.get(sensor_type, "Sensor")
-
-    def _is_outdoor_sensor(self, sensor_info: Dict[str, Any]) -> bool:
-        """Check if sensor is typically outdoor."""
-        sensor_type = sensor_info.get("sensor_type", "").lower()
-
-        outdoor_types = {
-            "wh51",
-            "wh41",
-            "wh55",
-            "wh57",
-            "wh40",
-            "wn20",
-            "wh68",
-            "soil",
-            "pm25",
-            "leak",
-            "lightning",
-            "rain",
-            "weather_station",
-        }
-
-        return sensor_type in outdoor_types
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -417,7 +372,7 @@ class EcowittStateBinarySensor(
                 )
                 return DeviceInfo(
                     identifiers={(DOMAIN, self._hardware_id)},
-                    name=f"Ecowitt {sensor_info.get('sensor_type', 'Sensor')} {self._hardware_id}",
+                    name=device_name(self._hardware_id, sensor_info),
                     manufacturer=MANUFACTURER,
                     model=device_model,
                     **via_device_kwargs(self.hass, gateway_id),

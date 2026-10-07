@@ -36,11 +36,14 @@ from .const import (
     ATTR_HARDWARE_ID,
     ATTR_SENSOR_TYPE,
     ATTR_SIGNAL_STRENGTH,
+    BATTERY_SENSORS,
     DOMAIN,
     MANUFACTURER,
+    SENSOR_TYPES,
 )
 from .coordinator import EcowittLocalDataUpdateCoordinator
 from .device_compat import via_device_kwargs
+from .device_naming import device_name, is_outdoor_sensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,12 +148,44 @@ class EcowittLocalSensor(
         if precision is not None:
             self._attr_suggested_display_precision = precision
 
+        # Channel-templated entities on their own hardware-ID device are named by
+        # what they measure; HA prefixes the device name (issue #244). Without a
+        # hardware device they keep the channel in the name so they stay distinct.
+        # Decided once here, together with the device the entity registers under.
+        sensor_def = (
+            BATTERY_SENSORS.get(self._sensor_key)
+            or SENSOR_TYPES.get(self._sensor_key)
+            or {}
+        )
+        self._entity_name: Optional[str] = sensor_def.get("entity_name")
+        self._use_entity_name = bool(
+            self._entity_name and self._hardware_sensor_info() is not None
+        )
+        self._attr_has_entity_name = self._use_entity_name
+
         # Set initial attributes
         self._update_attributes(sensor_info)
 
+    def _hardware_sensor_info(self) -> Optional[Dict[str, Any]]:
+        """Return mapping info if this entity belongs to its own hardware device."""
+        if not self._hardware_id or self._hardware_id.upper() in (
+            "FFFFFFFE",
+            "FFFFFFFF",
+            "00000000",
+        ):
+            return None
+        info: Optional[Dict[str, Any]] = self.coordinator.sensor_mapper.get_sensor_info(
+            self._hardware_id
+        )
+        return info
+
     def _update_attributes(self, sensor_info: Dict[str, Any]) -> None:
         """Update sensor attributes from sensor info."""
-        self._attr_name = sensor_info.get("name", self._sensor_key)
+        self._attr_name = (
+            self._entity_name
+            if self._use_entity_name
+            else sensor_info.get("name", self._sensor_key)
+        )
         self._attr_native_value = sensor_info.get("state")
 
         # Set unit of measurement
@@ -244,9 +279,7 @@ class EcowittLocalSensor(
             "FFFFFFFF",
             "00000000",
         ):
-            sensor_info = self.coordinator.sensor_mapper.get_sensor_info(
-                self._hardware_id
-            )
+            sensor_info = self._hardware_sensor_info()
             _LOGGER.debug(
                 "Sensor %s: hardware_id=%s, sensor_info=%s",
                 self._sensor_key,
@@ -257,8 +290,6 @@ class EcowittLocalSensor(
                 device_model = sensor_info.get("device_model") or sensor_info.get(
                     "sensor_type", "Unknown"
                 )
-                sensor_type_name = self._get_sensor_type_display_name(sensor_info)
-
                 _LOGGER.debug(
                     "Sensor %s using individual device: %s",
                     self._sensor_key,
@@ -266,11 +297,13 @@ class EcowittLocalSensor(
                 )
                 return DeviceInfo(
                     identifiers={(DOMAIN, self._hardware_id)},
-                    name=f"Ecowitt {sensor_type_name} {self._hardware_id}",
+                    name=device_name(self._hardware_id, sensor_info),
                     manufacturer=MANUFACTURER,
                     model=device_model,
                     suggested_area=(
-                        "Outdoor" if self._is_outdoor_sensor(sensor_info) else None
+                        "Outdoor"
+                        if is_outdoor_sensor(sensor_info.get("sensor_type", ""))
+                        else None
                     ),
                     **via_device_kwargs(self.hass, gateway_id),
                 )
@@ -437,49 +470,3 @@ class EcowittLocalSensor(
                 return icon
 
         return None
-
-    def _get_sensor_type_display_name(self, sensor_info: Dict[str, Any]) -> str:
-        """Get display name for sensor type."""
-        sensor_type = sensor_info.get("sensor_type", "").lower()
-
-        type_names = {
-            "wh51": "Soil Moisture Sensor",
-            "wh31": "Temperature/Humidity Sensor",
-            "wh41": "PM2.5 Air Quality Sensor",
-            "wh55": "Leak Sensor",
-            "wh57": "Lightning Sensor",
-            "wh40": "Rain Sensor",
-            "wn20": "Rain Gauge",
-            "wh68": "Weather Station",
-            "soil": "Soil Moisture Sensor",
-            "temp_hum": "Temperature/Humidity Sensor",
-            "pm25": "PM2.5 Air Quality Sensor",
-            "leak": "Leak Sensor",
-            "lightning": "Lightning Sensor",
-            "rain": "Rain Sensor",
-            "weather_station": "Weather Station",
-        }
-
-        return type_names.get(sensor_type, "Sensor")
-
-    def _is_outdoor_sensor(self, sensor_info: Dict[str, Any]) -> bool:
-        """Check if sensor is typically outdoor."""
-        sensor_type = sensor_info.get("sensor_type", "").lower()
-
-        outdoor_types = {
-            "wh51",
-            "wh41",
-            "wh55",
-            "wh57",
-            "wh40",
-            "wn20",
-            "wh68",
-            "soil",
-            "pm25",
-            "leak",
-            "lightning",
-            "rain",
-            "weather_station",
-        }
-
-        return sensor_type in outdoor_types

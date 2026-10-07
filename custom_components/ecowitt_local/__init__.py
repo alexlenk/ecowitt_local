@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import re
 from typing import Any, Dict
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,6 +22,8 @@ from .device_compat import (
     device_belongs_to_entry,
     via_device_kwargs,
 )
+from .device_naming import device_name as get_device_name
+from .device_naming import is_outdoor_sensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -196,19 +197,11 @@ async def _async_setup_device_registry(
             sensor_type = sensor_info.get("sensor_type", "Unknown")
             device_model = sensor_info.get("device_model") or sensor_type
 
-            # Get display name for sensor type
-            sensor_type_name = _get_sensor_type_display_name(sensor_type)
-
             # Determine if outdoor sensor for suggested area
-            is_outdoor = _is_outdoor_sensor(sensor_type)
+            is_outdoor = is_outdoor_sensor(sensor_type)
 
-            device_name = f"Ecowitt {sensor_type_name} {hardware_id}"
-            raw_name = str(sensor_info.get("raw_data", {}).get("name", "")).strip()
-            # A raw name without "CH{n}" means the user renamed the sensor on the
-            # gateway itself (e.g. "Deep Freezer") rather than leaving the
-            # default "Temp & Humidity CH2" — use it as the device name (issue #243).
-            if raw_name and not re.search(r"CH\d+", raw_name, re.IGNORECASE):
-                device_name = raw_name
+            # Same name as entity device_info produces (device_naming.py)
+            device_name = get_device_name(hardware_id, sensor_info)
 
             device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
@@ -585,56 +578,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         _LOGGER.info("Migration to v1.3 completed successfully")
 
     return True
-
-
-def _get_sensor_type_display_name(sensor_type: str) -> str:
-    """Get display name for sensor type."""
-    sensor_type_lower = sensor_type.lower()
-
-    type_names = {
-        "wh51": "Soil Moisture Sensor",
-        "wh31": "Temperature/Humidity Sensor",
-        "wh41": "PM2.5 Air Quality Sensor",
-        "wh54": "Liquid Depth Sensor",
-        "wh55": "Leak Sensor",
-        "wh57": "Lightning Sensor",
-        "wh40": "Rain Sensor",
-        "wn20": "Rain Gauge",
-        "wh68": "Weather Station",
-        "soil": "Soil Moisture Sensor",
-        "temp_hum": "Temperature/Humidity Sensor",
-        "pm25": "PM2.5 Air Quality Sensor",
-        "leak": "Leak Sensor",
-        "lightning": "Lightning Sensor",
-        "rain": "Rain Sensor",
-        "weather_station": "Weather Station",
-    }
-
-    return type_names.get(sensor_type_lower, "Sensor")
-
-
-def _is_outdoor_sensor(sensor_type: str) -> bool:
-    """Check if sensor is typically outdoor."""
-    sensor_type_lower = sensor_type.lower()
-
-    outdoor_types = {
-        "wh51",
-        "wh41",
-        "wh54",
-        "wh55",
-        "wh57",
-        "wh40",
-        "wn20",
-        "wh68",
-        "soil",
-        "pm25",
-        "leak",
-        "lightning",
-        "rain",
-        "weather_station",
-    }
-
-    return sensor_type_lower in outdoor_types
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
