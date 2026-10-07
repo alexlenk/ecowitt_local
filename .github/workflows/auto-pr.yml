@@ -37,7 +37,7 @@ jobs:
 
       - name: Checkout code
         if: steps.check-branch.outputs.exists == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
           fetch-depth: 0
