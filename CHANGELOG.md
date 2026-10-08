@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-10-08
+
+> **Visible changes on update** — entity IDs, unique IDs, automations, history and dashboards are **not** affected, and names you set yourself in Home Assistant (entity or device) are kept.
+> - **Multi-channel sensors (WH31, WH34, WH35, WH41, WH51, WH52, WH54, WH55)** and their batteries are now named by what they measure, with the device name in front: e.g. "Temperature CH2" becomes "`<device name>` Temperature". On recent Home Assistant versions, which already put the device name in front, the visible change is mostly the dropped "CH2" suffix.
+> - **Some device names change:**
+>   - channel sensors renamed on the gateway now show that name (e.g. "Deep Freezer"); this was previously overwritten (issue #243)
+>   - WH34, WH35, WH52 and WH54 get a proper type name instead of "Ecowitt Sensor `<id>`"
+>   - non-channel sensors whose gateway default name was mistaken for a user rename ("Lightning", "Rain", "PM25 & PM10 & CO2", ...) get their type-based name back
+>   - sensor types without a name entry show their model (e.g. "Ecowitt WH90 `<id>`") instead of "Ecowitt Sensor `<id>`"
+
+### Changed
+- **Device-based entity names for channel sensors**: channel-templated sensors and their batteries use Home Assistant's `has_entity_name`, so friendly names follow the physical device instead of the channel slot. Sensors without their own hardware device keep the old "Temperature CH2" style. Diagnostic entities are unchanged. Credit to @olympia (issue #244, PR #261).
+- **One source for device names**: device naming moved into a shared `device_naming.py`, replacing three diverging copies in `__init__.py`, `sensor.py` and `binary_sensor.py`, so device names no longer depend on which platform set up last. Credit to @olympia (PR #261).
+
+### Fixed
+- **Gateway-assigned sensor names were overwritten** by the platforms' own device names, so the gateway rename support from issue #243 never reached the device. The rename rule now also applies only to channel sensors and only treats a standalone "CH{n}" as a default name. Credit to @olympia (PR #261).
+
 ## [1.7.35] - 2026-10-07
 
 ### Changed
