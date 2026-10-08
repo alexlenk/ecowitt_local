@@ -148,18 +148,22 @@ class EcowittLocalSensor(
         if precision is not None:
             self._attr_suggested_display_precision = precision
 
-        # Channel-templated entities on their own hardware-ID device are named by
-        # what they measure; HA prefixes the device name (issue #244). Without a
-        # hardware device they keep the channel in the name so they stay distinct.
-        # Decided once here, together with the device the entity registers under.
+        # Entities on their own hardware-ID device are named by what they measure;
+        # HA prefixes the device name (issues #244, #262). Without a hardware device
+        # they keep their standalone name (with the channel, where there is one) so
+        # they stay distinct. Decided once here, together with the device the entity
+        # registers under.
         sensor_def = (
             BATTERY_SENSORS.get(self._sensor_key)
             or SENSOR_TYPES.get(self._sensor_key)
             or {}
         )
+        # The coordinator may supply entity_name for entities it renames or derives
+        # at runtime (solar radiation in lux mode); that wins over the static one.
         self._entity_name: Optional[str] = sensor_def.get("entity_name")
         self._use_entity_name = bool(
-            self._entity_name and self._hardware_sensor_info() is not None
+            (sensor_info.get("entity_name") or self._entity_name)
+            and self._hardware_sensor_info() is not None
         )
         self._attr_has_entity_name = self._use_entity_name
 
@@ -182,7 +186,7 @@ class EcowittLocalSensor(
     def _update_attributes(self, sensor_info: Dict[str, Any]) -> None:
         """Update sensor attributes from sensor info."""
         self._attr_name = (
-            self._entity_name
+            sensor_info.get("entity_name") or self._entity_name
             if self._use_entity_name
             else sensor_info.get("name", self._sensor_key)
         )

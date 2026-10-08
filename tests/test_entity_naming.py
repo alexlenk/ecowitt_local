@@ -1,4 +1,4 @@
-"""Tests for channel-free entity names on hardware-ID devices (issue #244)."""
+"""Tests for device-based entity names on hardware-ID devices (issues #244, #262)."""
 
 from __future__ import annotations
 
@@ -15,9 +15,11 @@ from custom_components.ecowitt_local.const import (
     CONF_HOST,
     CONF_PASSWORD,
     DOMAIN,
+    GATEWAY_SENSORS,
     SENSOR_TYPES,
 )
 from custom_components.ecowitt_local.sensor import EcowittLocalSensor
+from custom_components.ecowitt_local.sensor_mapper import SensorMapper
 
 
 def _mapping(hardware_id: str, img: str, type_num: int, name: str) -> Dict[str, Any]:
@@ -112,12 +114,11 @@ def _entities_by_key(hass: HomeAssistant, entry: MockConfigEntry) -> Dict[str, A
 
 def test_channel_templates_define_channel_free_entity_name():
     """Every channel-templated sensor and battery has an entity_name without CH."""
-    templated = {k: v for k, v in SENSOR_TYPES.items() if "entity_name" in v}
-    assert templated, "channel templates should define entity_name"
+    templated = {k: v for k, v in SENSOR_TYPES.items() if "CH" in v["name"]}
+    assert templated, "channel templates should exist"
     for key, info in templated.items():
         assert "CH" not in info["entity_name"], key
         assert info["name"].startswith(info["entity_name"]), key
-        assert "CH" in info["name"], f"{key}: fallback name keeps the channel"
 
     assert SENSOR_TYPES["temp2f"]["entity_name"] == "Temperature"
     assert SENSOR_TYPES["temp2f"]["name"] == "Temperature CH2"
@@ -125,16 +126,71 @@ def test_channel_templates_define_channel_free_entity_name():
     assert SENSOR_TYPES["leak_ch1"]["entity_name"] == "Leak"
     assert SENSOR_TYPES["leak_ch1"]["name"] == "Leak Sensor CH1"
 
-    batteries = {k: v for k, v in BATTERY_SENSORS.items() if "entity_name" in v}
+    batteries = {k: v for k, v in BATTERY_SENSORS.items() if "CH" in v["name"]}
     assert batteries
     for key, info in batteries.items():
         assert info["entity_name"] == "Battery", key
-        assert "CH" in info["name"], key
 
-    # Non-channel and gateway-level keys are out of scope and keep their names.
-    for key in ("tempinf", "tempf", "humidity", "0x02", "lightning_num"):
+
+# Sensor types with their own hardware-ID device but no channel (issue #262).
+_NON_CHANNEL_TYPES = (
+    ["wh57", "wh40", "wn20", "wh68", "wh69", "wh65", "ws90", "wh90", "wh80", "ws80"]
+    + ["wh85", "wh45", "wh46", "wh25", "wh26", "wn32", "wn38"]
+    + ["solar & wind", "temp & humidity & solar & wind", "wind & rain"]
+    + ["temp & humidity & solar & wind & rain", "pm25 & pm10 & co2"]
+)
+
+# Names that repeat the device (or its location) are reduced to what is measured.
+_TRIMMED_ENTITY_NAMES = {
+    "0x01": "Temperature",
+    "tempf": "Temperature",
+    "0x02": "Temperature",
+    "0x06": "Humidity",
+    "humidity": "Humidity",
+    "0x07": "Humidity",
+    "tf_co2": "Temperature",
+    "tf_co2c": "Temperature",
+    "humi_co2": "Humidity",
+    "ws90_voltage": "Battery Voltage",
+    "wh90_voltage": "Battery Voltage",
+    "ws85_voltage": "Battery Voltage",
+    "ws90cap_volt": "Capacitor Voltage",
+    "wh90cap_volt": "Capacitor Voltage",
+    "ws85cap_volt": "Capacitor Voltage",
+}
+
+
+def test_non_channel_keys_define_entity_name():
+    """Every key a non-channel hardware device can own has an entity_name."""
+    mapper = SensorMapper()
+    keys = set()
+    for sensor_type in _NON_CHANNEL_TYPES:
+        type_keys = mapper._generate_live_data_keys(sensor_type, "")
+        assert type_keys, sensor_type
+        keys.update(type_keys)
+    keys.add("solar_lux")  # computed by the coordinator next to solar radiation
+
+    # The coordinator never looks up a hardware ID for gateway sensors, so they
+    # always stay on the gateway device and keep their standalone names.
+    for key in GATEWAY_SENSORS:
+        assert key in keys, key
         assert "entity_name" not in SENSOR_TYPES[key], key
-    assert "entity_name" not in BATTERY_SENSORS["ws90batt"]
+    keys -= GATEWAY_SENSORS
+
+    for key in sorted(keys):
+        if key in BATTERY_SENSORS:
+            assert BATTERY_SENSORS[key]["entity_name"] == "Battery", key
+            continue
+        info = SENSOR_TYPES[key]
+        expected = _TRIMMED_ENTITY_NAMES.get(key, info["name"])
+        assert info["entity_name"] == expected, key
+    assert set(_TRIMMED_ENTITY_NAMES) <= keys
+
+    # What is measured stays in the name even if the device name repeats it.
+    assert SENSOR_TYPES["lightning"]["entity_name"] == "Lightning Distance"
+    assert SENSOR_TYPES["lightning_num"]["entity_name"] == "Lightning Strikes"
+    assert SENSOR_TYPES["lightning_time"]["entity_name"] == "Last Lightning"
+    assert SENSOR_TYPES["0xA1"]["entity_name"] == "Black Globe Temperature"
 
 
 def _sensor(sensor_info: Dict[str, Any], mapper_result: Any) -> EcowittLocalSensor:
@@ -187,17 +243,73 @@ def test_legacy_name_without_hardware_device():
 
 
 def test_sensor_without_entity_name_unchanged():
-    """Sensors without entity_name (non-channel, diagnostics) keep has_entity_name off."""
+    """Sensors without entity_name (diagnostics) keep has_entity_name off."""
     sensor = _sensor(
         {
-            "sensor_key": "tempinf",
+            "sensor_key": "rssi_D1E2F3",
             "hardware_id": "D1E2F3",
-            "name": "Indoor Temperature",
+            "name": "RSSI",
         },
         {"sensor_type": "WH25"},
     )
     assert sensor.has_entity_name is False
-    assert sensor.name == "Indoor Temperature"
+    assert sensor.name == "RSSI"
+
+
+def test_non_channel_entity_name_depends_on_device():
+    """The same key is trimmed on a hardware device and standalone on the gateway."""
+    base = {"sensor_key": "0x02", "name": "Outdoor Temperature", "state": 21.5}
+
+    on_device = _sensor({**base, "hardware_id": "W90"}, {"sensor_type": "WH90"})
+    assert on_device.has_entity_name is True
+    assert on_device.name == "Temperature"
+
+    for hardware_id, mapper_result in ((None, None), ("W90", None)):
+        on_gateway = _sensor({**base, "hardware_id": hardware_id}, mapper_result)
+        assert on_gateway.has_entity_name is False, hardware_id
+        assert on_gateway.name == "Outdoor Temperature", hardware_id
+
+    battery = _sensor(
+        {
+            "sensor_key": "wh57batt",
+            "hardware_id": "L57",
+            "name": "Lightning Sensor Battery",
+        },
+        {"sensor_type": "WH57"},
+    )
+    assert battery.has_entity_name is True
+    assert battery.name == "Battery"
+
+
+def test_coordinator_entity_name_overrides_static_one():
+    """An entity_name supplied with the data wins and follows later updates."""
+    lux_mode = {
+        "sensor_key": "0x15",
+        "hardware_id": "W90",
+        "name": "Solar Illuminance",
+        "entity_name": "Solar Illuminance",
+    }
+    sensor = _sensor(lux_mode, {"sensor_type": "WH90"})
+    assert sensor.has_entity_name is True
+    assert sensor.name == "Solar Illuminance"
+
+    # Gateway switched back to W/m²: the static entity_name applies again.
+    sensor._update_attributes({"sensor_key": "0x15", "name": "Solar Radiation"})
+    assert sensor.name == "Solar Radiation"
+    sensor._update_attributes(lux_mode)
+    assert sensor.name == "Solar Illuminance"
+
+    # A derived key without a static definition is named by the coordinator.
+    derived = {
+        "sensor_key": "0x15_wm2",
+        "hardware_id": "W90",
+        "name": "Solar Radiation",
+        "entity_name": "Solar Radiation",
+    }
+    sensor = _sensor(derived, {"sensor_type": "WH90"})
+    assert sensor.has_entity_name is True
+    assert sensor.name == "Solar Radiation"
+    assert _sensor({**derived, "hardware_id": None}, None).has_entity_name is False
 
 
 async def test_wh31_friendly_names_follow_device(hass: HomeAssistant, mock_ecowitt_api):
@@ -494,11 +606,201 @@ async def test_device_names_for_gateway_default_names(
         "F6G7H8": "Ecowitt Rain Sensor F6G7H8",  # "Rain"
         "G8H9I0": "Ecowitt PM2.5 Air Quality Sensor G8H9I0",
         "J1K2L3": "Ecowitt Leak Sensor J1K2L3",
-        "M4N5O6": "Ecowitt WH45 M4N5O6",  # "PM25 & PM10 & CO2", not in table
-        "W90": "Ecowitt WH90 W90",  # "WH90", not in table
+        "M4N5O6": "Ecowitt CO2 Air Quality Sensor M4N5O6",  # "PM25 & PM10 & CO2"
+        "W90": "Ecowitt WS90 Weather Station W90",  # "WH90"
     }
     device_registry = dr.async_get(hass)
     for hardware_id, name in expected.items():
         device = device_registry.async_get_device(identifiers={(DOMAIN, hardware_id)})
         assert device is not None, hardware_id
         assert device.name == name, hardware_id
+
+
+_NON_CHANNEL_MAPPINGS = [
+    _mapping("W90", "wh90", 48, "Temp & Humidity & Solar & Wind & Rain"),
+    _mapping("L57", "wh57", 26, "Lightning"),
+    _mapping("C45", "wh45", 39, "PM25 & PM10 & CO2"),
+    _mapping("R40", "wh40", 3, "Rain"),
+]
+
+_NON_CHANNEL_LIVE: Dict[str, Any] = {
+    "common_list": [
+        {"id": "0x02", "val": "21.5", "unit": "C"},
+        {"id": "0x07", "val": "55%"},
+        {"id": "0x03", "val": "12.0", "unit": "C"},
+        {"id": "3", "val": "21.0", "unit": "C"},
+        {"id": "0x0B", "val": "1.2 m/s"},
+        {"id": "0x0A", "val": "180"},
+        {"id": "0x15", "val": "120.5 W/m2"},
+        {"id": "0x17", "val": "3"},
+    ],
+    "piezoRain": [
+        {"id": "srain_piezo", "val": "0"},
+        {"id": "0x0E", "val": "0.0 mm/Hr"},
+        {
+            "id": "0x13",
+            "val": "257.8 mm",
+            "battery": "3",
+            "voltage": "2.62",
+            "ws90cap_volt": "5.3",
+            "ws90_ver": "153",
+        },
+    ],
+    "rain": [
+        {"id": "0x0E", "val": "0.0 mm/Hr"},
+        {"id": "0x13", "val": "29.5 mm", "battery": "0"},
+    ],
+    "lightning": [
+        {
+            "distance": "31 km",
+            "date": "2026-02-22T18:00:18",
+            "timestamp": "02/22/2026 18:00:18",
+            "count": "3",
+            "battery": "5",
+        }
+    ],
+    "co2": [
+        {
+            "temp": "29.7",
+            "unit": "C",
+            "humidity": "47%",
+            "PM25": "68.0",
+            "CO2": "511",
+            "battery": "6",
+        }
+    ],
+    "wh25": [{"intemp": "28.9", "unit": "C", "inhumi": "40%"}],
+}
+
+
+async def test_non_channel_families(hass: HomeAssistant, mock_ecowitt_api):
+    """Non-channel hardware devices follow the same scheme (issue #262)."""
+    entry = _entry(hass)
+    await _setup(
+        hass, mock_ecowitt_api, entry, _NON_CHANNEL_MAPPINGS, _NON_CHANNEL_LIVE
+    )
+    entities = _entities_by_key(hass, entry)
+    device_registry = dr.async_get(hass)
+
+    expected = {
+        # unique_id: (stable entity_id, entity name)
+        "ecowitt_local_W90_0x02": ("sensor.ecowitt_outdoor_temp_w90", "Temperature"),
+        "ecowitt_local_W90_0x07": ("sensor.ecowitt_outdoor_humidity_w90", "Humidity"),
+        "ecowitt_local_W90_0x03": (
+            "sensor.ecowitt_dewpoint_w90",
+            "Dewpoint Temperature",
+        ),
+        "ecowitt_local_W90_3": (
+            "sensor.ecowitt_feels_like_temp_w90",
+            "Feels Like Temperature",
+        ),
+        "ecowitt_local_W90_0x0B": ("sensor.ecowitt_wind_speed_w90", "Wind Speed"),
+        "ecowitt_local_W90_0x0E": ("sensor.ecowitt_rain_rate_w90", "Rain Rate"),
+        "ecowitt_local_W90_0x15": (
+            "sensor.ecowitt_solar_radiation_w90",
+            "Solar Radiation",
+        ),
+        "ecowitt_local_W90_solar_lux": (
+            "sensor.ecowitt_solar_lux_w90",
+            "Solar Illuminance",
+        ),
+        "ecowitt_local_W90_wh90batt": ("sensor.ecowitt_battery_w90", "Battery"),
+        "ecowitt_local_W90_wh90_voltage": (
+            "sensor.ecowitt_voltage_w90",
+            "Battery Voltage",
+        ),
+        "ecowitt_local_W90_wh90cap_volt": (
+            "sensor.ecowitt_capacitor_voltage_w90",
+            "Capacitor Voltage",
+        ),
+        "ecowitt_local_L57_lightning": (
+            "sensor.ecowitt_lightning_l57",
+            "Lightning Distance",
+        ),
+        "ecowitt_local_L57_lightning_num": (
+            "sensor.ecowitt_lightning_strikes_l57",
+            "Lightning Strikes",
+        ),
+        "ecowitt_local_L57_lightning_time": (
+            "sensor.ecowitt_last_lightning_l57",
+            "Last Lightning",
+        ),
+        "ecowitt_local_L57_wh57batt": (
+            "sensor.ecowitt_lightning_battery_l57",
+            "Battery",
+        ),
+        "ecowitt_local_C45_tf_co2c": ("sensor.ecowitt_tf_co2c_c45", "Temperature"),
+        "ecowitt_local_C45_humi_co2": ("sensor.ecowitt_humi_co_c45", "Humidity"),
+        "ecowitt_local_C45_pm25_co2": ("sensor.ecowitt_pm25_c45", "PM2.5"),
+        "ecowitt_local_C45_co2": ("sensor.ecowitt_co_c45", "CO2"),
+        "ecowitt_local_C45_co2_batt": ("sensor.ecowitt_battery_c45", "Battery"),
+        "ecowitt_local_R40_0x0E": ("sensor.ecowitt_rain_rate_r40", "Rain Rate"),
+        "ecowitt_local_R40_0x13": ("sensor.ecowitt_yearly_rain_r40", "Yearly Rain"),
+        "ecowitt_local_R40_wh40batt": ("sensor.ecowitt_rain_battery_r40", "Battery"),
+    }
+    for unique_id, (entity_id, name) in expected.items():
+        entity = entities[unique_id]
+        assert entity.entity_id == entity_id
+        assert entity.original_name == name, unique_id
+
+    device_names = {
+        "W90": "Ecowitt WS90 Weather Station W90",
+        "L57": "Ecowitt Lightning Sensor L57",
+        "C45": "Ecowitt CO2 Air Quality Sensor C45",
+        "R40": "Ecowitt Rain Sensor R40",
+    }
+    for hardware_id, device_name in device_names.items():
+        device = device_registry.async_get_device(identifiers={(DOMAIN, hardware_id)})
+        assert device is not None and device.name == device_name, hardware_id
+        on_device = [e for e in entities.values() if e.device_id == device.id]
+        sensors = [e for e in on_device if e.domain == "sensor"]
+        assert [e for e in sensors if not _is_diagnostic(e.unique_id)], hardware_id
+        for entity in sensors:
+            if _is_diagnostic(entity.unique_id):
+                assert entity.has_entity_name is False, entity.unique_id
+                assert _friendly_name(hass, entity.entity_id) == entity.original_name
+                continue
+            assert entity.has_entity_name is True, entity.unique_id
+            assert _friendly_name(hass, entity.entity_id) == (
+                f"{device_name} {entity.original_name}"
+            )
+        # Binary sensors (Online, rain state) are not part of this change.
+        for entity in on_device:
+            if entity.domain == "binary_sensor":
+                assert entity.has_entity_name is False, entity.unique_id
+
+    # The same kind of reading on the gateway device keeps its standalone name.
+    gateway = {
+        "ecowitt_local_naming_entry_tempinf": "Indoor Temperature",
+        "ecowitt_local_naming_entry_humidityin": "Indoor Humidity",
+    }
+    for unique_id, name in gateway.items():
+        entity = entities[unique_id]
+        assert entity.has_entity_name is False, unique_id
+        assert _friendly_name(hass, entity.entity_id) == name
+
+
+async def test_solar_names_in_lux_mode(hass: HomeAssistant, mock_ecowitt_api):
+    """In lux mode the renamed and the derived solar entity keep the right names."""
+    entry = _entry(hass)
+    await _setup(
+        hass,
+        mock_ecowitt_api,
+        entry,
+        [_mapping("W90", "wh90", 48, "WH90")],
+        {"common_list": [{"id": "0x15", "val": "15000.0 Lux"}]},
+    )
+    device_name = "Ecowitt WS90 Weather Station W90"
+    expected = {
+        "sensor.ecowitt_solar_radiation_w90": ("Solar Illuminance", "lx"),
+        "sensor.ecowitt_solar_radiation_wm2_w90": ("Solar Radiation", "W/m²"),
+    }
+    registry = er.async_get(hass)
+    for entity_id, (name, unit) in expected.items():
+        entity = registry.async_get(entity_id)
+        assert entity is not None and entity.has_entity_name is True, entity_id
+        assert entity.original_name == name
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.attributes["unit_of_measurement"] == unit
+        assert state.attributes["friendly_name"] == f"{device_name} {name}"

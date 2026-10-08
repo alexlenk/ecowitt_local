@@ -1331,6 +1331,8 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                     # Applies to both the non-hex 'solarradiation' key (WH68) and the
                     # hex '0x15' key (WH90/WS90) when the gateway is configured for lux output.
                     sensors_data[entity_id]["name"] = "Solar Illuminance"
+                    # Overrides the static entity_name of the key (issue #262).
+                    sensors_data[entity_id]["entity_name"] = "Solar Illuminance"
                     try:
                         wm2_val = round(float(sensor_value) / 126.7, 1)
                         wm2_entity_id = entity_id.replace(
@@ -1340,6 +1342,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                         sensors_data[wm2_entity_id] = {
                             "entity_id": wm2_entity_id,
                             "name": "Solar Radiation",
+                            "entity_name": "Solar Radiation",
                             "state": str(wm2_val),
                             "unit_of_measurement": "W/m²",
                             "device_class": "irradiance",

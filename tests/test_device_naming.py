@@ -29,9 +29,32 @@ def test_sensor_type_display_name():
         "leaf_wetness": "Leaf Wetness Sensor",
         "soil_ec": "Soil Moisture & EC Sensor",
         "lds": "Liquid Depth Sensor",
+        # non-channel devices (issue #262)
+        "WS90": "WS90 Weather Station",
+        "wh90": "WS90 Weather Station",
+        "WH69": "WH69 Weather Station",
+        "wh65": "WH69 Weather Station",
+        "WH80": "WS80 Weather Station",
+        "ws80": "WS80 Weather Station",
+        "WH85": "WS85 Wind & Rain Sensor",
+        "WS85": "WS85 Wind & Rain Sensor",
+        "WH45": "CO2 Air Quality Sensor",
+        "wh46": "CO2 Air Quality Sensor",
+        "WH25": "Indoor Station",
+        "WH26": "Outdoor Temperature/Humidity Sensor",
+        "wn32": "Outdoor Temperature/Humidity Sensor",
+        "WN38": "Black Globe Temperature Sensor",
+        "weather_station_ws90": "WS90 Weather Station",
+        "weather_station_wh90": "WS90 Weather Station",
+        "weather_station_wh69": "WH69 Weather Station",
+        "combo": "CO2 Air Quality Sensor",
+        "co2_pm": "CO2 Air Quality Sensor",
+        "indoor_station": "Indoor Station",
+        "outdoor_temp_hum": "Outdoor Temperature/Humidity Sensor",
+        "bgt": "Black Globe Temperature Sensor",
         # not in the table: keep the model instead of a generic name
-        "wh90": "WH90",
-        "WS85": "WS85",
+        "wh99": "WH99",
+        "WH77": "WH77",
         "": "Sensor",
     }
     for sensor_type, expected in cases.items():
@@ -51,9 +74,14 @@ def test_is_outdoor_sensor():
         "WH40",
         "WH68",
     ] + ["pm25", "soil_ec", "leaf_wetness", "lds"]
+    # non-channel devices (issue #262)
+    outdoor += ["WS90", "wh90", "WH69", "wh65", "WH80", "ws80", "WH85", "WS85"]
+    outdoor += ["WH26", "wn32", "WN38", "outdoor_temp_hum", "bgt"]
+    outdoor += ["weather_station_ws90", "weather_station_wh90", "weather_station_wh69"]
     for sensor_type in outdoor:
         assert is_outdoor_sensor(sensor_type) is True, sensor_type
-    for sensor_type in ("WH31", "WH34", "indoor"):
+    indoor = ["WH31", "WH34", "indoor", "WH25", "WH45", "wh46", "indoor_station"]
+    for sensor_type in indoor:
         assert is_outdoor_sensor(sensor_type) is False, sensor_type
 
 
@@ -65,7 +93,10 @@ def test_device_name_default():
         "Ecowitt Temperature/Humidity Sensor D1"
     )
     assert device_name("D1", {}) == "Ecowitt Sensor D1"
-    assert device_name("W90", {"sensor_type": "WH90"}) == "Ecowitt WH90 W90"
+    assert device_name("W90", {"sensor_type": "WH90"}) == (
+        "Ecowitt WS90 Weather Station W90"
+    )
+    assert device_name("X1", {"sensor_type": "WH99"}) == "Ecowitt WH99 X1"
 
 
 def test_device_name_gateway_rename():
@@ -97,7 +128,10 @@ def test_device_name_ignores_non_channel_default_names():
         "WH68": ("Solar & Wind", "Ecowitt Weather Station A1"),
         "WH57": ("Lightning", "Ecowitt Lightning Sensor A1"),
         "WH40": ("Rain", "Ecowitt Rain Sensor A1"),
-        "WH90": ("WH90", "Ecowitt WH90 A1"),
+        "WH90": ("WH90", "Ecowitt WS90 Weather Station A1"),
+        "WH45": ("PM25 & PM10 & CO2", "Ecowitt CO2 Air Quality Sensor A1"),
+        "WH85": ("Wind & Rain", "Ecowitt WS85 Wind & Rain Sensor A1"),
+        "WH99": ("Future Sensor", "Ecowitt WH99 A1"),
     }
     for sensor_type, (raw_name, expected) in cases.items():
         info = {
