@@ -140,3 +140,17 @@ def test_device_name_ignores_non_channel_default_names():
             "raw_data": {"name": raw_name},
         }
         assert device_name("A1", info) == expected, sensor_type
+
+
+def test_device_name_prefers_gateway_title():
+    """A "Customize Title" from the live data wins over every other name."""
+    info = {
+        "sensor_type": "WH31",
+        "channel": "1",
+        "raw_data": {"name": "Temp & Humidity CH1"},
+        "live_title": " Jacuzzi Temp ",
+    }
+    assert device_name("FD", info) == "Jacuzzi Temp"
+    for empty in ("", "  ", None):
+        info["live_title"] = empty
+        assert device_name("FD", info) == "Ecowitt Temperature/Humidity Sensor FD"

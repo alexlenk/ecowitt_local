@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import (
@@ -32,9 +33,23 @@ from .const import (
     SENSOR_TYPES,
     SYSTEM_SENSORS,
 )
+from .device_compat import async_get_device_by_identifier, device_belongs_to_entry
+from .device_naming import device_name
 from .sensor_mapper import SensorMapper
 
 _LOGGER = logging.getLogger(__name__)
+
+# Live-data blocks whose items carry the gateway's "Customize Title" as "name",
+# with the live-data key used to find the sensor's hardware ID for a channel.
+_TITLE_BLOCKS: Dict[str, str] = {
+    "ch_aisle": "temp{ch}f",
+    "ch_soil": "soilmoisture{ch}",
+    "ch_temp": "tf_ch{ch}",
+    "ch_leaf": "leafwetness_ch{ch}",
+    "ch_leak": "leak_ch{ch}",
+    "ch_lds": "lds_depth_ch{ch}",
+    "ch_ec": "soilec{ch}",
+}
 
 
 def extract_model_from_firmware(firmware_version: str) -> str:
@@ -88,6 +103,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         self._gateway_temp_unit: str = (
             "°F"  # default; overridden by get_units_info ("0"=°C, "1"=°F)
         )
+        self._live_titles: Dict[str, str] = {}
 
         # Get update intervals
         scan_interval = config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -212,6 +228,64 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         except Exception as err:
             _LOGGER.warning("Failed to update sensor mapping: %s", err)
 
+    def _apply_live_titles(self, raw_data: Dict[str, Any]) -> None:
+        """Use the gateway's "Customize Title" names as device names.
+
+        The title set on the gateway's Live Data page is reported only in the
+        live data ("name" of e.g. ch_aisle items), not in get_sensors_info. When
+        a title is set, changed or cleared, the device name in the registry is
+        updated; a name the user set in Home Assistant (name_by_user) is kept,
+        and devices of other config entries are left alone.
+        """
+        titles: Dict[str, str] = {}
+        for block, key_template in _TITLE_BLOCKS.items():
+            for item in raw_data.get(block, []) or []:
+                if not isinstance(item, dict):
+                    continue
+                channel = item.get("channel")
+                title = str(item.get("name") or "").strip()
+                if not channel or not title:
+                    continue
+                unique_id = self.sensor_mapper.get_hardware_id(
+                    key_template.format(ch=channel)
+                )
+                if unique_id:
+                    titles[unique_id] = title
+        self.sensor_mapper.set_live_titles(titles)
+
+        changed = {
+            unique_id
+            for unique_id in set(titles) | set(self._live_titles)
+            if titles.get(unique_id) != self._live_titles.get(unique_id)
+        }
+        self._live_titles = titles
+        if not changed:
+            return
+
+        device_registry = dr.async_get(self.hass)
+        for unique_id in changed:
+            sensor_info = self.sensor_mapper.get_sensor_info(unique_id)
+            device = async_get_device_by_identifier(
+                device_registry, (DOMAIN, unique_id)
+            )
+            # Only rename this gateway's own devices: with several gateways the
+            # same hardware ID can also exist under another config entry.
+            if (
+                sensor_info is None
+                or device is None
+                or not device_belongs_to_entry(device, self.config_entry.entry_id)
+            ):
+                continue
+            new_name = device_name(unique_id, sensor_info)
+            if device.name != new_name:
+                _LOGGER.debug(
+                    "Device %s renamed from %s to %s (gateway title)",
+                    unique_id,
+                    device.name,
+                    new_name,
+                )
+                device_registry.async_update_device(device.id, name=new_name)
+
     async def _process_live_data(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         """Process raw live data into structured sensor data."""
         sensors_data: Dict[str, Any] = {}
@@ -220,6 +294,8 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             "gateway_info": {},
             "last_update": datetime.now(),
         }
+
+        self._apply_live_titles(raw_data)
 
         # Process all sensor data sources
         all_sensor_items = []
