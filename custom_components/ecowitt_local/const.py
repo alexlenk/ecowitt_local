@@ -92,6 +92,9 @@ def _generate_channel_sensors(
 
 
 # Sensor types and their properties
+# entity_name is used instead of name when the entity sits on its own hardware-ID
+# device: HA then prefixes it with the device name (issues #244, #262), so it only
+# says what is measured. On the gateway device the entity keeps name.
 SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     # Temperature sensors
     "tempinf": {
@@ -101,18 +104,30 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     },
     "tempf": {
         "name": "Outdoor Temperature",
+        "entity_name": "Temperature",
         "unit": "°F",
         "device_class": "temperature",
     },
     "3": {
         "name": "Feels Like Temperature",
+        "entity_name": "Feels Like Temperature",
         "unit": "°C",
         "device_class": "temperature",
     },
-    "5": {"name": "Vapor Pressure Deficit", "unit": "kPa", "device_class": "pressure"},
+    "5": {
+        "name": "Vapor Pressure Deficit",
+        "entity_name": "Vapor Pressure Deficit",
+        "unit": "kPa",
+        "device_class": "pressure",
+    },
     # Humidity sensors
     "humidityin": {"name": "Indoor Humidity", "unit": "%", "device_class": "humidity"},
-    "humidity": {"name": "Outdoor Humidity", "unit": "%", "device_class": "humidity"},
+    "humidity": {
+        "name": "Outdoor Humidity",
+        "entity_name": "Humidity",
+        "unit": "%",
+        "device_class": "humidity",
+    },
     # Pressure sensors
     "baromrelin": {
         "name": "Relative Pressure",
@@ -125,26 +140,40 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
         "device_class": "atmospheric_pressure",
     },
     # Wind sensors
-    "windspeedmph": {"name": "Wind Speed", "unit": "mph", "device_class": "wind_speed"},
-    "windspdmph_avg10m": {
-        "name": "Wind Speed 10min Avg",
+    "windspeedmph": {
+        "name": "Wind Speed",
+        "entity_name": "Wind Speed",
         "unit": "mph",
         "device_class": "wind_speed",
     },
-    "windgustmph": {"name": "Wind Gust", "unit": "mph", "device_class": "wind_speed"},
+    "windspdmph_avg10m": {
+        "name": "Wind Speed 10min Avg",
+        "entity_name": "Wind Speed 10min Avg",
+        "unit": "mph",
+        "device_class": "wind_speed",
+    },
+    "windgustmph": {
+        "name": "Wind Gust",
+        "entity_name": "Wind Gust",
+        "unit": "mph",
+        "device_class": "wind_speed",
+    },
     "maxdailygust": {
         "name": "Max Daily Gust",
+        "entity_name": "Max Daily Gust",
         "unit": "mph",
         "device_class": "wind_speed",
     },
     "winddir": {
         "name": "Wind Direction",
+        "entity_name": "Wind Direction",
         "unit": "°",
         "icon": "mdi:compass",
         "state_class": "measurement_angle",
     },
     "winddir_avg10m": {
         "name": "Wind Direction 10min Avg",
+        "entity_name": "Wind Direction 10min Avg",
         "unit": "°",
         "icon": "mdi:compass",
         "state_class": "measurement_angle",
@@ -213,178 +242,299 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     # Solar and UV sensors
     "solarradiation": {
         "name": "Solar Radiation",
+        "entity_name": "Solar Radiation",
         "unit": "W/m²",
         "device_class": "irradiance",
     },
     "solar_lux": {
         "name": "Solar Illuminance",
+        "entity_name": "Solar Illuminance",
         "unit": "lx",
         "device_class": "illuminance",
         "state_class": "measurement",
     },
-    "uv": {"name": "UV Index", "unit": "UV Index", "icon": "mdi:weather-sunny-alert"},
+    "uv": {
+        "name": "UV Index",
+        "entity_name": "UV Index",
+        "unit": "UV Index",
+        "icon": "mdi:weather-sunny-alert",
+    },
     # Lightning sensor
     "lightning_num": {
         "name": "Lightning Strikes",
+        "entity_name": "Lightning Strikes",
         "unit": "strikes",
         "icon": "mdi:flash",
         "state_class": "total_increasing",
     },
-    "lightning_time": {"name": "Last Lightning", "device_class": "timestamp"},
+    "lightning_time": {
+        "name": "Last Lightning",
+        "entity_name": "Last Lightning",
+        "device_class": "timestamp",
+    },
     "lightning": {
         "name": "Lightning Distance",
+        "entity_name": "Lightning Distance",
         "unit": "km",
         "device_class": "distance",
     },
     "lightning_mi": {
         "name": "Lightning Distance",
+        "entity_name": "Lightning Distance",
         "unit": "mi",
         "device_class": "distance",
     },
     # WH45 combo sensor (CO2 + PM2.5 + PM10 + temp/humidity)
     "tf_co2": {
         "name": "CO2 Sensor Temperature",
+        "entity_name": "Temperature",
         "unit": "°F",
         "device_class": "temperature",
     },
     "tf_co2c": {
         "name": "CO2 Sensor Temperature",
+        "entity_name": "Temperature",
         "unit": "°C",
         "device_class": "temperature",
     },
     "humi_co2": {
         "name": "CO2 Sensor Humidity",
+        "entity_name": "Humidity",
         "unit": "%",
         "device_class": "humidity",
     },
-    "pm25_co2": {"name": "PM2.5", "unit": "µg/m³", "device_class": "pm25"},
-    "pm25_24h_co2": {"name": "PM2.5 24h Avg", "unit": "µg/m³", "device_class": "pm25"},
-    "pm10_co2": {"name": "PM10", "unit": "µg/m³", "device_class": "pm10"},
-    "pm10_24h_co2": {"name": "PM10 24h Avg", "unit": "µg/m³", "device_class": "pm10"},
-    "pm1_co2": {"name": "PM1.0", "unit": "µg/m³", "device_class": "pm1"},
-    "pm1_24h_co2": {"name": "PM1.0 24h Avg", "unit": "µg/m³", "device_class": "pm1"},
-    "pm4_co2": {"name": "PM4.0", "unit": "µg/m³", "device_class": "pm25"},
-    "pm4_24h_co2": {"name": "PM4.0 24h Avg", "unit": "µg/m³", "device_class": "pm25"},
+    "pm25_co2": {
+        "name": "PM2.5",
+        "entity_name": "PM2.5",
+        "unit": "µg/m³",
+        "device_class": "pm25",
+    },
+    "pm25_24h_co2": {
+        "name": "PM2.5 24h Avg",
+        "entity_name": "PM2.5 24h Avg",
+        "unit": "µg/m³",
+        "device_class": "pm25",
+    },
+    "pm10_co2": {
+        "name": "PM10",
+        "entity_name": "PM10",
+        "unit": "µg/m³",
+        "device_class": "pm10",
+    },
+    "pm10_24h_co2": {
+        "name": "PM10 24h Avg",
+        "entity_name": "PM10 24h Avg",
+        "unit": "µg/m³",
+        "device_class": "pm10",
+    },
+    "pm1_co2": {
+        "name": "PM1.0",
+        "entity_name": "PM1.0",
+        "unit": "µg/m³",
+        "device_class": "pm1",
+    },
+    "pm1_24h_co2": {
+        "name": "PM1.0 24h Avg",
+        "entity_name": "PM1.0 24h Avg",
+        "unit": "µg/m³",
+        "device_class": "pm1",
+    },
+    "pm4_co2": {
+        "name": "PM4.0",
+        "entity_name": "PM4.0",
+        "unit": "µg/m³",
+        "device_class": "pm25",
+    },
+    "pm4_24h_co2": {
+        "name": "PM4.0 24h Avg",
+        "entity_name": "PM4.0 24h Avg",
+        "unit": "µg/m³",
+        "device_class": "pm25",
+    },
     # WH45/WH46D AQI index fields (dimensionless 0–500). Spec V1.0.6 §1 co2 block.
     "pm25_realaqi_co2": {
         "name": "PM2.5 AQI",
+        "entity_name": "PM2.5 AQI",
         "unit": "AQI",
         "icon": "mdi:air-filter",
         "state_class": "measurement",
     },
     "pm25_24haqi_co2": {
         "name": "PM2.5 24h AQI",
+        "entity_name": "PM2.5 24h AQI",
         "unit": "AQI",
         "icon": "mdi:air-filter",
         "state_class": "measurement",
     },
     "pm10_realaqi_co2": {
         "name": "PM10 AQI",
+        "entity_name": "PM10 AQI",
         "unit": "AQI",
         "icon": "mdi:air-filter",
         "state_class": "measurement",
     },
     "pm10_24haqi_co2": {
         "name": "PM10 24h AQI",
+        "entity_name": "PM10 24h AQI",
         "unit": "AQI",
         "icon": "mdi:air-filter",
         "state_class": "measurement",
     },
     "pm1_realaqi_co2": {
         "name": "PM1.0 AQI",
+        "entity_name": "PM1.0 AQI",
         "unit": "AQI",
         "icon": "mdi:air-filter",
         "state_class": "measurement",
     },
     "pm1_24haqi_co2": {
         "name": "PM1.0 24h AQI",
+        "entity_name": "PM1.0 24h AQI",
         "unit": "AQI",
         "icon": "mdi:air-filter",
         "state_class": "measurement",
     },
     "pm4_realaqi_co2": {
         "name": "PM4.0 AQI",
+        "entity_name": "PM4.0 AQI",
         "unit": "AQI",
         "icon": "mdi:air-filter",
         "state_class": "measurement",
     },
     "pm4_24haqi_co2": {
         "name": "PM4.0 24h AQI",
+        "entity_name": "PM4.0 24h AQI",
         "unit": "AQI",
         "icon": "mdi:air-filter",
         "state_class": "measurement",
     },
-    "co2": {"name": "CO2", "unit": "ppm", "device_class": "carbon_dioxide"},
-    "co2_24h": {"name": "CO2 24h Avg", "unit": "ppm", "device_class": "carbon_dioxide"},
+    "co2": {
+        "name": "CO2",
+        "entity_name": "CO2",
+        "unit": "ppm",
+        "device_class": "carbon_dioxide",
+    },
+    "co2_24h": {
+        "name": "CO2 24h Avg",
+        "entity_name": "CO2 24h Avg",
+        "unit": "ppm",
+        "device_class": "carbon_dioxide",
+    },
     # Hex-ID sensors from common_list (spec V1.0.6 §1)
     # Indoor sensors — emitted via common_list by some firmware versions
     "0x01": {
         "name": "Indoor Temperature",
+        "entity_name": "Temperature",
         "unit": "°C",
         "device_class": "temperature",
     },
-    "0x06": {"name": "Indoor Humidity", "unit": "%", "device_class": "humidity"},
+    "0x06": {
+        "name": "Indoor Humidity",
+        "entity_name": "Humidity",
+        "unit": "%",
+        "device_class": "humidity",
+    },
     "0x08": {
         "name": "Absolute Pressure",
+        "entity_name": "Absolute Pressure",
         "unit": "hPa",
         "device_class": "atmospheric_pressure",
     },
     "0x09": {
         "name": "Relative Pressure",
+        "entity_name": "Relative Pressure",
         "unit": "hPa",
         "device_class": "atmospheric_pressure",
     },
     # Outdoor / weather-station sensors
     "0x02": {
         "name": "Outdoor Temperature",
+        "entity_name": "Temperature",
         "unit": "°C",
         "device_class": "temperature",
     },
     "0x03": {
         "name": "Dewpoint Temperature",
+        "entity_name": "Dewpoint Temperature",
         "unit": "°C",
         "device_class": "temperature",
     },
     "0x04": {
         "name": "Wind Chill",
+        "entity_name": "Wind Chill",
         "unit": "°C",
         "device_class": "temperature",
     },
     "0x05": {
         "name": "Heat Index",
+        "entity_name": "Heat Index",
         "unit": "°C",
         "device_class": "temperature",
     },
-    "0x07": {"name": "Outdoor Humidity", "unit": "%", "device_class": "humidity"},
-    "0x0B": {"name": "Wind Speed", "unit": "m/s", "device_class": "wind_speed"},
-    "0x0C": {"name": "Wind Gust", "unit": "m/s", "device_class": "wind_speed"},
-    "0x19": {"name": "Max Daily Gust", "unit": "m/s", "device_class": "wind_speed"},
+    "0x07": {
+        "name": "Outdoor Humidity",
+        "entity_name": "Humidity",
+        "unit": "%",
+        "device_class": "humidity",
+    },
+    "0x0B": {
+        "name": "Wind Speed",
+        "entity_name": "Wind Speed",
+        "unit": "m/s",
+        "device_class": "wind_speed",
+    },
+    "0x0C": {
+        "name": "Wind Gust",
+        "entity_name": "Wind Gust",
+        "unit": "m/s",
+        "device_class": "wind_speed",
+    },
+    "0x19": {
+        "name": "Max Daily Gust",
+        "entity_name": "Max Daily Gust",
+        "unit": "m/s",
+        "device_class": "wind_speed",
+    },
     "0x0A": {
         "name": "Wind Direction",
+        "entity_name": "Wind Direction",
         "unit": "°",
         "icon": "mdi:compass",
         "state_class": "measurement_angle",
     },
     "0x6D": {
         "name": "Wind Direction Avg",
+        "entity_name": "Wind Direction Avg",
         "unit": "°",
         "icon": "mdi:compass",
         "state_class": "measurement_angle",
     },
-    "0x15": {"name": "Solar Radiation", "unit": "W/m²", "device_class": "irradiance"},
+    "0x15": {
+        "name": "Solar Radiation",
+        "entity_name": "Solar Radiation",
+        "unit": "W/m²",
+        "device_class": "irradiance",
+    },
     # 0x16 UV irradiance (µW/m²) — raw UV sensor value, distinct from 0x17 UV Index.
     # No HA device_class for µW/m² so we use a custom icon.
     "0x16": {
         "name": "UV Radiation",
+        "entity_name": "UV Radiation",
         "unit": "µW/m²",
         "icon": "mdi:weather-sunny-alert",
         "state_class": "measurement",
     },
-    "0x17": {"name": "UV Index", "unit": "UV Index", "icon": "mdi:weather-sunny-alert"},
+    "0x17": {
+        "name": "UV Index",
+        "entity_name": "UV Index",
+        "unit": "UV Index",
+        "icon": "mdi:weather-sunny-alert",
+    },
     # Resets to 0 when the rain event ends: a restarting counter, so each drop is a
     # new meter cycle rather than a negative change (plain "total" subtracts it).
     "0x0D": {
         "name": "Rain Event",
+        "entity_name": "Rain Event",
         "unit": "mm",
         "device_class": "precipitation",
         "state_class": "total_increasing",
@@ -392,6 +542,7 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     },
     "0x0E": {
         "name": "Rain Rate",
+        "entity_name": "Rain Rate",
         "unit": "mm/Hr",
         "device_class": "precipitation_intensity",
         "state_class": "measurement",
@@ -401,6 +552,7 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     # monotonic and must not be total_increasing (HA reports it as a meter reset).
     "0x7D": {
         "name": "Hourly Rain",
+        "entity_name": "Hourly Rain",
         "unit": "mm",
         "device_class": "precipitation",
         "state_class": "measurement",
@@ -410,6 +562,7 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     # monotonic and must not be total_increasing (HA reports it as a meter reset).
     "0x7C": {
         "name": "24-Hour Rain",
+        "entity_name": "24-Hour Rain",
         "unit": "mm",
         "device_class": "precipitation",
         "state_class": "measurement",
@@ -417,6 +570,7 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     },
     "0x10": {
         "name": "Daily Rain",
+        "entity_name": "Daily Rain",
         "unit": "mm",
         "device_class": "precipitation",
         "state_class": "total_increasing",
@@ -424,6 +578,7 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     },
     "0x11": {
         "name": "Weekly Rain",
+        "entity_name": "Weekly Rain",
         "unit": "mm",
         "device_class": "precipitation",
         "state_class": "total_increasing",
@@ -431,6 +586,7 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     },
     "0x12": {
         "name": "Monthly Rain",
+        "entity_name": "Monthly Rain",
         "unit": "mm",
         "device_class": "precipitation",
         "state_class": "total_increasing",
@@ -438,6 +594,7 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     },
     "0x13": {
         "name": "Yearly Rain",
+        "entity_name": "Yearly Rain",
         "unit": "mm",
         "device_class": "precipitation",
         "state_class": "total_increasing",
@@ -446,6 +603,7 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     # 0x14 Rain Totals — all-time cumulative rain (spec V1.0.6 §1, ITEM_RAINTOTALS)
     "0x14": {
         "name": "Total Rain",
+        "entity_name": "Total Rain",
         "unit": "mm",
         "device_class": "precipitation",
         "state_class": "total_increasing",
@@ -454,11 +612,13 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     # WN38 Black Globe Thermometer
     "0xA1": {
         "name": "Black Globe Temperature",
+        "entity_name": "Black Globe Temperature",
         "unit": "°C",
         "device_class": "temperature",
     },
     "0xA2": {
         "name": "WBGT",
+        "entity_name": "WBGT",
         "unit": "°C",
         "device_class": "temperature",
     },
@@ -637,6 +797,7 @@ SENSOR_TYPES.update(
     {
         "ws90cap_volt": {
             "name": "WS90 Capacitor Voltage",
+            "entity_name": "Capacitor Voltage",
             "unit": "V",
             "device_class": "voltage",
             "state_class": "measurement",
@@ -645,6 +806,7 @@ SENSOR_TYPES.update(
         },
         "wh90cap_volt": {
             "name": "WH90 Capacitor Voltage",
+            "entity_name": "Capacitor Voltage",
             "unit": "V",
             "device_class": "voltage",
             "state_class": "measurement",
@@ -653,6 +815,7 @@ SENSOR_TYPES.update(
         },
         "ws90_voltage": {
             "name": "WS90 Battery Voltage",
+            "entity_name": "Battery Voltage",
             "unit": "V",
             "device_class": "voltage",
             "state_class": "measurement",
@@ -661,6 +824,7 @@ SENSOR_TYPES.update(
         },
         "wh90_voltage": {
             "name": "WH90 Battery Voltage",
+            "entity_name": "Battery Voltage",
             "unit": "V",
             "device_class": "voltage",
             "state_class": "measurement",
@@ -669,6 +833,7 @@ SENSOR_TYPES.update(
         },
         "ws85cap_volt": {
             "name": "WS85 Capacitor Voltage",
+            "entity_name": "Capacitor Voltage",
             "unit": "V",
             "device_class": "voltage",
             "state_class": "measurement",
@@ -677,6 +842,7 @@ SENSOR_TYPES.update(
         },
         "ws85_voltage": {
             "name": "WS85 Battery Voltage",
+            "entity_name": "Battery Voltage",
             "unit": "V",
             "device_class": "voltage",
             "state_class": "measurement",
@@ -718,20 +884,72 @@ def _generate_battery_sensors(
 # Battery sensors (companion to main sensors)
 BATTERY_SENSORS: Final = {
     # Fixed battery sensors
-    "wh57batt": {"name": "Lightning Sensor Battery", "sensor_key": "lightning"},
-    "wh40batt": {"name": "Rain Sensor Battery", "sensor_key": "rainratein"},
-    "wn20batt": {"name": "Rain Gauge Battery", "sensor_key": "rainratein"},
-    "wh68batt": {"name": "Weather Station Battery", "sensor_key": "tempf"},
-    "wh25batt": {"name": "Indoor Station Battery", "sensor_key": "tempinf"},
-    "wh26batt": {"name": "Outdoor Sensor Battery", "sensor_key": "0x02"},
-    "co2_batt": {"name": "CO2 Combo Sensor Battery", "sensor_key": "co2"},
-    "wh80batt": {"name": "WH80 Weather Station Battery", "sensor_key": "0x02"},
-    "wh69batt": {"name": "WH69 Weather Station Battery", "sensor_key": "0x02"},
-    "ws90batt": {"name": "WS90 Weather Station Battery", "sensor_key": "0x02"},
-    "wh90batt": {"name": "WH90 Weather Station Battery", "sensor_key": "0x02"},
+    "wh57batt": {
+        "name": "Lightning Sensor Battery",
+        "entity_name": "Battery",
+        "sensor_key": "lightning",
+    },
+    "wh40batt": {
+        "name": "Rain Sensor Battery",
+        "entity_name": "Battery",
+        "sensor_key": "rainratein",
+    },
+    "wn20batt": {
+        "name": "Rain Gauge Battery",
+        "entity_name": "Battery",
+        "sensor_key": "rainratein",
+    },
+    "wh68batt": {
+        "name": "Weather Station Battery",
+        "entity_name": "Battery",
+        "sensor_key": "tempf",
+    },
+    "wh25batt": {
+        "name": "Indoor Station Battery",
+        "entity_name": "Battery",
+        "sensor_key": "tempinf",
+    },
+    "wh26batt": {
+        "name": "Outdoor Sensor Battery",
+        "entity_name": "Battery",
+        "sensor_key": "0x02",
+    },
+    "co2_batt": {
+        "name": "CO2 Combo Sensor Battery",
+        "entity_name": "Battery",
+        "sensor_key": "co2",
+    },
+    "wh80batt": {
+        "name": "WH80 Weather Station Battery",
+        "entity_name": "Battery",
+        "sensor_key": "0x02",
+    },
+    "wh69batt": {
+        "name": "WH69 Weather Station Battery",
+        "entity_name": "Battery",
+        "sensor_key": "0x02",
+    },
+    "ws90batt": {
+        "name": "WS90 Weather Station Battery",
+        "entity_name": "Battery",
+        "sensor_key": "0x02",
+    },
+    "wh90batt": {
+        "name": "WH90 Weather Station Battery",
+        "entity_name": "Battery",
+        "sensor_key": "0x02",
+    },
     "wh77batt": {"name": "WH77 Multi-Sensor Station Battery", "sensor_key": "0x02"},
-    "wn38batt": {"name": "WN38 Black Globe Thermometer Battery", "sensor_key": "0xA1"},
-    "ws85batt": {"name": "WS85 Wind & Rain Battery", "sensor_key": "0x0B"},
+    "wn38batt": {
+        "name": "WN38 Black Globe Thermometer Battery",
+        "entity_name": "Battery",
+        "sensor_key": "0xA1",
+    },
+    "ws85batt": {
+        "name": "WS85 Wind & Rain Battery",
+        "entity_name": "Battery",
+        "sensor_key": "0x0B",
+    },
 }
 
 # Add dynamically generated battery sensors

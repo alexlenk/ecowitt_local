@@ -25,6 +25,20 @@ _TYPE_NAMES: Dict[str, str] = {
     "wh40": "Rain Sensor",
     "wn20": "Rain Gauge",
     "wh68": "Weather Station",
+    "wh69": "WH69 Weather Station",
+    "wh65": "WH69 Weather Station",
+    "ws90": "WS90 Weather Station",
+    "wh90": "WS90 Weather Station",
+    "wh80": "WS80 Weather Station",
+    "ws80": "WS80 Weather Station",
+    "wh85": "WS85 Wind & Rain Sensor",
+    "ws85": "WS85 Wind & Rain Sensor",
+    "wh45": "CO2 Air Quality Sensor",
+    "wh46": "CO2 Air Quality Sensor",
+    "wh25": "Indoor Station",
+    "wh26": "Outdoor Temperature/Humidity Sensor",
+    "wn32": "Outdoor Temperature/Humidity Sensor",
+    "wn38": "Black Globe Temperature Sensor",
     "soil": "Soil Moisture Sensor",
     "soil_ec": "Soil Moisture & EC Sensor",
     "temp_hum": "Temperature/Humidity Sensor",
@@ -36,6 +50,14 @@ _TYPE_NAMES: Dict[str, str] = {
     "lightning": "Lightning Sensor",
     "rain": "Rain Sensor",
     "weather_station": "Weather Station",
+    "weather_station_wh69": "WH69 Weather Station",
+    "weather_station_ws90": "WS90 Weather Station",
+    "weather_station_wh90": "WS90 Weather Station",
+    "combo": "CO2 Air Quality Sensor",
+    "co2_pm": "CO2 Air Quality Sensor",
+    "indoor_station": "Indoor Station",
+    "outdoor_temp_hum": "Outdoor Temperature/Humidity Sensor",
+    "bgt": "Black Globe Temperature Sensor",
 }
 
 _OUTDOOR_TYPES = {
@@ -49,6 +71,17 @@ _OUTDOOR_TYPES = {
     "wh40",
     "wn20",
     "wh68",
+    "wh69",
+    "wh65",
+    "ws90",
+    "wh90",
+    "wh80",
+    "ws80",
+    "wh85",
+    "ws85",
+    "wh26",
+    "wn32",
+    "wn38",
     "soil",
     "soil_ec",
     "leaf_wetness",
@@ -58,13 +91,18 @@ _OUTDOOR_TYPES = {
     "lightning",
     "rain",
     "weather_station",
+    "weather_station_wh69",
+    "weather_station_ws90",
+    "weather_station_wh90",
+    "outdoor_temp_hum",
+    "bgt",
 }
 
 
 def sensor_type_display_name(sensor_type: str) -> str:
     """Return the display name for a sensor type (e.g. "WH31").
 
-    Types without a table entry keep their model ("WH90") rather than a
+    Types without a table entry keep their model ("WH99") rather than a
     generic "Sensor", so the device name still says what it is.
     """
     return _TYPE_NAMES.get(sensor_type.lower()) or sensor_type.upper() or "Sensor"
