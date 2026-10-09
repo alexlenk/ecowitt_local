@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-10-09
+
+> **Visible changes on update** — entity IDs, unique IDs, automations, history and dashboards are **not** affected, and names you set yourself in Home Assistant (entity or device) are kept.
+> - **Non-channel sensors with their own device** (weather stations, WH57, WH40, WN20, WH45/WH46, WH25, WH26/WN32, WN38) are now named by what they measure, with the device name in front, like the channel sensors since v1.8.0. "Outdoor"/"Indoor" and the sensor type are dropped where the device name already says it, e.g. "Outdoor Temperature" becomes "`<device name>` Temperature" and "Lightning Sensor Battery" becomes "`<device name>` Battery". Readings that stay on the gateway device keep their names.
+> - **New device names** for WS90/WH90, WH69/WH65, WS80/WH80, WS85/WH85, WH45/WH46, WH25, WH26/WN32 and WN38 (e.g. "Ecowitt WS90 Weather Station `<id>`" instead of "Ecowitt WH90 `<id>`").
+
+### Changed
+- **Device-based entity names for non-channel hardware devices**: entities of weather stations and other single sensors with their own device use Home Assistant's `has_entity_name`. Shortened names: "Outdoor/Indoor Temperature" and "Outdoor/Indoor Humidity" become "Temperature"/"Humidity", "CO2 Sensor Temperature/Humidity" become "Temperature"/"Humidity", all fixed batteries become "Battery", and "WS90/WH90/WS85 Battery Voltage"/"Capacitor Voltage" drop the model prefix. Lightning and black globe entities keep their names. Credit to @olympia (issue #262, PR #274).
+- **Device type names** added for WS90/WH90, WH69/WH65, WS80/WH80, WS85/WH85, WH45/WH46, WH25, WH26/WN32 and WN38. The WH65 shows as "WH69 Weather Station" because the gateway reports both as the same type. Credit to @olympia (PR #274).
+
+### Fixed
+- **Solar entity names now follow the unit**: when the gateway reports solar in lux, the entity is named "Solar Illuminance" and the derived W/m² entity "Solar Radiation", instead of the lux entity being called "Solar Radiation". Credit to @olympia (PR #274).
+- **Correction to the v1.8.0 notes**: a sensor name set on the gateway only becomes the device name if the gateway reports it in its sensor list. On some firmware (e.g. GW3000A V1.2.3), titles set with "Customize Title" on the Live Data page are not reported there and are not used yet. The README now says so.
+
 ## [1.8.0] - 2026-10-08
 
 > **Visible changes on update** — entity IDs, unique IDs, automations, history and dashboards are **not** affected, and names you set yourself in Home Assistant (entity or device) are kept.
