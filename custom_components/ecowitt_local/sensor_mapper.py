@@ -41,6 +41,9 @@ class SensorMapper:
         self._hardware_mapping: Dict[str, str] = {}
         self._sensor_info: Dict[str, Dict[str, Any]] = {}
         self._last_mapping_update: Optional[float] = None
+        # "Customize Title" names from live data, keyed by unique_id. Kept across
+        # mapping refreshes, which rebuild _sensor_info from get_sensors_info.
+        self._live_titles: Dict[str, str] = {}
 
     def update_mapping(self, sensor_mappings: List[Dict[str, Any]]) -> None:
         """Update the hardware ID mapping from sensor mapping data.
@@ -161,6 +164,10 @@ class SensorMapper:
                     "rssi": rssi,
                     "raw_data": sensor,
                 }
+                if unique_id in self._live_titles:
+                    self._sensor_info[unique_id]["live_title"] = self._live_titles[
+                        unique_id
+                    ]
 
                 # Map live data keys to unique_id
                 live_keys = self._generate_live_data_keys(sensor_type, channel)
@@ -738,6 +745,19 @@ class SensorMapper:
             Hardware ID if found, None otherwise
         """
         return self._hardware_mapping.get(live_data_key)
+
+    def set_live_titles(self, titles: Dict[str, str]) -> None:
+        """Set the gateway "Customize Title" names, keyed by unique_id.
+
+        The titles come from the live data (e.g. ch_aisle[].name) and replace the
+        previous set; a sensor without a title has no entry.
+        """
+        self._live_titles = dict(titles)
+        for unique_id, info in self._sensor_info.items():
+            if unique_id in self._live_titles:
+                info["live_title"] = self._live_titles[unique_id]
+            else:
+                info.pop("live_title", None)
 
     def get_sensor_info(self, hardware_id: str) -> Optional[Dict[str, Any]]:
         """Get sensor information for a hardware ID.
