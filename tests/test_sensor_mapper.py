@@ -515,7 +515,8 @@ def test_conflict_with_equal_signal_wn32_beats_wh90():
 
 def test_sensor_priority_dead_high_priority_does_not_block_lower():
     """A higher-priority sensor with signal=0 must not block a lower-priority but
-    active sensor from claiming shared keys — signal strength always beats priority.
+    active sensor from claiming shared keys. Priority only decides between
+    sensors that are both active (signal > 0).
     """
     mapper = SensorMapper()
     mapper.update_mapping(
@@ -538,6 +539,76 @@ def test_sensor_priority_dead_high_priority_does_not_block_lower():
     )
     assert mapper.get_hardware_id("0x02") == "LIVE02"
     assert mapper.get_hardware_id("0x07") == "LIVE02"
+
+
+def test_sensor_priority_beats_stronger_signal_when_both_active():
+    """Both sensors active, the WN32 (priority 4) has a weaker signal than the
+    WS90 (priority 3): the WN32 still owns the shared keys, in either order and
+    across polls, so fluctuating signal no longer moves the entities between
+    devices.
+    """
+    wh90 = {
+        "id": "6530",
+        "img": "wh90",
+        "name": "Temp & Humidity & Solar & Wind & Rain",
+        "batt": "0",
+        "signal": "4",
+    }
+    wn32 = {
+        "id": "A9",
+        "img": "wh26",
+        "name": "Outdoor T&H",
+        "batt": "0",
+        "signal": "3",
+    }
+
+    mapper = SensorMapper()
+    mapper.update_mapping([wh90, wn32])
+    for key in ("0x02", "0x07", "0x03"):
+        assert mapper.get_hardware_id(key) == "A9"
+    # Keys only the WS90 reports stay with the WS90.
+    assert mapper.get_hardware_id("0x0B") == "6530"
+
+    mapper2 = SensorMapper()
+    mapper2.update_mapping([wn32, wh90])
+    for key in ("0x02", "0x07", "0x03"):
+        assert mapper2.get_hardware_id(key) == "A9"
+
+    # WN32 signal fluctuates between polls: ownership does not move.
+    for wn32_signal in ("4", "2", "1", "3"):
+        mapper.update_mapping([wh90, {**wn32, "signal": wn32_signal}])
+        assert mapper.get_hardware_id("0x02") == "A9"
+
+    # Once the WN32 goes stale (signal 0), the active WS90 takes over.
+    mapper.update_mapping([wh90, {**wn32, "signal": "0"}])
+    assert mapper.get_hardware_id("0x02") == "6530"
+
+
+def test_sensor_priority_between_weather_stations_when_both_active():
+    """The same rule applies between weather stations: an active WS80
+    (priority 2) owns shared keys over an active WH69 (priority 1) with a
+    stronger signal.
+    """
+    wh69 = {
+        "id": "C1",
+        "img": "wh69",
+        "name": "Temp & Humidity & Solar & Wind & Rain",
+        "batt": "0",
+        "signal": "4",
+    }
+    ws80 = {
+        "id": "D2",
+        "img": "wh80",
+        "name": "Temp & Humidity & Solar & Wind",
+        "batt": "0",
+        "signal": "2",
+    }
+    mapper = SensorMapper()
+    mapper.update_mapping([ws80, wh69])
+    assert mapper.get_hardware_id("0x02") == "D2"
+    assert mapper.get_hardware_id("0x0B") == "D2"
+    # Rain keys only the WH69 reports stay with the WH69.
+    assert mapper.get_hardware_id("0x0D") == "C1"
 
 
 def test_sensor_priority_equal_priority_stable_tiebreak():

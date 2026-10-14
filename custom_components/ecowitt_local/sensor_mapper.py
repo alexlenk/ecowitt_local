@@ -185,19 +185,27 @@ class SensorMapper:
                         and previous_mapping.get(key) == unique_id
                         and self._hardware_mapping.get(key) != unique_id
                     )
-                    # Priority win: higher-priority sensor claims the key when
-                    # signals are equal and both are active (issue #203).
-                    is_priority_win = (
+                    # When both sensors are active (signal > 0) and their
+                    # priorities differ, the higher-priority sensor owns the
+                    # key regardless of signal strength. A sensor with
+                    # signal 0 is stale and never blocks an active one
+                    # (issue #203).
+                    priority_decides = (
                         existing_signal is not None
-                        and signal_int == existing_signal
+                        and existing_signal > 0
                         and signal_int > 0
-                        and device_priority > existing_priority
+                        and device_priority != existing_priority
+                    )
+                    is_priority_win = (
+                        priority_decides and device_priority > existing_priority
                     )
                     if (
                         existing_signal is None
-                        or signal_int > existing_signal
                         or is_priority_win
-                        or is_stable_tie
+                        or (
+                            not priority_decides
+                            and (signal_int > existing_signal or is_stable_tie)
+                        )
                     ):
                         if existing_signal is not None:
                             reason = (
