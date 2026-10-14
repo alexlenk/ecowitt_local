@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from .const import BATTERY_SENSORS, SENSOR_TYPES
 
@@ -44,6 +44,10 @@ class SensorMapper:
         # "Customize Title" names from live data, keyed by unique_id. Kept across
         # mapping refreshes, which rebuild _sensor_info from get_sensors_info.
         self._live_titles: Dict[str, str] = {}
+        # WH52 sensors seen in the live data's ch_ec block. get_sensors_info
+        # reports a WH52 like a WH51 ("wh51" img and type range), so only the
+        # live data tells them apart (issue #279). Kept across mapping refreshes.
+        self._ec_devices: Set[str] = set()
 
     def update_mapping(self, sensor_mappings: List[Dict[str, Any]]) -> None:
         """Update the hardware ID mapping from sensor mapping data.
@@ -168,6 +172,8 @@ class SensorMapper:
                     self._sensor_info[unique_id]["live_title"] = self._live_titles[
                         unique_id
                     ]
+                if unique_id in self._ec_devices:
+                    self._set_wh52_model(self._sensor_info[unique_id])
 
                 # Map live data keys to unique_id
                 live_keys = self._generate_live_data_keys(sensor_type, channel)
@@ -766,6 +772,31 @@ class SensorMapper:
                 info["live_title"] = self._live_titles[unique_id]
             else:
                 info.pop("live_title", None)
+
+    def mark_ec_devices(self, unique_ids: Set[str]) -> Set[str]:
+        """Mark sensors seen in the live data's ch_ec block as WH52.
+
+        A sensor stays marked once seen, so a poll where it is missing from
+        ch_ec does not switch its model back and forth. Returns the unique_ids
+        that were not marked before.
+
+        This relies on two observations from real gateways (issue #279): only
+        WH52s are listed in ch_ec, and WH51 and WH52 share one channel space,
+        so the soilec{ch} key of a ch_ec channel cannot belong to a WH51.
+        """
+        new_ids = set(unique_ids) - self._ec_devices
+        self._ec_devices |= new_ids
+        for unique_id in new_ids:
+            info = self._sensor_info.get(unique_id)
+            if info is not None:
+                self._set_wh52_model(info)
+        return new_ids
+
+    @staticmethod
+    def _set_wh52_model(info: Dict[str, Any]) -> None:
+        """Use the WH52 model for a sensor that get_sensors_info calls a WH51."""
+        info["device_model"] = "wh52"
+        info["live_model"] = "wh52"
 
     def get_sensor_info(self, hardware_id: str) -> Optional[Dict[str, Any]]:
         """Get sensor information for a hardware ID.
