@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-10-14
+
+> **Visible change on update** — entity IDs, unique IDs, automations, history and dashboards are **not** affected, and names you set yourself in Home Assistant are kept.
+> - **Gateway titles become device names**: a multi-channel sensor (WH31, WH34, WH35, WH51, WH54, WH55) titled with "Customize Title" on the gateway's Live Data page now uses that title as its device name, e.g. "Jacuzzi Temp" instead of "Ecowitt Temperature/Humidity Sensor `<id>`". Changing or clearing the title on the gateway renames the device on the next update.
+
+### Added
+- **"Customize Title" from the gateway as device name**: the title is read from the live data on every update, because the gateway never reports it in its sensor list. The device registry is only written when a title changes, a name set in Home Assistant is never overridden, and devices of other gateways are left alone. WH41 is not covered because its live data has no title field. Credit to @olympia (PR #276).
+
+### Fixed
+- **Shared outdoor readings no longer move between devices**: when a WN32/WH26 and a weather station (or two weather stations) are both active, the higher-priority sensor now always owns the shared outdoor temperature, humidity and dew point entities. Previously, normal signal fluctuation could reassign them on every mapping refresh, splitting the history. A sensor that goes offline still hands its readings over once its signal reaches 0. Credit to @olympia (PR #277).
+
 ## [1.9.0] - 2026-10-09
 
 > **Visible changes on update** — entity IDs, unique IDs, automations, history and dashboards are **not** affected, and names you set yourself in Home Assistant (entity or device) are kept.
