@@ -74,6 +74,7 @@ If your gateway is not in either list and setup fails with a connection or 404 e
 | **WH25** | Indoor temperature, humidity, barometric pressure |
 | **WH26 / WN32** | Outdoor temperature, humidity, dew point |
 | **WH31** | Multi-channel temperature & humidity (CH1–8) |
+| **WN30 / WN36** | Probe / pool thermometer, temperature only (shares the WH31 channels) |
 | **WH34** | Multi-channel temperature (CH1–8) |
 | **WH35** | Leaf wetness (CH1–8) |
 | **WH40** | Traditional rain gauge |
@@ -90,6 +91,8 @@ If your gateway is not in either list and setup fails with a connection or 404 e
 | **WN38** | Black Globe Thermometer (BGT + WBGT) |
 
 All built-in gateway sensors (indoor temperature/humidity/pressure, wind, rain) are also supported.
+
+The gateway reports a WN30 or WN36 as a WH31. The integration recognizes them by the missing humidity reading in the live data and shows them as a temperature sensor with model `wn30/wn36`, since the gateway gives no way to tell the two apart.
 
 ## 📱 How Devices Are Organized
 
