@@ -1499,6 +1499,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 sensors_data[signal_entity_id] = {
                     "entity_id": signal_entity_id,
                     "name": "Signal Strength",
+                    "entity_name": "Signal Strength",
                     "state": signal_pct,
                     "unit_of_measurement": "%",
                     "device_class": None,
@@ -1540,6 +1541,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 sensors_data[rssi_entity_id] = {
                     "entity_id": rssi_entity_id,
                     "name": "RSSI",
+                    "entity_name": "RSSI",
                     "state": rssi_val,
                     "unit_of_measurement": "dBm",
                     "device_class": "signal_strength",
@@ -1563,6 +1565,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 sensors_data[quality_entity_id] = {
                     "entity_id": quality_entity_id,
                     "name": "Signal Quality",
+                    "entity_name": "Signal Quality",
                     "state": quality_pct,
                     "unit_of_measurement": "%",
                     "device_class": None,
@@ -1592,6 +1595,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             sensors_data[hardware_id_entity_id] = {
                 "entity_id": hardware_id_entity_id,
                 "name": "Hardware ID",
+                "entity_name": "Hardware ID",
                 "state": hardware_id,
                 "unit_of_measurement": None,
                 "device_class": None,
@@ -1692,6 +1696,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 sensors_data[channel_entity_id] = {
                     "entity_id": channel_entity_id,
                     "name": "Channel",
+                    "entity_name": "Channel",
                     "state": channel,
                     "unit_of_measurement": None,
                     "device_class": None,

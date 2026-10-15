@@ -350,19 +350,38 @@ async def test_wh31_friendly_names_follow_device(hass: HomeAssistant, mock_ecowi
         assert entity.original_name == name
         assert _friendly_name(hass, entity_id) == f"{device.name} {name}"
 
-    unchanged = {
-        "ecowitt_local_D1E2F3_channel_D1E2F3": "Channel",
-        "ecowitt_local_D1E2F3_hardware_id_D1E2F3": "Hardware ID",
-        "ecowitt_local_D1E2F3_rssi_D1E2F3": "RSSI",
-        "ecowitt_local_D1E2F3_signal_D1E2F3": "Signal Strength",
-        "ecowitt_local_D1E2F3_signal_quality_D1E2F3": "Signal Quality",
-        "ecowitt_local_D1E2F3_online": "Ecowitt Temperature D1E2F3 Online",
+    # Diagnostic entities follow the device name too (issue #263); their
+    # entity IDs stay as they were.
+    diagnostics = {
+        "ecowitt_local_D1E2F3_channel_D1E2F3": (
+            "sensor.ecowitt_channel_d1e2f3",
+            "Channel",
+        ),
+        "ecowitt_local_D1E2F3_hardware_id_D1E2F3": (
+            "sensor.ecowitt_hardware_id_d1e2f3",
+            "Hardware ID",
+        ),
+        "ecowitt_local_D1E2F3_rssi_D1E2F3": ("sensor.ecowitt_rssi_d1e2f3", "RSSI"),
+        "ecowitt_local_D1E2F3_signal_D1E2F3": (
+            "sensor.ecowitt_signal_strength_d1e2f3",
+            "Signal Strength",
+        ),
+        "ecowitt_local_D1E2F3_signal_quality_D1E2F3": (
+            "sensor.ecowitt_signal_quality_d1e2f3",
+            "Signal Quality",
+        ),
+        "ecowitt_local_D1E2F3_online": (
+            "binary_sensor.ecowitt_temperature_d1e2f3_online",
+            "Online",
+        ),
     }
-    for unique_id, name in unchanged.items():
+    for unique_id, (entity_id, name) in diagnostics.items():
         entity = entities[unique_id]
-        assert entity.has_entity_name is False, unique_id
+        assert entity.entity_id == entity_id, unique_id
+        assert entity.device_id == device.id, unique_id
+        assert entity.has_entity_name is True, unique_id
         assert entity.original_name == name
-        assert _friendly_name(hass, entity.entity_id) == name
+        assert _friendly_name(hass, entity_id) == f"{device.name} {name}"
 
 
 async def test_user_overrides_survive_switch(hass: HomeAssistant, mock_ecowitt_api):
@@ -446,7 +465,7 @@ _DIAGNOSTIC_MARKERS = ("_channel_", "_hardware_id_", "_rssi_", "_signal_")
 
 
 def _is_diagnostic(unique_id: str) -> bool:
-    """Return True for the diagnostic entities that keep their legacy names."""
+    """Return True for the diagnostic entities (signal, RSSI, channel, Online)."""
     return unique_id.endswith("_online") or any(
         marker in unique_id for marker in _DIAGNOSTIC_MARKERS
     )
@@ -517,9 +536,7 @@ async def test_all_channel_families(hass: HomeAssistant, mock_ecowitt_api):
         renamed = [e for e in on_device if not _is_diagnostic(e.unique_id)]
         assert renamed, hardware_id
         for entity in on_device:
-            if _is_diagnostic(entity.unique_id):
-                assert entity.has_entity_name is False, entity.unique_id
-                continue
+            # Diagnostic entities follow the device name too (issue #263).
             assert entity.has_entity_name is True, entity.unique_id
             assert "CH" not in str(entity.original_name), entity.unique_id
             assert _friendly_name(hass, entity.entity_id) == (
@@ -756,18 +773,21 @@ async def test_non_channel_families(hass: HomeAssistant, mock_ecowitt_api):
         sensors = [e for e in on_device if e.domain == "sensor"]
         assert [e for e in sensors if not _is_diagnostic(e.unique_id)], hardware_id
         for entity in sensors:
-            if _is_diagnostic(entity.unique_id):
-                assert entity.has_entity_name is False, entity.unique_id
-                assert _friendly_name(hass, entity.entity_id) == entity.original_name
-                continue
+            # Diagnostic entities follow the device name too (issue #263).
             assert entity.has_entity_name is True, entity.unique_id
             assert _friendly_name(hass, entity.entity_id) == (
                 f"{device_name} {entity.original_name}"
             )
-        # Binary sensors (Online, rain state) are not part of this change.
+        # The Online binary sensor follows the device name (issue #263); other
+        # binary sensors (rain state) keep their standalone names.
         for entity in on_device:
             if entity.domain == "binary_sensor":
-                assert entity.has_entity_name is False, entity.unique_id
+                is_online = entity.unique_id.endswith("_online")
+                assert entity.has_entity_name is is_online, entity.unique_id
+                if is_online:
+                    assert _friendly_name(hass, entity.entity_id) == (
+                        f"{device_name} Online"
+                    )
 
     # The same kind of reading on the gateway device keeps its standalone name.
     gateway = {
@@ -804,3 +824,80 @@ async def test_solar_names_in_lux_mode(hass: HomeAssistant, mock_ecowitt_api):
         assert state is not None
         assert state.attributes["unit_of_measurement"] == unit
         assert state.attributes["friendly_name"] == f"{device_name} {name}"
+
+
+async def test_diagnostic_names_follow_title_and_user_name(
+    hass: HomeAssistant, mock_ecowitt_api
+):
+    """Diagnostic and Online names follow the gateway title and HA user names."""
+    entry = _entry(hass)
+    titled = {**_aisle(2, "21.5"), "name": "Garage"}
+    await _setup(
+        hass, mock_ecowitt_api, entry, [_wh31("A2", 2)], {"ch_aisle": [titled]}
+    )
+
+    assert _friendly_name(hass, "sensor.ecowitt_rssi_a2") == "Garage RSSI"
+    assert _friendly_name(hass, "sensor.ecowitt_channel_a2") == "Garage Channel"
+    assert (
+        _friendly_name(hass, "binary_sensor.ecowitt_temperature_a2_online")
+        == "Garage Online"
+    )
+
+    # A title changed on the gateway while HA runs renames them as well.
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    _set_gateway(
+        mock_ecowitt_api,
+        [_wh31("A2", 2)],
+        {"ch_aisle": [{**titled, "name": "Shed"}]},
+    )
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert _friendly_name(hass, "sensor.ecowitt_rssi_a2") == "Shed RSSI"
+    assert (
+        _friendly_name(hass, "binary_sensor.ecowitt_temperature_a2_online")
+        == "Shed Online"
+    )
+
+    devices = dr.async_get(hass)
+    device = devices.async_get_device(identifiers={(DOMAIN, "A2")})
+    assert device is not None
+    devices.async_update_device(device.id, name_by_user="Living Room")
+    await hass.async_block_till_done()
+    assert _friendly_name(hass, "sensor.ecowitt_rssi_a2") == "Living Room RSSI"
+    assert (
+        _friendly_name(hass, "binary_sensor.ecowitt_temperature_a2_online")
+        == "Living Room Online"
+    )
+
+
+async def test_user_entity_names_kept_for_diagnostics(
+    hass: HomeAssistant, mock_ecowitt_api
+):
+    """Entity names set in HA before the upgrade still win for diagnostics."""
+    entry = _entry(hass)
+    entity_registry = er.async_get(hass)
+    for domain, unique_id, entity_id in (
+        ("sensor", "ecowitt_local_A2_rssi_A2", "ecowitt_rssi_a2"),
+        ("binary_sensor", "ecowitt_local_A2_online", "ecowitt_temperature_a2_online"),
+    ):
+        entry_id = entity_registry.async_get_or_create(
+            domain,
+            DOMAIN,
+            unique_id,
+            suggested_object_id=entity_id,
+            config_entry=entry,
+        ).entity_id
+        entity_registry.async_update_entity(entry_id, name="Freezer link")
+
+    await _setup(
+        hass,
+        mock_ecowitt_api,
+        entry,
+        [_wh31("A2", 2)],
+        {"ch_aisle": [_aisle(2, "21.5")]},
+    )
+    assert _friendly_name(hass, "sensor.ecowitt_rssi_a2") == "Freezer link"
+    assert (
+        _friendly_name(hass, "binary_sensor.ecowitt_temperature_a2_online")
+        == "Freezer link"
+    )
