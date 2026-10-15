@@ -100,10 +100,10 @@ Each physical sensor gets its own Home Assistant device with relevant entities:
 ├── 💧 Soil Moisture (24%)          [Sensor]
 ├── 🔋 Battery (85%)                [Diagnostic]
 ├── 📶 Signal Strength              [Diagnostic]
-└── 🟢 Online Status                [Diagnostic]
+└── 🟢 Online                       [Diagnostic]
 ```
 
-Battery, signal strength, and online status are grouped under **Diagnostic** so they stay out of your main dashboard view.
+Battery, signal strength, and online status are grouped under **Diagnostic** so they stay out of your main dashboard view. They are also named after their device, e.g. `Ecowitt Soil Moisture Sensor D8174 Signal Strength` or `Ecowitt Soil Moisture Sensor D8174 Online`, so they can be told apart in the entity picker, logbook and history.
 
 For every sensor with its own device, the device name is shown in front of the entity name, e.g. `Ecowitt Soil Moisture Sensor D8174 Soil Moisture` or `Ecowitt WS90 Weather Station A1B2C3 Temperature`. Entities are named by what they measure, so the temperature of an outdoor station is simply `Temperature`. Readings that stay on the gateway device keep their standalone names (e.g. `Indoor Temperature`). If you give a multi-channel sensor a title with "Customize Title" on the gateway's Live Data page (e.g. "Deep Freezer" instead of "Temp & Humidity CH2"), that title becomes the device name, giving `Deep Freezer Temperature`. This works for WH31, WH34, WH35, WH51, WH52, WH54 and WH55; the gateway does not report titles for WH41. Changing or clearing the title on the gateway renames the device on the next update. Names you set in Home Assistant always take precedence.
 
