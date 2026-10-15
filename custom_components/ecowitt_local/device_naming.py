@@ -123,6 +123,9 @@ def device_name(hardware_id: str, sensor_info: Dict[str, Any]) -> str:
     default "Temp & Humidity CH2", so it is used as the device name (issue #243).
     Non-channel sensors have default names without "CH{n}" ("Solar & Wind",
     "Lightning", "WH90"), so the rule must not apply to them.
+
+    The type name comes from "live_model" when the live data shows a different
+    model than get_sensors_info (a WH52 reported as WH51, issue #279).
     """
     live_title = str(sensor_info.get("live_title") or "").strip()
     if live_title:
@@ -134,5 +137,7 @@ def device_name(hardware_id: str, sensor_info: Dict[str, Any]) -> str:
         and not re.search(r"\bCH\s?\d+\b", raw_name, re.IGNORECASE)
     ):
         return raw_name
-    type_name = sensor_type_display_name(sensor_info.get("sensor_type", ""))
+    type_name = sensor_type_display_name(
+        sensor_info.get("live_model") or sensor_info.get("sensor_type", "")
+    )
     return f"Ecowitt {type_name} {hardware_id}"

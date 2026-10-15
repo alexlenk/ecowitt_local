@@ -6,7 +6,7 @@ import asyncio
 import logging
 import re
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
@@ -236,22 +236,32 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         a title is set, changed or cleared, the device name in the registry is
         updated; a name the user set in Home Assistant (name_by_user) is kept,
         and devices of other config entries are left alone.
+
+        Sensors in the ch_ec block are WH52s, which get_sensors_info reports as
+        WH51 (issue #279). They are marked in the mapper, which gives them the
+        WH52 name and model before their entities register the device.
         """
         titles: Dict[str, str] = {}
+        ec_devices: Set[str] = set()
         for block, key_template in _TITLE_BLOCKS.items():
             for item in raw_data.get(block, []) or []:
                 if not isinstance(item, dict):
                     continue
                 channel = item.get("channel")
-                title = str(item.get("name") or "").strip()
-                if not channel or not title:
+                if not channel:
                     continue
                 unique_id = self.sensor_mapper.get_hardware_id(
                     key_template.format(ch=channel)
                 )
-                if unique_id:
+                if not unique_id:
+                    continue
+                if block == "ch_ec":
+                    ec_devices.add(unique_id)
+                title = str(item.get("name") or "").strip()
+                if title:
                     titles[unique_id] = title
         self.sensor_mapper.set_live_titles(titles)
+        self.sensor_mapper.mark_ec_devices(ec_devices)
 
         changed = {
             unique_id
