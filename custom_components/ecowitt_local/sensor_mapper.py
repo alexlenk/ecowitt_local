@@ -10,10 +10,16 @@ from .const import BATTERY_SENSORS, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
+# Model shown for a ch_aisle sensor that reports no humidity. The gateway lists
+# it as a WH31, and the WN30 (probe thermometer) and WN36 (pool thermometer) both
+# use the WN31 channels without humidity, so the live data cannot tell them apart.
+TEMP_ONLY_AISLE_MODEL = "wn30/wn36"
+
 # Ecowitt-documented priority order for outdoor measurements when multiple sensors
 # share the same common_list hex keys (e.g. 0x02/0x07/0x03 for temp/humidity/dewpoint).
-# Higher value = preferred. Only applied when signal strengths are equal and both sensors
-# are active (signal > 0); a stronger signal always wins regardless of priority.
+# Higher value = preferred. When both sensors are active (signal > 0), the higher
+# priority wins regardless of signal strength; a sensor with signal 0 never blocks an
+# active one (#277).
 # Source: Ecowitt sensor priority docs referenced in issue #203.
 _SENSOR_PRIORITY: Dict[str, int] = {
     "wh26": 4,  # WH26/WN32 outdoor T/H — highest priority per Ecowitt docs
@@ -48,6 +54,12 @@ class SensorMapper:
         # reports a WH52 like a WH51 ("wh51" img and type range), so only the
         # live data tells them apart (issue #279). Kept across mapping refreshes.
         self._ec_devices: Set[str] = set()
+        # ch_aisle sensors seen without and with humidity. A sensor seen only
+        # without humidity is a temperature-only WN30/WN36 that get_sensors_info
+        # reports as WH31; humidity once seen makes it a WH31 for the rest of
+        # the run (the sets are not kept across restarts).
+        self._aisle_without_humidity: Set[str] = set()
+        self._aisle_with_humidity: Set[str] = set()
 
     def update_mapping(self, sensor_mappings: List[Dict[str, Any]]) -> None:
         """Update the hardware ID mapping from sensor mapping data.
@@ -112,9 +124,9 @@ class SensorMapper:
         # paired WH65 — the dict-overwrite "last wins" picked an arbitrary owner
         # depending on iteration order, splitting entities across two phantom
         # devices. By preferring the entry with the stronger signal we let the
-        # active sensor win (stale slots typically degrade to signal=0). When
-        # signals are equal and both are active, Ecowitt's documented priority
-        # order (WN32 > WS90 > WS80 > WS69) determines the winner (issue #203).
+        # active sensor win (stale slots typically degrade to signal=0). When both
+        # sensors are active and their priorities differ, Ecowitt's documented
+        # priority order (WN32 > WS90 > WS80 > WS69) determines the winner (#203, #277).
         key_signal: Dict[str, int] = {}
         key_priority: Dict[str, int] = {}
 
@@ -174,6 +186,9 @@ class SensorMapper:
                     ]
                 if unique_id in self._ec_devices:
                     self._set_wh52_model(self._sensor_info[unique_id])
+                if self._is_temp_only_aisle(unique_id):
+                    self._sensor_info[unique_id]["device_model"] = TEMP_ONLY_AISLE_MODEL
+                    self._sensor_info[unique_id]["live_model"] = TEMP_ONLY_AISLE_MODEL
 
                 # Map live data keys to unique_id
                 live_keys = self._generate_live_data_keys(sensor_type, channel)
@@ -791,6 +806,33 @@ class SensorMapper:
             if info is not None:
                 self._set_wh52_model(info)
         return new_ids
+
+    def mark_aisle_humidity(self, without: Set[str], with_: Set[str]) -> None:
+        """Record which ch_aisle sensors reported humidity in this poll.
+
+        A sensor seen only without humidity gets the WN30/WN36 model. Once a
+        sensor reports humidity it is a WH31 for the rest of the run, so a WN31
+        with a missing humidity value in one poll is not switched to WN30/WN36.
+        """
+        self._aisle_without_humidity |= set(without)
+        self._aisle_with_humidity |= set(with_)
+        for unique_id in set(without) | set(with_):
+            info = self._sensor_info.get(unique_id)
+            if info is None:
+                continue
+            if self._is_temp_only_aisle(unique_id):
+                info["device_model"] = TEMP_ONLY_AISLE_MODEL
+                info["live_model"] = TEMP_ONLY_AISLE_MODEL
+            elif info.get("live_model") == TEMP_ONLY_AISLE_MODEL:
+                info["device_model"] = str(info["raw_data"].get("img", "")).strip()
+                info.pop("live_model", None)
+
+    def _is_temp_only_aisle(self, unique_id: str) -> bool:
+        """Return True for a ch_aisle sensor never seen with humidity."""
+        return (
+            unique_id in self._aisle_without_humidity
+            and unique_id not in self._aisle_with_humidity
+        )
 
     @staticmethod
     def _set_wh52_model(info: Dict[str, Any]) -> None:

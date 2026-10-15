@@ -15,6 +15,7 @@ from typing import Any, Dict
 _TYPE_NAMES: Dict[str, str] = {
     "wh51": "Soil Moisture Sensor",
     "wh52": "Soil Moisture & EC Sensor",
+    "wn30/wn36": "Temperature Sensor",
     "wh31": "Temperature/Humidity Sensor",
     "wh34": "Temperature Sensor",
     "wh35": "Leaf Wetness Sensor",
@@ -125,7 +126,8 @@ def device_name(hardware_id: str, sensor_info: Dict[str, Any]) -> str:
     "Lightning", "WH90"), so the rule must not apply to them.
 
     The type name comes from "live_model" when the live data shows a different
-    model than get_sensors_info (a WH52 reported as WH51, issue #279).
+    model than get_sensors_info (a WH52 reported as WH51, issue #279, or a
+    temperature-only WN30/WN36 reported as WH31).
     """
     live_title = str(sensor_info.get("live_title") or "").strip()
     if live_title:

@@ -130,7 +130,7 @@ async def test_title_changes_follow_at_runtime(hass: HomeAssistant, mock_ecowitt
         assert device is not None
         return device
 
-    assert name_of("FD").name == "Ecowitt Temperature/Humidity Sensor FD"
+    assert name_of("FD").name == "Ecowitt Temperature Sensor FD"
 
     await poll("Jacuzzi Temp")
     assert name_of("FD").name == "Jacuzzi Temp"
@@ -142,7 +142,7 @@ async def test_title_changes_follow_at_runtime(hass: HomeAssistant, mock_ecowitt
     assert name_of("FD").name == "Hot Tub"
 
     await poll("")
-    assert name_of("FD").name == "Ecowitt Temperature/Humidity Sensor FD"
+    assert name_of("FD").name == "Ecowitt Temperature Sensor FD"
 
     # A name set in Home Assistant is kept; the gateway title only updates the
     # default name underneath it.
