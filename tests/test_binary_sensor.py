@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -94,7 +94,7 @@ async def test_async_setup_entry(mock_coordinator, mock_config_entry):
         },
     }
 
-    async_add_entities = AsyncMock()
+    async_add_entities = Mock()
 
     await async_setup_entry(hass, mock_config_entry, async_add_entities)
 
@@ -603,7 +603,7 @@ async def test_async_setup_entry_with_binary_sensor(
         },
     }
 
-    async_add_entities = AsyncMock()
+    async_add_entities = Mock()
     await async_setup_entry(hass, mock_config_entry, async_add_entities)
 
     entities = async_add_entities.call_args[0][0]
@@ -628,7 +628,7 @@ async def test_async_setup_entry_binary_unknown_key_skipped(
         },
     }
 
-    async_add_entities = AsyncMock()
+    async_add_entities = Mock()
     await async_setup_entry(hass, mock_config_entry, async_add_entities)
 
     entities = async_add_entities.call_args[0][0]

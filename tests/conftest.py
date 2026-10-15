@@ -400,6 +400,9 @@ def mock_ecowitt_api():
         return_value={"stationtype": "GW1100A", "version": "1.7.3"}
     )
     mock_instance.get_all_sensor_mappings = AsyncMock(return_value=[])
+    # Gateway units: an unconfigured AsyncMock would return a mock whose
+    # .get() is a coroutine nobody awaits. {} means the Fahrenheit default.
+    mock_instance.get_units = AsyncMock(return_value={})
     mock_instance.get_soil_calibration = AsyncMock(return_value=[])
     mock_instance.get_lds_config = AsyncMock(return_value=[])
     # No MAC by default — an unconfigured mock would otherwise auto-generate
