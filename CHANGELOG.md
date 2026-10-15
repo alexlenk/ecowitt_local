@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.1] - 2026-10-15
+
+### Fixed
+- **WH52 soil sensors are named and modelled as WH52**: the gateway reports a WH52 as a WH51 in its sensor list, so its device was named "Soil Moisture Sensor" with model WH51. Sensors that report soil EC in the live data are now named "Soil Moisture & EC Sensor" with model WH52. Existing devices switch on the first start after updating, and names set in Home Assistant are kept. A WH52's "Customize Title" on the gateway also becomes its device name. Thanks to @MajorC1983 for the gateway data. Credit to @olympia (issues #279, #265, PR #282).
+
+### Changed
+- **CI**: `codecov/codecov-action` updated to v7, removing the Node.js 20 deprecation warning. Credit to @olympia (PR #284).
+- **Tests**: fixed "coroutine was never awaited" warnings, so the suite now runs without warnings. Credit to @olympia (PR #283).
+
 ## [1.10.0] - 2026-10-14
 
 > **Visible change on update** — entity IDs, unique IDs, automations, history and dashboards are **not** affected, and names you set yourself in Home Assistant are kept.
