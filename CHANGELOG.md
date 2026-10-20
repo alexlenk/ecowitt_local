@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-10-20
+
+> **Visible change on update** — entity IDs and unique IDs are unchanged, so automations, history and dashboards keep working, and names you set yourself in Home Assistant are kept.
+> - **Diagnostic and Online entities are named after their device**: Signal Strength, RSSI, Signal Quality, Hardware ID, Channel and Online now show the device name (or its gateway title), e.g. "Deep Freezer RSSI" and "Deep Freezer Online" instead of "RSSI" and "Ecowitt Temperature `<id>` Online", so they can be told apart on installs with several sensors.
+
+### Changed
+- **Diagnostic entities and Online binary sensors of sensor devices use the device name**, like the measurements since v1.8.0. Entities that stay on the gateway device keep their standalone names. Credit to @olympia (issue #263, PR #287).
+
+### Fixed
+- **Temperature-only sensors on WH31 channels are no longer shown as temperature/humidity sensors**: the gateway reports a WN30 probe thermometer or a WN36 pool thermometer as a WH31. Channels that report no humidity are now named "Temperature Sensor" with model WN30/WN36 (the gateway gives no way to tell the two apart). Titles set on the gateway and names set in Home Assistant are kept. Credit to @olympia (PR #286).
+
 ## [1.10.1] - 2026-10-15
 
 ### Fixed
