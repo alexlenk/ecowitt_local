@@ -14,35 +14,59 @@ This file defines the autonomous behavior for a Claude Code agent working on thi
 4. If any comment contains an image URL, download and view it (images often contain critical data like entity lists or raw API JSON)
 5. Build a list of actionable vs. non-actionable items (see decision tree below)
 6. Fetch open pull requests from external contributors: `gh pr list --state open`. Skip any PR opened by the bot itself (`claude/**` branches, `claude/release-*`) — those are handled by the release pipeline, not this step.
-7. For each external PR, read the full diff and description, then decide whether it's mergeable (see "External Pull Requests" below)
-8. Implement all actionable issue items **and** merge all mergeable external PRs in the same release
-9. If nothing is actionable and no PR is mergeable, do nothing — do not create empty releases
+7. For each external PR, read the full diff, the description and every comment, check its **actual** CI state (`gh pr checks <number>`), then decide whether it's safe to merge (see "External Pull Requests" below)
+8. Merge the safe external PRs first, then implement all actionable issue items on top, and ship everything in one release
+9. If nothing is actionable and no PR was merged, do not create a release. PRs waiting for the maintainer still go into the run summary (see "When you don't merge")
 
 ---
 
 ## External Pull Requests — What is mergeable?
 
-Community PRs (translations, docs, small fixes) show up from forks. GitHub blocks Actions workflows on a fork PR from a first-time or outside contributor until a maintainer approves them (`action_required` conclusion on every check, PR status stuck on `pending`) — there is no API access in this environment to click "Approve and run workflows", so **never wait on or try to force those checks to run**. Evaluate the PR on its diff alone instead.
+Community PRs come from forks. **CI does run on them in this repo** (test, validate, HACS, codecov). Before you say anything about a PR's CI, read its real state with `gh pr checks <number>` (or the check runs of its head commit) and report only what that shows: passed, failed, pending, or never started. Never claim CI was blocked or didn't run without having checked.
 
-### Merge it (fold into the current release)
+**Contributors keep their authorship.** A PR you merge is merged as the contributor's own PR, with a merge commit: `gh pr merge <number> --merge`. Never copy a contributor's changes onto a `claude/release-*` branch, never squash their commits into your own, and never close their PR in favour of your own copy.
+
+### Before merging any external PR
+
+All of these must hold, otherwise treat it as "not safe":
+1. `gh pr checks <number>` shows every check passed on the current head commit
+2. The PR has no merge conflict with `main`
+3. Merged locally onto current `main`, the full pre-commit checklist passes (black, isort, mypy, full test suite at 100% coverage)
+4. You have read the whole diff, and it does what its description says
+
+### Safe to merge on its own (no maintainer needed)
 
 | Situation | Why it's safe |
 |---|---|
-| New translation file (`translations/xx.json`) that mirrors `en.json`'s exact key structure | Additive, isolated, no code path touches it besides HA's own translation loader |
+| New translation file (`translations/xx.json`) that mirrors `en.json`'s exact key structure | Additive, isolated |
 | Documentation-only change (README, comments) with no factual errors | No runtime effect |
-| A small, obviously-correct fix that follows an existing pattern in this file's decision tree (e.g. a one-line device-type-string match identical to the WH90 pattern) | Same bar as a bot-authored fix |
+| Test-only change (files under `tests/` only) that keeps coverage at 100% | No runtime effect |
+| A small, obviously-correct fix that follows an existing pattern (e.g. a one-line device-type-string match like the WH90 fix) **and** stays out of the files and changes listed below | Same bar as a bot-authored fix |
 
-To merge one of these: **do not use the GitHub merge button** (branch protection requires the blocked status checks to pass). Instead, port the PR's file contents onto the current `claude/release-vX.Y.Z` branch as a normal commit — same version-bump-and-release flow as any other change in this file — crediting the author and PR number in the commit message and CHANGELOG entry. This runs the change through this repo's own CI instead of the fork's blocked one. Once the release ships, comment on the original PR thanking the contributor and linking the release, then close it (it was never merged via GitHub's merge mechanism, so close rather than expecting "Merged" status).
+After merging, ship it in this run's release: the PR has no version bump, so the release branch bumps the version and adds a CHANGELOG entry that credits the contributor and PR number (`Credit to @user (PR #N)`). Once the release is out, comment on the merged PR: `Thanks @user, merged and released in vX.Y.Z!`
 
-### Do not merge — leave a comment instead
+### Not safe — wait for the maintainer
 
-| Situation | Action |
-|---|---|
-| Touches `coordinator.py`, `sensor_mapper.py`, or any core entity-creation/mapping logic | Too risky to fold in without the same scrutiny as a hand-written fix — read it carefully, and only merge if you would have written the identical diff yourself to fix a specific issue in the tracker. Otherwise say what additional testing/evidence you'd need. |
-| Adds a new dependency, new service, or changes `manifest.json` requirements | Out of scope for an unattended merge — comment explaining why |
-| Adds WH77 support | Never — same rule as everywhere else in this file |
-| Diff doesn't apply cleanly (real conflict, not just a stale base) | Comment asking the author to rebase |
-| Unclear intent, missing description, or behavior you can't verify against the spec/architecture | Ask a clarifying question in a comment, don't merge speculatively |
+Anything that:
+- changes `coordinator.py`, `sensor_mapper.py`, `sensor.py`, `binary_sensor.py`, `__init__.py`, `device_naming.py` or other entity-creation/mapping logic
+- changes entity names, device names, entity IDs or units that users will see
+- adds a dependency, a service, or changes `manifest.json` / `hacs.json`
+- changes anything under `.github/` (workflows can carry secrets and permissions), `CLAUDE.md` or `AGENT_SYSTEM_PROMPT.md`
+- adds WH77 support (never, same rule as everywhere else)
+- fails any of the "Before merging" checks above (red CI, conflict, failing local tests)
+- has unclear intent, or does something you can't verify against the spec/architecture
+
+### When you don't merge
+
+**Do not comment on the PR.** Your comments are posted under the maintainer's account, so never write review verdicts, merge conditions, or requests that speak for the maintainer.
+
+Instead, report it in the run summary. Mark the summary as needing attention, since that is what sends the maintainer a push notification. Report each PR that is new or whose head commit changed since the previous run (look back 72 hours; the run is Mon/Wed/Fri). For each, give:
+- PR number, title, author
+- what it changes, in one or two sentences
+- real CI state from `gh pr checks`, merge state, and your local test result
+- which "not safe" rule applies and anything in the diff the maintainer should look at
+
+PRs you already reported, whose head hasn't changed, don't need to be repeated.
 
 ---
 
@@ -189,8 +213,9 @@ gh release list --limit 3            # release should exist
 6. **Minimal changes**: Fix the specific problem. Don't refactor surrounding code, add docstrings, or improve unrelated things.
 7. **No force pushes to main**: Never. Main is protected.
 8. **One release per session**: Batch all fixes from the current scan into a single version bump and release.
-9. **Never merge an external PR via the GitHub merge button**: Fork PRs from outside contributors have blocked/unapproved checks — port the content onto the release branch instead (see "External Pull Requests" above) so it runs through this repo's own CI.
-10. **Never fold in a PR touching core mapping/entity-creation logic without the same scrutiny as a hand-written fix**: When in doubt, comment instead of merging.
+9. **Contributors keep their authorship**: merge external PRs as their own PR (`gh pr merge --merge`). Never port their changes onto a bot branch or close their PR in favour of a copy.
+10. **Only merge external PRs that are safe** (see "External Pull Requests"). Everything else waits for the maintainer: report it in the run summary, never as a PR comment.
+11. **Never state something about CI you haven't checked**: read `gh pr checks` first.
 
 ---
 
@@ -209,7 +234,7 @@ At the end of a successful run:
 - All fixed issues have a comment with the version number and what changed
 - The CHANGELOG has a new entry
 - Fixed issues are closed with a comment linking to the release
-- Any mergeable external PRs were ported into the release (credited in the commit/CHANGELOG), commented on with thanks + release link, and closed
-- Non-mergeable external PRs got an explanatory comment, not silence
+- Safe external PRs were merged as the contributor's own PR, credited in the CHANGELOG, and thanked with the release link after the release
+- External PRs waiting for the maintainer are listed in the run summary (with real CI state and the reason), and nothing was posted on them
 - No WH77 code was written
 - `git tag -l` shows the new tag after the pipeline completes
