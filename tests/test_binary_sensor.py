@@ -197,9 +197,31 @@ def test_sensor_online_binary_sensor_init(mock_coordinator):
     assert entity._device_model == "WH51"
     assert entity.unique_id == f"{DOMAIN}_D8174_online"
     assert entity.entity_id == "binary_sensor.ecowitt_soil_moisture_d8174_online"
-    assert "Soil Moisture D8174 Online" in entity.name
+    # On its own hardware device the name is "Online"; HA adds the device name.
+    assert entity.has_entity_name is True
+    assert entity.name == "Online"
     assert entity.device_class == BinarySensorDeviceClass.CONNECTIVITY
     assert entity.entity_category == EntityCategory.DIAGNOSTIC
+
+
+def test_sensor_online_binary_sensor_without_hardware_device(mock_coordinator):
+    """Without its own hardware device the Online sensor keeps its full name."""
+    sensor_info = {"sensor_key": "soilmoisture1", "attributes": {}}
+
+    # An invalid hardware ID never gets its own device, even with mapping info.
+    invalid = EcowittSensorOnlineBinarySensor(mock_coordinator, "FFFFFFFE", sensor_info)
+    mock_coordinator.sensor_mapper.get_sensor_info.return_value = None
+    unmapped = EcowittSensorOnlineBinarySensor(mock_coordinator, "D8174", sensor_info)
+    mock_coordinator.sensor_mapper.get_sensor_info.return_value = {}
+    empty = EcowittSensorOnlineBinarySensor(mock_coordinator, "D8175", sensor_info)
+
+    for entity, hardware_id in (
+        (unmapped, "D8174"),
+        (empty, "D8175"),
+        (invalid, "FFFFFFFE"),
+    ):
+        assert entity.has_entity_name is False
+        assert entity.name == f"Ecowitt Soil Moisture {hardware_id} Online"
 
 
 def test_sensor_type_extraction(mock_coordinator):

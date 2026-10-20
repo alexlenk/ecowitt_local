@@ -141,13 +141,36 @@ class EcowittSensorOnlineBinarySensor(
         self.entity_id = (
             f"binary_sensor.ecowitt_{sensor_type}_{hardware_id.lower()}_online"
         )
-        self._attr_name = (
-            f"Ecowitt {sensor_type.replace('_', ' ').title()} {hardware_id} Online"
-        )
+        # On its own hardware device the entity is named "Online" and HA prefixes
+        # the device name (issue #263). Without one it falls back to the gateway
+        # device, so it keeps its standalone name to stay distinct.
+        if self._hardware_sensor_info() is not None:
+            self._attr_has_entity_name = True
+            self._attr_name = "Online"
+        else:
+            self._attr_name = (
+                f"Ecowitt {sensor_type.replace('_', ' ').title()} {hardware_id} Online"
+            )
 
         # Set device class and entity category
         self._attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def _hardware_sensor_info(self) -> Optional[Dict[str, Any]]:
+        """Return mapping info if this sensor has its own hardware device.
+
+        Used for both the name and device_info, so they make the same decision.
+        """
+        if not self._hardware_id or self._hardware_id.upper() in (
+            "FFFFFFFE",
+            "FFFFFFFF",
+            "00000000",
+        ):
+            return None
+        info: Optional[Dict[str, Any]] = self.coordinator.sensor_mapper.get_sensor_info(
+            self._hardware_id
+        )
+        return info or None
 
     def _extract_sensor_type(self, sensor_info: Dict[str, Any]) -> str:
         """Extract sensor type from sensor info."""
@@ -221,30 +244,23 @@ class EcowittSensorOnlineBinarySensor(
         gateway_id = gateway_info.get("gateway_id", "unknown")
 
         # Create individual device for sensor hardware
-        if self._hardware_id and self._hardware_id.upper() not in (
-            "FFFFFFFE",
-            "FFFFFFFF",
-            "00000000",
-        ):
-            sensor_info = self.coordinator.sensor_mapper.get_sensor_info(
-                self._hardware_id
+        sensor_info = self._hardware_sensor_info()
+        if sensor_info is not None:
+            device_model = sensor_info.get("device_model") or sensor_info.get(
+                "sensor_type", "Unknown"
             )
-            if sensor_info:
-                device_model = sensor_info.get("device_model") or sensor_info.get(
-                    "sensor_type", "Unknown"
-                )
-                return DeviceInfo(
-                    identifiers={(DOMAIN, self._hardware_id)},
-                    name=device_name(self._hardware_id, sensor_info),
-                    manufacturer=MANUFACTURER,
-                    model=device_model,
-                    suggested_area=(
-                        "Outdoor"
-                        if is_outdoor_sensor(sensor_info.get("sensor_type", ""))
-                        else None
-                    ),
-                    **via_device_kwargs(self.hass, gateway_id),
-                )
+            return DeviceInfo(
+                identifiers={(DOMAIN, self._hardware_id)},
+                name=device_name(self._hardware_id, sensor_info),
+                manufacturer=MANUFACTURER,
+                model=device_model,
+                suggested_area=(
+                    "Outdoor"
+                    if is_outdoor_sensor(sensor_info.get("sensor_type", ""))
+                    else None
+                ),
+                **via_device_kwargs(self.hass, gateway_id),
+            )
 
         # Fall back to gateway device
         return DeviceInfo(
