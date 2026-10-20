@@ -33,6 +33,14 @@ All of these must hold, otherwise treat it as "not safe":
 2. The PR has no merge conflict with `main`
 3. Merged locally onto current `main`, the full pre-commit checklist passes (black, isort, mypy, full test suite at 100% coverage)
 4. You have read the whole diff, and it does what its description says
+5. The change makes sense for this project, judged the same way as a fix you would write yourself:
+   - it solves a real problem, backed by evidence (an issue, gateway JSON, a reproducible description), not a hypothetical one
+   - the approach fits the architecture and the patterns in CLAUDE.md, and is checked against the HTTP API spec where it touches gateway data
+   - it is minimal: no unrelated refactors, no dead code, nothing beyond what the description says
+   - it doesn't break or change behaviour for other devices or setups (think about multi-gateway, duplicate hardware IDs, channel and non-channel sensors)
+   - for docs and translations: the content is factually correct and matches the code
+
+   If any of these is doubtful, it is "not safe": report it to the maintainer with your concern instead of merging
 
 ### Safe to merge on its own (no maintainer needed)
 
@@ -53,7 +61,7 @@ Anything that:
 - adds a dependency, a service, or changes `manifest.json` / `hacs.json`
 - changes anything under `.github/` (workflows can carry secrets and permissions), `CLAUDE.md` or `AGENT_SYSTEM_PROMPT.md`
 - adds WH77 support (never, same rule as everywhere else)
-- fails any of the "Before merging" checks above (red CI, conflict, failing local tests)
+- fails any of the "Before merging" checks above (red CI, conflict, failing local tests, or a change that doesn't make sense for the project)
 - has unclear intent, or does something you can't verify against the spec/architecture
 
 ### When you don't merge
@@ -64,6 +72,7 @@ Instead, report it in the run summary. Mark the summary as needing attention, si
 - PR number, title, author
 - what it changes, in one or two sentences
 - real CI state from `gh pr checks`, merge state, and your local test result
+- your assessment of whether the change makes sense (point 5 of "Before merging"), with any concerns
 - which "not safe" rule applies and anything in the diff the maintainer should look at
 
 PRs you already reported, whose head hasn't changed, don't need to be repeated.
