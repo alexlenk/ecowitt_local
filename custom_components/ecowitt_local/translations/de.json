@@ -1,0 +1,82 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Ecowitt Local einrichten",
+        "description": "Richte die Verbindung zu deinem Ecowitt-Gateway ein. Gib die IP-Adresse deines Ecowitt-Gateways ein.",
+        "data": {
+          "host": "IP-Adresse des Gateways",
+          "password": "Passwort des Gateways (optional)"
+        },
+        "data_description": {
+          "host": "IP-Adresse oder Hostname des Ecowitt-Gateways (z. B. 192.168.1.100)",
+          "password": "Passwort für die Weboberfläche des Gateways (leer lassen, wenn kein Passwort festgelegt ist)"
+        }
+      },
+      "options": {
+        "title": "Optionen für Ecowitt Local",
+        "description": "Lege die Abfrageintervalle und Sensoroptionen fest.",
+        "data": {
+          "scan_interval": "Abfrageintervall für Live-Daten (Sekunden)",
+          "mapping_interval": "Aktualisierungsintervall der Sensorzuordnung (Sekunden)",
+          "include_inactive": "Inaktive Sensoren einbeziehen"
+        },
+        "data_description": {
+          "scan_interval": "Wie oft Live-Daten abgefragt werden (30–300 Sekunden)",
+          "mapping_interval": "Wie oft die Sensorzuordnung aktualisiert wird (300–3600 Sekunden)",
+          "include_inactive": "Sensoren einbeziehen, die derzeit offline sind oder keine Daten liefern"
+        }
+      },
+      "reconfigure": {
+        "title": "Verbindung zum Ecowitt-Gateway aktualisieren",
+        "description": "Aktualisiere die Verbindungsdaten dieses Gateways, beispielsweise nach einer Änderung seiner IP-Adresse.",
+        "data": {
+          "host": "IP-Adresse des Gateways",
+          "password": "Passwort des Gateways (optional)"
+        },
+        "data_description": {
+          "host": "IP-Adresse oder Hostname des Ecowitt-Gateways (z. B. 192.168.1.100)",
+          "password": "Passwort für die Weboberfläche des Gateways (leer lassen, wenn kein Passwort festgelegt ist)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zum Gateway fehlgeschlagen. Überprüfe die IP-Adresse und stelle sicher, dass das Gateway erreichbar ist.",
+      "invalid_auth": "Ungültiges Passwort. Überprüfe das Passwort des Gateways.",
+      "unknown": "Ein unerwarteter Fehler ist aufgetreten. Versuche es erneut."
+    },
+    "abort": {
+      "already_configured": "Dieses Gateway ist bereits eingerichtet.",
+      "reconfigure_successful": "Die Verbindung zum Gateway wurde erfolgreich aktualisiert.",
+      "wrong_device": "Diese IP-Adresse gehört zu einem anderen Gateway als dem, das derzeit für diesen Eintrag eingerichtet ist. Überprüfe die Adresse oder entferne diese Integration und füge das andere Gateway separat hinzu."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Optionen für Ecowitt Local",
+        "description": "Lege die Abfrageintervalle und Sensoroptionen fest.",
+        "data": {
+          "scan_interval": "Abfrageintervall für Live-Daten (Sekunden)",
+          "mapping_interval": "Aktualisierungsintervall der Sensorzuordnung (Sekunden)",
+          "include_inactive": "Inaktive Sensoren einbeziehen"
+        },
+        "data_description": {
+          "scan_interval": "Wie oft Live-Daten abgefragt werden (30–300 Sekunden)",
+          "mapping_interval": "Wie oft die Sensorzuordnung aktualisiert wird (300–3600 Sekunden)",
+          "include_inactive": "Sensoren einbeziehen, die derzeit offline sind oder keine Daten liefern"
+        }
+      }
+    }
+  },
+  "services": {
+    "refresh_mapping": {
+      "name": "Sensorzuordnung aktualisieren",
+      "description": "Erzwingt eine Aktualisierung der Zuordnung der Sensoren zu ihren Hardware-IDs vom Gateway"
+    },
+    "update_data": {
+      "name": "Live-Daten aktualisieren",
+      "description": "Erzwingt eine sofortige Aktualisierung der aktuellen Sensordaten vom Gateway"
+    }
+  }
+}
