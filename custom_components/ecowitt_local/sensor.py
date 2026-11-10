@@ -43,7 +43,12 @@ from .const import (
 )
 from .coordinator import EcowittLocalDataUpdateCoordinator
 from .device_compat import via_device_kwargs
-from .device_naming import device_name, is_outdoor_sensor
+from .device_naming import device_name_kwargs, gateway_name_kwargs, is_outdoor_sensor
+from .localization import (
+    LocalizedEntityNameMixin,
+    name_translation_spec,
+    translated_text,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,9 +112,13 @@ async def async_setup_entry(
 
 
 class EcowittLocalSensor(
-    CoordinatorEntity[EcowittLocalDataUpdateCoordinator], SensorEntity
+    LocalizedEntityNameMixin,
+    CoordinatorEntity[EcowittLocalDataUpdateCoordinator],
+    SensorEntity,
 ):
     """Representation of an Ecowitt Local sensor."""
+
+    _translation_platform = "sensor"
 
     def __init__(
         self,
@@ -190,6 +199,11 @@ class EcowittLocalSensor(
             if self._use_entity_name
             else sensor_info.get("name", self._sensor_key)
         )
+        if self._attr_name is not None:
+            (
+                self._attr_translation_key,
+                self._attr_translation_placeholders,
+            ) = name_translation_spec(self._attr_name)
         self._attr_native_value = sensor_info.get("state")
 
         # Set unit of measurement
@@ -301,11 +315,11 @@ class EcowittLocalSensor(
                 )
                 return DeviceInfo(
                     identifiers={(DOMAIN, self._hardware_id)},
-                    name=device_name(self._hardware_id, sensor_info),
+                    **device_name_kwargs(self._hardware_id, sensor_info),
                     manufacturer=MANUFACTURER,
                     model=device_model,
                     suggested_area=(
-                        "Outdoor"
+                        translated_text(self.hass, "device", "outdoor.name", "Outdoor")
                         if is_outdoor_sensor(sensor_info.get("sensor_type", ""))
                         else None
                     ),
@@ -326,7 +340,7 @@ class EcowittLocalSensor(
         )
         return DeviceInfo(
             identifiers={(DOMAIN, gateway_id)},
-            name=f"Ecowitt Gateway {gateway_info.get('host', '')}",
+            **gateway_name_kwargs(gateway_info),
             manufacturer=MANUFACTURER,
             model=gateway_info.get("model", "Unknown"),
             sw_version=gateway_info.get("firmware_version", "Unknown"),

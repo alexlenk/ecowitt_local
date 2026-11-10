@@ -13,6 +13,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import EcowittLocalDataUpdateCoordinator
+from .device_naming import gateway_name_kwargs
+from .localization import LocalizedEntityNameMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,9 +30,13 @@ async def async_setup_entry(
 
 
 class EcowittResyncMappingButton(
-    CoordinatorEntity[EcowittLocalDataUpdateCoordinator], ButtonEntity
+    LocalizedEntityNameMixin,
+    CoordinatorEntity[EcowittLocalDataUpdateCoordinator],
+    ButtonEntity,
 ):
     """Button that forces an immediate sensor mapping resync."""
+
+    _translation_platform = "button"
 
     def __init__(self, coordinator: EcowittLocalDataUpdateCoordinator) -> None:
         """Initialize the button."""
@@ -43,6 +49,8 @@ class EcowittResyncMappingButton(
         self._attr_unique_id = f"{DOMAIN}_{gateway_id}_resync_mapping"
         self.entity_id = f"button.ecowitt_gateway_{gateway_id.lower()}_resync_mapping"
         self._attr_name = f"Ecowitt Gateway {host} Resync Sensor Mappings"
+        self._attr_translation_key = "resync_mapping"
+        self._attr_translation_placeholders = {"host": host}
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     async def async_press(self) -> None:
@@ -58,7 +66,7 @@ class EcowittResyncMappingButton(
 
         return DeviceInfo(
             identifiers={(DOMAIN, gateway_id)},
-            name=f"Ecowitt Gateway {gateway_info.get('host', '')}",
+            **gateway_name_kwargs(gateway_info),
             manufacturer=MANUFACTURER,
             model=gateway_info.get("model", "Unknown"),
             sw_version=gateway_info.get("firmware_version", "Unknown"),

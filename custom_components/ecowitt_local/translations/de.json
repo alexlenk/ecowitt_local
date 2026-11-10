@@ -1,0 +1,6435 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Ecowitt Local einrichten",
+        "description": "Richte die Verbindung zu deinem Ecowitt-Gateway ein. Gib die IP-Adresse deines Ecowitt-Gateways ein.",
+        "data": {
+          "host": "IP-Adresse des Gateways",
+          "password": "Passwort des Gateways (optional)"
+        },
+        "data_description": {
+          "host": "IP-Adresse oder Hostname des Ecowitt-Gateways (z. B. 192.168.1.100)",
+          "password": "Passwort für die Weboberfläche des Gateways (leer lassen, wenn kein Passwort festgelegt ist)"
+        }
+      },
+      "options": {
+        "title": "Optionen für Ecowitt Local",
+        "description": "Lege die Abfrageintervalle und Sensoroptionen fest.",
+        "data": {
+          "scan_interval": "Abfrageintervall für Live-Daten (Sekunden)",
+          "mapping_interval": "Aktualisierungsintervall der Sensorzuordnung (Sekunden)",
+          "include_inactive": "Inaktive Sensoren einbeziehen"
+        },
+        "data_description": {
+          "scan_interval": "Wie oft Live-Daten abgefragt werden (30–300 Sekunden)",
+          "mapping_interval": "Wie oft die Sensorzuordnung aktualisiert wird (300–3600 Sekunden)",
+          "include_inactive": "Sensoren einbeziehen, die derzeit offline sind oder keine Daten liefern"
+        }
+      },
+      "reconfigure": {
+        "title": "Verbindung zum Ecowitt-Gateway aktualisieren",
+        "description": "Aktualisiere die Verbindungsdaten dieses Gateways, beispielsweise nach einer Änderung seiner IP-Adresse.",
+        "data": {
+          "host": "IP-Adresse des Gateways",
+          "password": "Passwort des Gateways (optional)"
+        },
+        "data_description": {
+          "host": "IP-Adresse oder Hostname des Ecowitt-Gateways (z. B. 192.168.1.100)",
+          "password": "Passwort für die Weboberfläche des Gateways (leer lassen, wenn kein Passwort festgelegt ist)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zum Gateway fehlgeschlagen. Überprüfe die IP-Adresse und stelle sicher, dass das Gateway erreichbar ist.",
+      "invalid_auth": "Ungültiges Passwort. Überprüfe das Passwort des Gateways.",
+      "unknown": "Ein unerwarteter Fehler ist aufgetreten. Versuche es erneut."
+    },
+    "abort": {
+      "already_configured": "Dieses Gateway ist bereits eingerichtet.",
+      "reconfigure_successful": "Die Verbindung zum Gateway wurde erfolgreich aktualisiert.",
+      "wrong_device": "Diese IP-Adresse gehört zu einem anderen Gateway als dem, das derzeit für diesen Eintrag eingerichtet ist. Überprüfe die Adresse oder entferne diese Integration und füge das andere Gateway separat hinzu."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Optionen für Ecowitt Local",
+        "description": "Lege die Abfrageintervalle und Sensoroptionen fest.",
+        "data": {
+          "scan_interval": "Abfrageintervall für Live-Daten (Sekunden)",
+          "mapping_interval": "Aktualisierungsintervall der Sensorzuordnung (Sekunden)",
+          "include_inactive": "Inaktive Sensoren einbeziehen"
+        },
+        "data_description": {
+          "scan_interval": "Wie oft Live-Daten abgefragt werden (30–300 Sekunden)",
+          "mapping_interval": "Wie oft die Sensorzuordnung aktualisiert wird (300–3600 Sekunden)",
+          "include_inactive": "Sensoren einbeziehen, die derzeit offline sind oder keine Daten liefern"
+        }
+      }
+    }
+  },
+  "services": {
+    "refresh_mapping": {
+      "name": "Sensorzuordnung aktualisieren",
+      "description": "Erzwingt eine Aktualisierung der Zuordnung der Sensoren zu ihren Hardware-IDs vom Gateway"
+    },
+    "update_data": {
+      "name": "Live-Daten aktualisieren",
+      "description": "Erzwingt eine sofortige Aktualisierung der aktuellen Sensordaten vom Gateway"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "24_hour_rain": {
+        "name": "Regenmenge der letzten 24 Stunden",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "absolute_pressure": {
+        "name": "Absoluter Luftdruck",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "battery": {
+        "name": "Batterie",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "battery_voltage": {
+        "name": "Batteriespannung",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "black_globe_temperature": {
+        "name": "Schwarzkugeltemperatur",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "co2": {
+        "name": "CO2",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "co2_24h_avg": {
+        "name": "CO2 (24-Stunden-Mittelwert)",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "co2_combo_sensor_battery": {
+        "name": "Batterie des CO2-Kombisensors",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "co2_sensor_humidity": {
+        "name": "Luftfeuchtigkeit des CO2-Sensors",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "co2_sensor_temperature": {
+        "name": "Temperatur des CO2-Sensors",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "capacitor_voltage": {
+        "name": "Kondensatorspannung",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "channel": {
+        "name": "Kanal",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "daily_rain": {
+        "name": "Tägliche Regenmenge",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "dewpoint": {
+        "name": "Taupunkt",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "dewpoint_ch": {
+        "name": "Taupunkt Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "dewpoint_temperature": {
+        "name": "Taupunkttemperatur",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "event_rain": {
+        "name": "Regenmenge des Ereignisses",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "feels_like_temperature": {
+        "name": "Gefühlte Temperatur",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "gateway_heap_memory": {
+        "name": "Heap-Speicher des Gateways",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "gateway_uptime": {
+        "name": "Betriebszeit des Gateways",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "hardware_id": {
+        "name": "Hardware-ID",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "heap": {
+        "name": "Heap-Speicher",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "heat_index": {
+        "name": "Hitzeindex",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "hourly_rain": {
+        "name": "Stündliche Regenmenge",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "humidity": {
+        "name": "Luftfeuchtigkeit",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "humidity_ch": {
+        "name": "Luftfeuchtigkeit Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "indoor_humidity": {
+        "name": "Luftfeuchtigkeit innen",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "indoor_station_battery": {
+        "name": "Batterie der Innenstation",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "indoor_temperature": {
+        "name": "Innentemperatur",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "last_lightning": {
+        "name": "Letzter Blitz",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "leaf_wetness": {
+        "name": "Blattnässe",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "leaf_wetness_ch": {
+        "name": "Blattnässe Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "leaf_wetness_ch_battery": {
+        "name": "Blattnässe Kanal {channel} Batterie",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "leak": {
+        "name": "Leck",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "leak_sensor_ch": {
+        "name": "Lecksensor Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "leak_sensor_ch_battery": {
+        "name": "Lecksensor Kanal {channel} Batterie",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "lightning_distance": {
+        "name": "Blitzentfernung",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "lightning_sensor_battery": {
+        "name": "Batterie des Blitzsensors",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "lightning_strikes": {
+        "name": "Blitzanzahl",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "liquid_depth": {
+        "name": "Flüssigkeitstiefe",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "liquid_depth_air_gap": {
+        "name": "Abstand zur Flüssigkeitsoberfläche",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "liquid_depth_air_gap_ch": {
+        "name": "Abstand zur Flüssigkeitsoberfläche Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "liquid_depth_ch": {
+        "name": "Flüssigkeitstiefe Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "liquid_depth_ch_battery": {
+        "name": "Flüssigkeitstiefe Kanal {channel} Batterie",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "liquid_depth_filter_level": {
+        "name": "Filterstufe des Füllstandssensors",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "liquid_depth_filter_level_ch": {
+        "name": "Filterstufe des Füllstandssensors Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "liquid_depth_heater_counter": {
+        "name": "Heizungszähler des Füllstandssensors",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "liquid_depth_heater_counter_ch": {
+        "name": "Heizungszähler des Füllstandssensors Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "liquid_depth_sensor_voltage": {
+        "name": "Spannung des Füllstandssensors",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "liquid_depth_sensor_voltage_ch": {
+        "name": "Spannung des Füllstandssensors Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "max_daily_gust": {
+        "name": "Stärkste Windböe des Tages",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "monthly_rain": {
+        "name": "Monatliche Regenmenge",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "outdoor_humidity": {
+        "name": "Luftfeuchtigkeit außen",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "outdoor_sensor_battery": {
+        "name": "Batterie des Außensensors",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "outdoor_temperature": {
+        "name": "Außentemperatur",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm1_0": {
+        "name": "PM1.0",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm1_0_24h_aqi": {
+        "name": "PM1.0-Luftqualitätsindex (24 Stunden)",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm1_0_24h_avg": {
+        "name": "PM1.0 (24-Stunden-Mittelwert)",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm1_0_aqi": {
+        "name": "PM1.0-Luftqualitätsindex",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm10": {
+        "name": "PM10",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm10_24h_aqi": {
+        "name": "PM10-Luftqualitätsindex (24 Stunden)",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm10_24h_avg": {
+        "name": "PM10 (24-Stunden-Mittelwert)",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm10_aqi": {
+        "name": "PM10-Luftqualitätsindex",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm2_5": {
+        "name": "PM2.5",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm2_5_24h_aqi": {
+        "name": "PM2.5-Luftqualitätsindex (24 Stunden)",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm2_5_24h_aqi_ch": {
+        "name": "PM2.5-Luftqualitätsindex (24 Stunden) Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm2_5_24h_avg": {
+        "name": "PM2.5 (24-Stunden-Mittelwert)",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm2_5_24h_avg_ch": {
+        "name": "PM2.5 (24-Stunden-Mittelwert) Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm2_5_aqi": {
+        "name": "PM2.5-Luftqualitätsindex",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm2_5_aqi_ch": {
+        "name": "PM2.5-Luftqualitätsindex Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm2_5_ch": {
+        "name": "PM2.5 Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm2_5_ch_battery": {
+        "name": "PM2.5 Kanal {channel} Batterie",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm4_0": {
+        "name": "PM4.0",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm4_0_24h_aqi": {
+        "name": "PM4.0-Luftqualitätsindex (24 Stunden)",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm4_0_24h_avg": {
+        "name": "PM4.0 (24-Stunden-Mittelwert)",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "pm4_0_aqi": {
+        "name": "PM4.0-Luftqualitätsindex",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "rssi": {
+        "name": "RSSI",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "rain_event": {
+        "name": "Regenmenge des Ereignisses",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "rain_gauge_battery": {
+        "name": "Batterie des Regenmessers",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "rain_rate": {
+        "name": "Regenintensität",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "rain_sensor_battery": {
+        "name": "Batterie des Regensensors",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "rain_state_piezo": {
+        "name": "Regenstatus des Piezo-Sensors",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "relative_pressure": {
+        "name": "Relativer Luftdruck",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "runtime": {
+        "name": "Betriebszeit",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "signal_quality": {
+        "name": "Signalqualität",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "signal_strength": {
+        "name": "Signalstärke",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "soil_conductivity": {
+        "name": "Elektrische Bodenleitfähigkeit",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "soil_conductivity_ch": {
+        "name": "Elektrische Bodenleitfähigkeit Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "soil_moisture": {
+        "name": "Bodenfeuchtigkeit",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "soil_moisture_ad": {
+        "name": "AD-Wert der Bodenfeuchtigkeit",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "soil_moisture_ad_ch": {
+        "name": "AD-Wert der Bodenfeuchtigkeit Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "soil_moisture_ch": {
+        "name": "Bodenfeuchtigkeit Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "soil_moisture_ch_battery": {
+        "name": "Bodenfeuchtigkeit Kanal {channel} Batterie",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "soil_temperature": {
+        "name": "Bodentemperatur",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "soil_temperature_ch": {
+        "name": "Bodentemperatur Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "solar_illuminance": {
+        "name": "Solare Beleuchtungsstärke",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "solar_radiation": {
+        "name": "Solarstrahlung",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "temperature": {
+        "name": "Temperatur",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "temperature_ch": {
+        "name": "Temperatur Kanal {channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "temperature_ch_battery": {
+        "name": "Temperatur Kanal {channel} Batterie",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "temperature_humidity_ch_battery": {
+        "name": "Temperatur/Luftfeuchtigkeit Kanal {channel} Batterie",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "total_rain": {
+        "name": "Gesamte Regenmenge",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "uv_index": {
+        "name": "UV-Index",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "uv_radiation": {
+        "name": "UV-Strahlung",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "vapor_pressure_deficit": {
+        "name": "Dampfdruckdefizit",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wbgt": {
+        "name": "WBGT",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wh69_weather_station_battery": {
+        "name": "Batterie der WH69-Wetterstation",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wh77_multi_sensor_station_battery": {
+        "name": "Batterie der WH77-Mehrsensorstation",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wh80_weather_station_battery": {
+        "name": "Batterie der WH80-Wetterstation",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wh90_battery_voltage": {
+        "name": "WH90-Batteriespannung",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wh90_capacitor_voltage": {
+        "name": "WH90-Kondensatorspannung",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wh90_weather_station_battery": {
+        "name": "Batterie der WH90-Wetterstation",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wn38_black_globe_thermometer_battery": {
+        "name": "Batterie des WN38-Schwarzkugelthermometers",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "ws85_battery_voltage": {
+        "name": "WS85-Batteriespannung",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "ws85_capacitor_voltage": {
+        "name": "WS85-Kondensatorspannung",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "ws85_wind_rain_battery": {
+        "name": "Batterie des WS85-Wind- und Regensensors",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "ws90_battery_voltage": {
+        "name": "WS90-Batteriespannung",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "ws90_capacitor_voltage": {
+        "name": "WS90-Kondensatorspannung",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "ws90_weather_station_battery": {
+        "name": "Batterie der WS90-Wetterstation",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "weather_station_battery": {
+        "name": "Batterie der Wetterstation",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "weekly_rain": {
+        "name": "Wöchentliche Regenmenge",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wind_chill": {
+        "name": "Gefühlte Temperatur durch Wind",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wind_direction": {
+        "name": "Windrichtung",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wind_direction_10min_avg": {
+        "name": "Windrichtung (10-Minuten-Mittelwert)",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wind_direction_avg": {
+        "name": "Mittlere Windrichtung",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wind_gust": {
+        "name": "Windböe",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wind_speed": {
+        "name": "Windgeschwindigkeit",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "wind_speed_10min_avg": {
+        "name": "Windgeschwindigkeit (10-Minuten-Mittelwert)",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      },
+      "yearly_rain": {
+        "name": "Jährliche Regenmenge",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "category": {
+            "name": "Kategorie",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "raw_value": {
+            "name": "Rohwert"
+          }
+        }
+      }
+    },
+    "binary_sensor": {
+      "online": {
+        "name": "Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline-Schwellenwert (Minuten)"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          }
+        }
+      },
+      "gateway_online": {
+        "name": "Ecowitt-Gateway {host} Online",
+        "state_attributes": {
+          "gateway_id": {
+            "name": "Gateway-ID"
+          },
+          "host": {
+            "name": "Adresse"
+          },
+          "model": {
+            "name": "Modell"
+          },
+          "firmware_version": {
+            "name": "Firmwareversion"
+          },
+          "last_successful_update": {
+            "name": "Letzte erfolgreiche Aktualisierung"
+          },
+          "last_update_time": {
+            "name": "Letzte Aktualisierung"
+          }
+        }
+      },
+      "rain_state": {
+        "name": "Regenstatus (Piezo)",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "signal": {
+            "name": "Empfangssignal"
+          },
+          "battery": {
+            "name": "Batterie"
+          },
+          "device_type": {
+            "name": "Gerätetyp"
+          },
+          "last_seen": {
+            "name": "Zuletzt gesehen"
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "signal_percentage": {
+            "name": "Signalstärke in Prozent"
+          }
+        }
+      },
+      "rain_state_raw": {
+        "name": "Regenstatus (Piezo)",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "sensor_key": {
+            "name": "Sensorschlüssel"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "signal": {
+            "name": "Empfangssignal"
+          },
+          "battery": {
+            "name": "Batterie"
+          },
+          "device_type": {
+            "name": "Gerätetyp"
+          },
+          "last_seen": {
+            "name": "Zuletzt gesehen"
+          },
+          "sensor_type": {
+            "name": "Sensortyp",
+            "state": {
+              "sensor": "Messsensor",
+              "battery": "Batterie",
+              "system": "System",
+              "diagnostic": "Diagnose",
+              "binary": "Binärsensor"
+            }
+          },
+          "signal_percentage": {
+            "name": "Signalstärke in Prozent"
+          }
+        }
+      },
+      "online_soil_moisture": {
+        "name": "Ecowitt Bodenfeuchtigkeit {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline-Schwellenwert (Minuten)"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          }
+        }
+      },
+      "online_temperature": {
+        "name": "Ecowitt Temperatur {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline-Schwellenwert (Minuten)"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          }
+        }
+      },
+      "online_pm25": {
+        "name": "Ecowitt PM2.5 {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline-Schwellenwert (Minuten)"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          }
+        }
+      },
+      "online_leak": {
+        "name": "Ecowitt Leckage {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline-Schwellenwert (Minuten)"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          }
+        }
+      },
+      "online_lightning": {
+        "name": "Ecowitt Blitz {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline-Schwellenwert (Minuten)"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          }
+        }
+      },
+      "online_rain": {
+        "name": "Ecowitt Regen {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline-Schwellenwert (Minuten)"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          }
+        }
+      },
+      "online_wind": {
+        "name": "Ecowitt Wind {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline-Schwellenwert (Minuten)"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          }
+        }
+      },
+      "online_sensor": {
+        "name": "Ecowitt Sensor {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware-ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline-Schwellenwert (Minuten)"
+          },
+          "channel": {
+            "name": "Kanal"
+          },
+          "device_model": {
+            "name": "Gerätemodell"
+          },
+          "battery_level": {
+            "name": "Batteriestand"
+          },
+          "signal_strength": {
+            "name": "Signalstärke"
+          }
+        }
+      }
+    },
+    "button": {
+      "resync_mapping": {
+        "name": "Ecowitt-Gateway {host} Sensorzuordnung neu einlesen"
+      }
+    }
+  },
+  "device": {
+    "black_globe_temperature_sensor": {
+      "name": "Ecowitt Schwarzkugeltemperatursensor {hardware_id}"
+    },
+    "co2_air_quality_sensor": {
+      "name": "Ecowitt CO2-Luftqualitätssensor {hardware_id}"
+    },
+    "indoor_station": {
+      "name": "Ecowitt Innenstation {hardware_id}"
+    },
+    "leaf_wetness_sensor": {
+      "name": "Ecowitt Blattnässesensor {hardware_id}"
+    },
+    "leak_sensor": {
+      "name": "Ecowitt Lecksensor {hardware_id}"
+    },
+    "lightning_sensor": {
+      "name": "Ecowitt Blitzsensor {hardware_id}"
+    },
+    "liquid_depth_sensor": {
+      "name": "Ecowitt Füllstandssensor {hardware_id}"
+    },
+    "outdoor_temperature_humidity_sensor": {
+      "name": "Ecowitt Außen-Temperatur-/Luftfeuchtigkeitssensor {hardware_id}"
+    },
+    "pm2_5_air_quality_sensor": {
+      "name": "Ecowitt PM2.5-Luftqualitätssensor {hardware_id}"
+    },
+    "rain_gauge": {
+      "name": "Ecowitt Regenmesser {hardware_id}"
+    },
+    "rain_sensor": {
+      "name": "Ecowitt Regensensor {hardware_id}"
+    },
+    "soil_moisture_ec_sensor": {
+      "name": "Ecowitt Bodenfeuchte- und Leitfähigkeitssensor {hardware_id}"
+    },
+    "soil_moisture_sensor": {
+      "name": "Ecowitt Bodenfeuchtesensor {hardware_id}"
+    },
+    "temperature_sensor": {
+      "name": "Ecowitt Temperatursensor {hardware_id}"
+    },
+    "temperature_humidity_sensor": {
+      "name": "Ecowitt Temperatur-/Luftfeuchtigkeitssensor {hardware_id}"
+    },
+    "wh69_weather_station": {
+      "name": "Ecowitt WH69-Wetterstation {hardware_id}"
+    },
+    "ws80_weather_station": {
+      "name": "Ecowitt WS80-Wetterstation {hardware_id}"
+    },
+    "ws85_wind_rain_sensor": {
+      "name": "Ecowitt WS85-Wind- und Regensensor {hardware_id}"
+    },
+    "ws90_weather_station": {
+      "name": "Ecowitt WS90-Wetterstation {hardware_id}"
+    },
+    "weather_station": {
+      "name": "Ecowitt Wetterstation {hardware_id}"
+    },
+    "model": {
+      "name": "Ecowitt {model} {hardware_id}"
+    },
+    "sensor": {
+      "name": "Ecowitt Sensor {hardware_id}"
+    },
+    "gateway": {
+      "name": "Ecowitt-Gateway {host}"
+    },
+    "outdoor": {
+      "name": "Außenbereich"
+    }
+  },
+  "exceptions": {
+    "setup_coordinator_failed": {
+      "message": "Einrichtung der Datenaktualisierung fehlgeschlagen: {error}"
+    },
+    "authentication_failed": {
+      "message": "Authentifizierung fehlgeschlagen: {error}"
+    },
+    "communication_failed": {
+      "message": "Fehler bei der Kommunikation mit dem Gateway: {error}"
+    },
+    "unexpected_error": {
+      "message": "Unerwarteter Fehler: {error}"
+    },
+    "cannot_connect": {
+      "message": "Verbindung zum Gateway fehlgeschlagen: {error}"
+    },
+    "setup_failed": {
+      "message": "Einrichtung fehlgeschlagen: {error}"
+    }
+  }
+}
