@@ -149,12 +149,27 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             return processed_data
 
         except AuthenticationError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+            raise ConfigEntryAuthFailed(
+                f"Authentication failed: {err}",
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         except APIConnectionError as err:
-            raise UpdateFailed(f"Error communicating with gateway: {err}") from err
+            raise UpdateFailed(
+                f"Error communicating with gateway: {err}",
+                translation_domain=DOMAIN,
+                translation_key="communication_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         except Exception as err:
             _LOGGER.exception("Unexpected error fetching data")
-            raise UpdateFailed(f"Unexpected error: {err}") from err
+            raise UpdateFailed(
+                f"Unexpected error: {err}",
+                translation_domain=DOMAIN,
+                translation_key="unexpected_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def _update_sensor_mapping_if_needed(self) -> None:
         """Update sensor mapping if enough time has passed."""
@@ -303,7 +318,7 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 or not device_belongs_to_entry(device, self.config_entry.entry_id)
             ):
                 continue
-            new_name = device_name(unique_id, sensor_info)
+            new_name = device_name(unique_id, sensor_info, self.hass)
             if device.name != new_name:
                 _LOGGER.debug(
                     "Device %s renamed from %s to %s (gateway title)",
@@ -1905,12 +1920,27 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
             _LOGGER.info("Ecowitt Local coordinator setup complete")
 
         except AuthenticationError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+            raise ConfigEntryAuthFailed(
+                f"Authentication failed: {err}",
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         except APIConnectionError as err:
-            raise ConfigEntryNotReady(f"Cannot connect to gateway: {err}") from err
+            raise ConfigEntryNotReady(
+                f"Cannot connect to gateway: {err}",
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(err)},
+            ) from err
         except Exception as err:
             _LOGGER.exception("Unexpected error during setup")
-            raise ConfigEntryNotReady(f"Setup failed: {err}") from err
+            raise ConfigEntryNotReady(
+                f"Setup failed: {err}",
+                translation_domain=DOMAIN,
+                translation_key="setup_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def async_shutdown(self) -> None:
         """Shutdown the coordinator."""

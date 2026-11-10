@@ -29,7 +29,12 @@ from .const import (
 )
 from .coordinator import EcowittLocalDataUpdateCoordinator
 from .device_compat import via_device_kwargs
-from .device_naming import device_name, is_outdoor_sensor
+from .device_naming import (
+    device_name_kwargs,
+    gateway_name_kwargs,
+    is_outdoor_sensor,
+)
+from .localization import LocalizedEntityNameMixin, translated_text
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,9 +121,13 @@ async def async_setup_entry(
 
 
 class EcowittSensorOnlineBinarySensor(
-    CoordinatorEntity[EcowittLocalDataUpdateCoordinator], BinarySensorEntity
+    LocalizedEntityNameMixin,
+    CoordinatorEntity[EcowittLocalDataUpdateCoordinator],
+    BinarySensorEntity,
 ):
     """Binary sensor for individual sensor online/offline status."""
+
+    _translation_platform = "binary_sensor"
 
     def __init__(
         self,
@@ -147,10 +156,14 @@ class EcowittSensorOnlineBinarySensor(
         if self._hardware_sensor_info() is not None:
             self._attr_has_entity_name = True
             self._attr_name = "Online"
+            self._attr_translation_key = "online"
+            self._attr_translation_placeholders = {}
         else:
             self._attr_name = (
                 f"Ecowitt {sensor_type.replace('_', ' ').title()} {hardware_id} Online"
             )
+            self._attr_translation_key = f"online_{sensor_type}"
+            self._attr_translation_placeholders = {"hardware_id": hardware_id}
 
         # Set device class and entity category
         self._attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
@@ -251,11 +264,11 @@ class EcowittSensorOnlineBinarySensor(
             )
             return DeviceInfo(
                 identifiers={(DOMAIN, self._hardware_id)},
-                name=device_name(self._hardware_id, sensor_info),
+                **device_name_kwargs(self._hardware_id, sensor_info),
                 manufacturer=MANUFACTURER,
                 model=device_model,
                 suggested_area=(
-                    "Outdoor"
+                    translated_text(self.hass, "device", "outdoor.name", "Outdoor")
                     if is_outdoor_sensor(sensor_info.get("sensor_type", ""))
                     else None
                 ),
@@ -265,7 +278,7 @@ class EcowittSensorOnlineBinarySensor(
         # Fall back to gateway device
         return DeviceInfo(
             identifiers={(DOMAIN, gateway_id)},
-            name=f"Ecowitt Gateway {gateway_info.get('host', '')}",
+            **gateway_name_kwargs(gateway_info),
             manufacturer=MANUFACTURER,
             model=gateway_info.get("model", "Unknown"),
             sw_version=gateway_info.get("firmware_version", "Unknown"),
@@ -317,9 +330,13 @@ class EcowittSensorOnlineBinarySensor(
 
 
 class EcowittStateBinarySensor(
-    CoordinatorEntity[EcowittLocalDataUpdateCoordinator], BinarySensorEntity
+    LocalizedEntityNameMixin,
+    CoordinatorEntity[EcowittLocalDataUpdateCoordinator],
+    BinarySensorEntity,
 ):
     """Binary sensor for state-based sensors like srain_piezo."""
+
+    _translation_platform = "binary_sensor"
 
     def __init__(
         self,
@@ -345,6 +362,11 @@ class EcowittStateBinarySensor(
         self._attr_name = sensor_info.get(
             "name", sensor_def.get("name", self._sensor_key)
         )
+        self._attr_translation_key = {
+            "Srain Piezo": "rain_state_raw",
+            "Rain State Piezo": "rain_state",
+        }.get(self._attr_name)
+        self._attr_translation_placeholders = {}
 
         # Set device class
         dc_str = sensor_def.get("device_class", "")
@@ -388,7 +410,7 @@ class EcowittStateBinarySensor(
                 )
                 return DeviceInfo(
                     identifiers={(DOMAIN, self._hardware_id)},
-                    name=device_name(self._hardware_id, sensor_info),
+                    **device_name_kwargs(self._hardware_id, sensor_info),
                     manufacturer=MANUFACTURER,
                     model=device_model,
                     **via_device_kwargs(self.hass, gateway_id),
@@ -396,7 +418,7 @@ class EcowittStateBinarySensor(
 
         return DeviceInfo(
             identifiers={(DOMAIN, gateway_id)},
-            name=f"Ecowitt Gateway {gateway_info.get('host', '')}",
+            **gateway_name_kwargs(gateway_info),
             manufacturer=MANUFACTURER,
             model=gateway_info.get("model", "Unknown"),
             sw_version=gateway_info.get("firmware_version", "Unknown"),
@@ -425,9 +447,13 @@ class EcowittStateBinarySensor(
 
 
 class EcowittGatewayOnlineBinarySensor(
-    CoordinatorEntity[EcowittLocalDataUpdateCoordinator], BinarySensorEntity
+    LocalizedEntityNameMixin,
+    CoordinatorEntity[EcowittLocalDataUpdateCoordinator],
+    BinarySensorEntity,
 ):
     """Binary sensor for gateway online/offline status."""
+
+    _translation_platform = "binary_sensor"
 
     def __init__(self, coordinator: EcowittLocalDataUpdateCoordinator) -> None:
         """Initialize the binary sensor."""
@@ -443,6 +469,8 @@ class EcowittGatewayOnlineBinarySensor(
         # Set entity ID and name
         self.entity_id = f"binary_sensor.ecowitt_gateway_{gateway_id.lower()}_online"
         self._attr_name = f"Ecowitt Gateway {host} Online"
+        self._attr_translation_key = "gateway_online"
+        self._attr_translation_placeholders = {"host": host}
 
         # Set device class and entity category
         self._attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
@@ -462,7 +490,7 @@ class EcowittGatewayOnlineBinarySensor(
 
         return DeviceInfo(
             identifiers={(DOMAIN, gateway_id)},
-            name=f"Ecowitt Gateway {gateway_info.get('host', '')}",
+            **gateway_name_kwargs(gateway_info),
             manufacturer=MANUFACTURER,
             model=gateway_info.get("model", "Unknown"),
             sw_version=gateway_info.get("firmware_version", "Unknown"),
