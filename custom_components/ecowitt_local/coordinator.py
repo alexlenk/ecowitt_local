@@ -467,12 +467,11 @@ class EcowittLocalDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                             battery_key = f"soilbatt{channel}"
                             # Spec (V1.0.6 §7) defines WH51 battery as binary
                             # (0=normal, 1=low) — same encoding as WH31 ch_aisle.
-                            # Some firmwares also report a 0-5 bar level, so accept
-                            # both: "0"=full, "1"=low, "2"-"5"=bar*20.
+                            # Firmwares such as GW1100A V2.4.5 report a 0-5 bar
+                            # level instead (issue #290), so "1" is one bar (20%),
+                            # which still reads as low: "0"=full, "1"-"5"=bar*20.
                             if battery == "0":
                                 battery_pct = "100"
-                            elif battery == "1":
-                                battery_pct = "10"
                             else:
                                 battery_pct = (
                                     str(int(battery) * 20)

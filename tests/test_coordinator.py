@@ -1349,7 +1349,7 @@ async def test_coordinator_process_ch_soil_data(coordinator):
             {"channel": "1", "humidity": "45%", "battery": "4"},
             {"channel": "2", "humidity": "50%", "battery": "3"},
             {"channel": "3", "humidity": "60%", "battery": "0"},  # binary full
-            {"channel": "4", "humidity": "70%", "battery": "1"},  # binary low
+            {"channel": "4", "humidity": "70%", "battery": "1"},  # low / 1 bar
         ]
     }
 
@@ -1385,7 +1385,7 @@ async def test_coordinator_process_ch_soil_data(coordinator):
         elif sensor_key == "soilbatt3":
             assert sensor_data["state"] == "100"  # binary 0 → full (100%)
         elif sensor_key == "soilbatt4":
-            assert sensor_data["state"] == "10"  # binary 1 → low (10%)
+            assert sensor_data["state"] == "20"  # 1 → 1 bar (20%), issue #290
 
     assert all(found.values()), f"Missing sensors: {found}"
 
