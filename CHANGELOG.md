@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.2] - 2026-11-23
+
+### Fixed
+- **Soil Moisture AD sensors get long-term statistics**: the raw soil moisture AD values (`soilad1`-`soilad16`, from `/get_cli_soilad`) had no state class, so Home Assistant kept no long-term statistics, drew the history as coloured bars instead of a line, and raised the repair issue "The entity no longer has a state class" for entities that had one before. They now use state class `measurement`. Thanks to @snakkp for the report (issue #295).
+
 ## [1.11.1] - 2026-11-13
 
 ### Fixed

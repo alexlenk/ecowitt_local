@@ -648,7 +648,7 @@ SENSOR_TYPES.update(
     _generate_channel_sensors(
         "soilad",
         "Soil Moisture AD CH{ch}",
-        {"icon": "mdi:sprout", "enabled_default": False},
+        {"icon": "mdi:sprout", "enabled_default": False, "state_class": "measurement"},
         16,
     )
 )
