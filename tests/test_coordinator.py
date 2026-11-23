@@ -3394,6 +3394,8 @@ async def test_coordinator_soil_ad_data(coordinator):
         if sensor_key == "soilad1":
             ad1_found = True
             assert sensor_data["state"] == 160
+            # Issue #295: needs a state class for long-term statistics
+            assert sensor_data["state_class"] == "measurement"
         elif sensor_key == "soilad2":
             ad2_found = True
             assert sensor_data["state"] == 310

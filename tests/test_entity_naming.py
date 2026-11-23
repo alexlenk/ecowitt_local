@@ -123,6 +123,7 @@ def test_channel_templates_define_channel_free_entity_name():
     assert SENSOR_TYPES["temp2f"]["entity_name"] == "Temperature"
     assert SENSOR_TYPES["temp2f"]["name"] == "Temperature CH2"
     assert SENSOR_TYPES["soilad3"]["entity_name"] == "Soil Moisture AD"
+    assert SENSOR_TYPES["soilad3"]["state_class"] == "measurement"
     assert SENSOR_TYPES["leak_ch1"]["entity_name"] == "Leak"
     assert SENSOR_TYPES["leak_ch1"]["name"] == "Leak Sensor CH1"
 
