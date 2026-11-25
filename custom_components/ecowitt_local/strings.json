@@ -78,5 +78,6358 @@
       "name": "Update Live Data",
       "description": "Force immediate update of live sensor data from the gateway"
     }
+  },
+  "entity": {
+    "sensor": {
+      "24_hour_rain": {
+        "name": "24-Hour Rain",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "absolute_pressure": {
+        "name": "Absolute Pressure",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "battery": {
+        "name": "Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "battery_voltage": {
+        "name": "Battery Voltage",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "black_globe_temperature": {
+        "name": "Black Globe Temperature",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "co2": {
+        "name": "CO2",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "co2_24h_avg": {
+        "name": "CO2 24h Avg",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "co2_combo_sensor_battery": {
+        "name": "CO2 Combo Sensor Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "co2_sensor_humidity": {
+        "name": "CO2 Sensor Humidity",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "co2_sensor_temperature": {
+        "name": "CO2 Sensor Temperature",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "capacitor_voltage": {
+        "name": "Capacitor Voltage",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "channel": {
+        "name": "Channel",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "daily_rain": {
+        "name": "Daily Rain",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "dewpoint": {
+        "name": "Dewpoint",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "dewpoint_ch": {
+        "name": "Dewpoint CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "dewpoint_temperature": {
+        "name": "Dewpoint Temperature",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "event_rain": {
+        "name": "Event Rain",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "feels_like_temperature": {
+        "name": "Feels Like Temperature",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "gateway_heap_memory": {
+        "name": "Gateway Heap Memory",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "gateway_uptime": {
+        "name": "Gateway Uptime",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "hardware_id": {
+        "name": "Hardware ID",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "heap": {
+        "name": "Heap",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "heat_index": {
+        "name": "Heat Index",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "hourly_rain": {
+        "name": "Hourly Rain",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "humidity": {
+        "name": "Humidity",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "humidity_ch": {
+        "name": "Humidity CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "indoor_humidity": {
+        "name": "Indoor Humidity",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "indoor_station_battery": {
+        "name": "Indoor Station Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "indoor_temperature": {
+        "name": "Indoor Temperature",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "last_lightning": {
+        "name": "Last Lightning",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "leaf_wetness": {
+        "name": "Leaf Wetness",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "leaf_wetness_ch": {
+        "name": "Leaf Wetness CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "leaf_wetness_ch_battery": {
+        "name": "Leaf Wetness CH{channel} Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "leak": {
+        "name": "Leak",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "leak_sensor_ch": {
+        "name": "Leak Sensor CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "leak_sensor_ch_battery": {
+        "name": "Leak Sensor CH{channel} Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "lightning_distance": {
+        "name": "Lightning Distance",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "lightning_sensor_battery": {
+        "name": "Lightning Sensor Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "lightning_strikes": {
+        "name": "Lightning Strikes",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "liquid_depth": {
+        "name": "Liquid Depth",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "liquid_depth_air_gap": {
+        "name": "Liquid Depth Air Gap",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "liquid_depth_air_gap_ch": {
+        "name": "Liquid Depth Air Gap CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "liquid_depth_ch": {
+        "name": "Liquid Depth CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "liquid_depth_ch_battery": {
+        "name": "Liquid Depth CH{channel} Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "liquid_depth_filter_level": {
+        "name": "Liquid Depth Filter Level",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "liquid_depth_filter_level_ch": {
+        "name": "Liquid Depth Filter Level CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "liquid_depth_heater_counter": {
+        "name": "Liquid Depth Heater Counter",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "liquid_depth_heater_counter_ch": {
+        "name": "Liquid Depth Heater Counter CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "liquid_depth_sensor_voltage": {
+        "name": "Liquid Depth Sensor Voltage",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "liquid_depth_sensor_voltage_ch": {
+        "name": "Liquid Depth Sensor Voltage CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "max_daily_gust": {
+        "name": "Max Daily Gust",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "monthly_rain": {
+        "name": "Monthly Rain",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "outdoor_humidity": {
+        "name": "Outdoor Humidity",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "outdoor_sensor_battery": {
+        "name": "Outdoor Sensor Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor Temperature",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm1_0": {
+        "name": "PM1.0",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm1_0_24h_aqi": {
+        "name": "PM1.0 24h AQI",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm1_0_24h_avg": {
+        "name": "PM1.0 24h Avg",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm1_0_aqi": {
+        "name": "PM1.0 AQI",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm10": {
+        "name": "PM10",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm10_24h_aqi": {
+        "name": "PM10 24h AQI",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm10_24h_avg": {
+        "name": "PM10 24h Avg",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm10_aqi": {
+        "name": "PM10 AQI",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm2_5": {
+        "name": "PM2.5",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm2_5_24h_aqi": {
+        "name": "PM2.5 24h AQI",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm2_5_24h_aqi_ch": {
+        "name": "PM2.5 24h AQI CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm2_5_24h_avg": {
+        "name": "PM2.5 24h Avg",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm2_5_24h_avg_ch": {
+        "name": "PM2.5 24h Avg CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm2_5_aqi": {
+        "name": "PM2.5 AQI",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm2_5_aqi_ch": {
+        "name": "PM2.5 AQI CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm2_5_ch": {
+        "name": "PM2.5 CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm2_5_ch_battery": {
+        "name": "PM2.5 CH{channel} Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm4_0": {
+        "name": "PM4.0",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm4_0_24h_aqi": {
+        "name": "PM4.0 24h AQI",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm4_0_24h_avg": {
+        "name": "PM4.0 24h Avg",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "pm4_0_aqi": {
+        "name": "PM4.0 AQI",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "rssi": {
+        "name": "RSSI",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "rain_event": {
+        "name": "Rain Event",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "rain_gauge_battery": {
+        "name": "Rain Gauge Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "rain_rate": {
+        "name": "Rain Rate",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "rain_sensor_battery": {
+        "name": "Rain Sensor Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "rain_state_piezo": {
+        "name": "Rain State Piezo",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "relative_pressure": {
+        "name": "Relative Pressure",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "runtime": {
+        "name": "Runtime",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "signal_quality": {
+        "name": "Signal Quality",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "signal_strength": {
+        "name": "Signal Strength",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "soil_conductivity": {
+        "name": "Soil Conductivity",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "soil_conductivity_ch": {
+        "name": "Soil Conductivity CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "soil_moisture": {
+        "name": "Soil Moisture",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "soil_moisture_ad": {
+        "name": "Soil Moisture AD",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "soil_moisture_ad_ch": {
+        "name": "Soil Moisture AD CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "soil_moisture_ch": {
+        "name": "Soil Moisture CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "soil_moisture_ch_battery": {
+        "name": "Soil Moisture CH{channel} Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "soil_temperature": {
+        "name": "Soil Temperature",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "soil_temperature_ch": {
+        "name": "Soil Temperature CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "solar_illuminance": {
+        "name": "Solar Illuminance",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "solar_radiation": {
+        "name": "Solar Radiation",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "temperature": {
+        "name": "Temperature",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "temperature_ch": {
+        "name": "Temperature CH{channel}",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "temperature_ch_battery": {
+        "name": "Temperature CH{channel} Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "temperature_humidity_ch_battery": {
+        "name": "Temperature/Humidity CH{channel} Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "total_rain": {
+        "name": "Total Rain",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "uv_index": {
+        "name": "UV Index",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "uv_radiation": {
+        "name": "UV Radiation",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "vapor_pressure_deficit": {
+        "name": "Vapor Pressure Deficit",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wbgt": {
+        "name": "WBGT",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wh69_weather_station_battery": {
+        "name": "WH69 Weather Station Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wh77_multi_sensor_station_battery": {
+        "name": "WH77 Multi-Sensor Station Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wh80_weather_station_battery": {
+        "name": "WH80 Weather Station Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wh90_battery_voltage": {
+        "name": "WH90 Battery Voltage",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wh90_capacitor_voltage": {
+        "name": "WH90 Capacitor Voltage",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wh90_weather_station_battery": {
+        "name": "WH90 Weather Station Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wn38_black_globe_thermometer_battery": {
+        "name": "WN38 Black Globe Thermometer Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "ws85_battery_voltage": {
+        "name": "WS85 Battery Voltage",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "ws85_capacitor_voltage": {
+        "name": "WS85 Capacitor Voltage",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "ws85_wind_rain_battery": {
+        "name": "WS85 Wind & Rain Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "ws90_battery_voltage": {
+        "name": "WS90 Battery Voltage",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "ws90_capacitor_voltage": {
+        "name": "WS90 Capacitor Voltage",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "ws90_weather_station_battery": {
+        "name": "WS90 Weather Station Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "weather_station_battery": {
+        "name": "Weather Station Battery",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "weekly_rain": {
+        "name": "Weekly Rain",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wind_chill": {
+        "name": "Wind Chill",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wind_direction": {
+        "name": "Wind Direction",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wind_direction_10min_avg": {
+        "name": "Wind Direction 10min Avg",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wind_direction_avg": {
+        "name": "Wind Direction Avg",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wind_gust": {
+        "name": "Wind Gust",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wind_speed": {
+        "name": "Wind Speed",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "wind_speed_10min_avg": {
+        "name": "Wind Speed 10min Avg",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      },
+      "yearly_rain": {
+        "name": "Yearly Rain",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "category": {
+            "name": "Category",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "raw_value": {
+            "name": "Raw Value"
+          }
+        }
+      }
+    },
+    "binary_sensor": {
+      "online": {
+        "name": "Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline Threshold (minutes)"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          }
+        }
+      },
+      "gateway_online": {
+        "name": "Ecowitt Gateway {host} Online",
+        "state_attributes": {
+          "gateway_id": {
+            "name": "Gateway ID"
+          },
+          "host": {
+            "name": "Host"
+          },
+          "model": {
+            "name": "Model"
+          },
+          "firmware_version": {
+            "name": "Firmware Version"
+          },
+          "last_successful_update": {
+            "name": "Last Successful Update"
+          },
+          "last_update_time": {
+            "name": "Last Update"
+          }
+        }
+      },
+      "rain_state": {
+        "name": "Rain State Piezo",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "signal": {
+            "name": "Signal"
+          },
+          "battery": {
+            "name": "Battery"
+          },
+          "device_type": {
+            "name": "Device Type"
+          },
+          "last_seen": {
+            "name": "Last Seen"
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "signal_percentage": {
+            "name": "Signal Percentage"
+          }
+        }
+      },
+      "rain_state_raw": {
+        "name": "Srain Piezo",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "sensor_key": {
+            "name": "Sensor Key"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "signal": {
+            "name": "Signal"
+          },
+          "battery": {
+            "name": "Battery"
+          },
+          "device_type": {
+            "name": "Device Type"
+          },
+          "last_seen": {
+            "name": "Last Seen"
+          },
+          "sensor_type": {
+            "name": "Sensor Type",
+            "state": {
+              "sensor": "Sensor",
+              "battery": "Battery",
+              "system": "System",
+              "diagnostic": "Diagnostic",
+              "binary": "Binary Sensor"
+            }
+          },
+          "signal_percentage": {
+            "name": "Signal Percentage"
+          }
+        }
+      },
+      "online_soil_moisture": {
+        "name": "Ecowitt Soil Moisture {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline Threshold (minutes)"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          }
+        }
+      },
+      "online_temperature": {
+        "name": "Ecowitt Temperature {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline Threshold (minutes)"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          }
+        }
+      },
+      "online_pm25": {
+        "name": "Ecowitt Pm25 {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline Threshold (minutes)"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          }
+        }
+      },
+      "online_leak": {
+        "name": "Ecowitt Leak {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline Threshold (minutes)"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          }
+        }
+      },
+      "online_lightning": {
+        "name": "Ecowitt Lightning {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline Threshold (minutes)"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          }
+        }
+      },
+      "online_rain": {
+        "name": "Ecowitt Rain {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline Threshold (minutes)"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          }
+        }
+      },
+      "online_wind": {
+        "name": "Ecowitt Wind {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline Threshold (minutes)"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          }
+        }
+      },
+      "online_sensor": {
+        "name": "Ecowitt Sensor {hardware_id} Online",
+        "state_attributes": {
+          "hardware_id": {
+            "name": "Hardware ID"
+          },
+          "offline_threshold_minutes": {
+            "name": "Offline Threshold (minutes)"
+          },
+          "channel": {
+            "name": "Channel"
+          },
+          "device_model": {
+            "name": "Device Model"
+          },
+          "battery_level": {
+            "name": "Battery Level"
+          },
+          "signal_strength": {
+            "name": "Signal Strength"
+          }
+        }
+      }
+    },
+    "button": {
+      "resync_mapping": {
+        "name": "Ecowitt Gateway {host} Resync Sensor Mappings"
+      }
+    }
+  },
+  "device": {
+    "black_globe_temperature_sensor": {
+      "name": "Ecowitt Black Globe Temperature Sensor {hardware_id}"
+    },
+    "co2_air_quality_sensor": {
+      "name": "Ecowitt CO2 Air Quality Sensor {hardware_id}"
+    },
+    "indoor_station": {
+      "name": "Ecowitt Indoor Station {hardware_id}"
+    },
+    "leaf_wetness_sensor": {
+      "name": "Ecowitt Leaf Wetness Sensor {hardware_id}"
+    },
+    "leak_sensor": {
+      "name": "Ecowitt Leak Sensor {hardware_id}"
+    },
+    "lightning_sensor": {
+      "name": "Ecowitt Lightning Sensor {hardware_id}"
+    },
+    "liquid_depth_sensor": {
+      "name": "Ecowitt Liquid Depth Sensor {hardware_id}"
+    },
+    "outdoor_temperature_humidity_sensor": {
+      "name": "Ecowitt Outdoor Temperature/Humidity Sensor {hardware_id}"
+    },
+    "pm2_5_air_quality_sensor": {
+      "name": "Ecowitt PM2.5 Air Quality Sensor {hardware_id}"
+    },
+    "rain_gauge": {
+      "name": "Ecowitt Rain Gauge {hardware_id}"
+    },
+    "rain_sensor": {
+      "name": "Ecowitt Rain Sensor {hardware_id}"
+    },
+    "soil_moisture_ec_sensor": {
+      "name": "Ecowitt Soil Moisture & EC Sensor {hardware_id}"
+    },
+    "soil_moisture_sensor": {
+      "name": "Ecowitt Soil Moisture Sensor {hardware_id}"
+    },
+    "temperature_sensor": {
+      "name": "Ecowitt Temperature Sensor {hardware_id}"
+    },
+    "temperature_humidity_sensor": {
+      "name": "Ecowitt Temperature/Humidity Sensor {hardware_id}"
+    },
+    "wh69_weather_station": {
+      "name": "Ecowitt WH69 Weather Station {hardware_id}"
+    },
+    "ws80_weather_station": {
+      "name": "Ecowitt WS80 Weather Station {hardware_id}"
+    },
+    "ws85_wind_rain_sensor": {
+      "name": "Ecowitt WS85 Wind & Rain Sensor {hardware_id}"
+    },
+    "ws90_weather_station": {
+      "name": "Ecowitt WS90 Weather Station {hardware_id}"
+    },
+    "weather_station": {
+      "name": "Ecowitt Weather Station {hardware_id}"
+    },
+    "model": {
+      "name": "Ecowitt {model} {hardware_id}"
+    },
+    "sensor": {
+      "name": "Ecowitt Sensor {hardware_id}"
+    },
+    "gateway": {
+      "name": "Ecowitt Gateway {host}"
+    },
+    "outdoor": {
+      "name": "Outdoor"
+    }
+  },
+  "exceptions": {
+    "setup_coordinator_failed": {
+      "message": "Failed to setup coordinator: {error}"
+    },
+    "authentication_failed": {
+      "message": "Authentication failed: {error}"
+    },
+    "communication_failed": {
+      "message": "Error communicating with gateway: {error}"
+    },
+    "unexpected_error": {
+      "message": "Unexpected error: {error}"
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to gateway: {error}"
+    },
+    "setup_failed": {
+      "message": "Setup failed: {error}"
+    }
   }
 }

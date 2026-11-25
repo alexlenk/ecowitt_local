@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.translation import async_get_translations
 
 from .api import EcowittLocalAPI
 from .const import DOMAIN, GATEWAY_SENSORS, SERVICE_REFRESH_MAPPING, SERVICE_UPDATE_DATA
@@ -22,8 +23,8 @@ from .device_compat import (
     device_belongs_to_entry,
     via_device_kwargs,
 )
-from .device_naming import device_name as get_device_name
-from .device_naming import is_outdoor_sensor
+from .device_naming import device_name_kwargs, gateway_name_kwargs, is_outdoor_sensor
+from .localization import translated_text
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +35,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ecowitt Local from a config entry."""
     _LOGGER.info("Setting up Ecowitt Local integration for %s", entry.data[CONF_HOST])
 
+    # Names must be available before the first poll can register or rename devices.
+    await async_get_translations(hass, hass.config.language, "entity", {DOMAIN})
+    await async_get_translations(hass, hass.config.language, "device", {DOMAIN})
+
     # Create and setup coordinator
     coordinator = EcowittLocalDataUpdateCoordinator(hass, entry)
 
@@ -41,7 +46,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.async_setup()
     except Exception as err:
         _LOGGER.error("Failed to setup coordinator: %s", err)
-        raise ConfigEntryNotReady(f"Failed to setup coordinator: {err}") from err
+        raise ConfigEntryNotReady(
+            f"Failed to setup coordinator: {err}",
+            translation_domain=DOMAIN,
+            translation_key="setup_coordinator_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     # Fetch initial data here — ConfigEntryNotReady must be raised before
     # async_forward_entry_setups, not inside a forwarded platform.
@@ -150,11 +160,11 @@ async def _async_setup_device_registry(
     gateway_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, gateway_id)},
-        name=f"Ecowitt Gateway {host}",
         manufacturer="Ecowitt",
         model=gateway_info.get("model", "Unknown"),
         sw_version=gateway_info.get("firmware_version", "Unknown"),
         configuration_url=config_url,
+        **gateway_name_kwargs(gateway_info),
     )
 
     # Clean up stale "unknown" gateway device left over from before the gateway ID
@@ -200,16 +210,18 @@ async def _async_setup_device_registry(
             # Determine if outdoor sensor for suggested area
             is_outdoor = is_outdoor_sensor(sensor_type)
 
-            # Same name as entity device_info produces (device_naming.py)
-            device_name = get_device_name(hardware_id, sensor_info)
-
             device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
                 identifiers={(DOMAIN, hardware_id)},
-                name=device_name,
                 manufacturer="Ecowitt",
                 model=device_model,
-                suggested_area="Outdoor" if is_outdoor else None,
+                # HA applies a suggested area only when creating a new device.
+                suggested_area=(
+                    translated_text(hass, "device", "outdoor.name", "Outdoor")
+                    if is_outdoor
+                    else None
+                ),
+                **device_name_kwargs(hardware_id, sensor_info),
                 **via_device_kwargs(hass, gateway_id),
             )
             _LOGGER.debug("Created device for hardware_id: %s", hardware_id)

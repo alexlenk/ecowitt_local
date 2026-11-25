@@ -12,6 +12,10 @@ from __future__ import annotations
 import re
 from typing import Any, Dict
 
+from homeassistant.core import HomeAssistant
+
+from .localization import translated_text
+
 _TYPE_NAMES: Dict[str, str] = {
     "wh51": "Soil Moisture Sensor",
     "wh52": "Soil Moisture & EC Sensor",
@@ -114,8 +118,18 @@ def is_outdoor_sensor(sensor_type: str) -> bool:
     return sensor_type.lower() in _OUTDOOR_TYPES
 
 
-def device_name(hardware_id: str, sensor_info: Dict[str, Any]) -> str:
-    """Return the device name for a hardware-ID device.
+def gateway_name_kwargs(gateway_info: Dict[str, Any]) -> Dict[str, Any]:
+    """Return a translatable gateway name without changing its identifiers."""
+    host = str(gateway_info.get("host", ""))
+    return {
+        "name": f"Ecowitt Gateway {host}",
+        "translation_key": "gateway",
+        "translation_placeholders": {"host": host},
+    }
+
+
+def device_name_kwargs(hardware_id: str, sensor_info: Dict[str, Any]) -> Dict[str, Any]:
+    """Return a default name and native HA translation data for a device.
 
     A title set with "Customize Title" on the gateway's Live Data page wins; it
     is reported in the live data only and stored as "live_title" by the sensor
@@ -131,15 +145,44 @@ def device_name(hardware_id: str, sensor_info: Dict[str, Any]) -> str:
     """
     live_title = str(sensor_info.get("live_title") or "").strip()
     if live_title:
-        return live_title
+        return {"name": live_title}
     raw_name = str(sensor_info.get("raw_data", {}).get("name", "")).strip()
     if (
         sensor_info.get("channel")
         and raw_name
         and not re.search(r"\bCH\s?\d+\b", raw_name, re.IGNORECASE)
     ):
-        return raw_name
-    type_name = sensor_type_display_name(
-        sensor_info.get("live_model") or sensor_info.get("sensor_type", "")
+        return {"name": raw_name}
+    sensor_type = sensor_info.get("live_model") or sensor_info.get("sensor_type", "")
+    type_name = sensor_type_display_name(sensor_type)
+    placeholders = {"hardware_id": hardware_id}
+    if sensor_type.lower() in _TYPE_NAMES:
+        translation_key = re.sub(r"[^a-z0-9]+", "_", type_name.lower()).strip("_")
+    elif sensor_type:
+        translation_key = "model"
+        placeholders["model"] = type_name
+    else:
+        translation_key = "sensor"
+    return {
+        "name": f"Ecowitt {type_name} {hardware_id}",
+        "translation_key": translation_key,
+        "translation_placeholders": placeholders,
+    }
+
+
+def device_name(
+    hardware_id: str,
+    sensor_info: Dict[str, Any],
+    hass: HomeAssistant | None = None,
+) -> str:
+    """Return the current name without changing a gateway-supplied custom title."""
+    kwargs = device_name_kwargs(hardware_id, sensor_info)
+    if "translation_key" not in kwargs:
+        return str(kwargs["name"])
+    return translated_text(
+        hass,
+        "device",
+        f"{kwargs['translation_key']}.name",
+        kwargs["name"],
+        kwargs["translation_placeholders"],
     )
-    return f"Ecowitt {type_name} {hardware_id}"
