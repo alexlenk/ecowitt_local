@@ -222,3 +222,14 @@ async def test_sensor_disabled_by_default(hass: HomeAssistant, mock_coordinator)
 
     assert sensor.entity_registry_enabled_default is False
     assert sensor.native_value == 160
+
+
+def test_issue_297_state_class_and_uv_unit():
+    """Lightning distance, UV index and solar radiation/illuminance need a state class."""
+    from custom_components.ecowitt_local.const import SENSOR_TYPES
+
+    for key in ("lightning", "lightning_mi", "uv", "0x17", "0x15", "solarradiation"):
+        assert SENSOR_TYPES[key]["state_class"] == "measurement", key
+    # HA's standard UV index unit (UV_INDEX constant), lowercase "i"
+    assert SENSOR_TYPES["uv"]["unit"] == "UV index"
+    assert SENSOR_TYPES["0x17"]["unit"] == "UV index"

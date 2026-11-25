@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.3] - 2026-11-25
+
+### Fixed
+- **Lightning Distance, UV Index and Solar Radiation/Illuminance get long-term statistics**: these entities had no state class, so Home Assistant kept no long-term statistics and raised the repair issue "The entity no longer has a state class". Lightning Distance (`lightning`, km and mi), UV Index (`uv`, `0x17`) and Solar Radiation (`solarradiation`, `0x15`, including when the gateway is in lux mode and the entity becomes Solar Illuminance) now use state class `measurement`. Thanks to @snakkp for the report (issue #297).
+- **UV Index unit matches Home Assistant's standard spelling**: the unit is now `UV index` (Home Assistant's `UV_INDEX` constant) instead of `UV Index`, so statistics recorded by the core Ecowitt integration carry over without a unit-mismatch repair (issue #297).
+
 ## [1.11.2] - 2026-11-23
 
 ### Fixed

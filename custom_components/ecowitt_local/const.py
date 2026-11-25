@@ -245,6 +245,7 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
         "entity_name": "Solar Radiation",
         "unit": "W/m²",
         "device_class": "irradiance",
+        "state_class": "measurement",
     },
     "solar_lux": {
         "name": "Solar Illuminance",
@@ -256,8 +257,9 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     "uv": {
         "name": "UV Index",
         "entity_name": "UV Index",
-        "unit": "UV Index",
+        "unit": "UV index",
         "icon": "mdi:weather-sunny-alert",
+        "state_class": "measurement",
     },
     # Lightning sensor
     "lightning_num": {
@@ -277,12 +279,14 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
         "entity_name": "Lightning Distance",
         "unit": "km",
         "device_class": "distance",
+        "state_class": "measurement",
     },
     "lightning_mi": {
         "name": "Lightning Distance",
         "entity_name": "Lightning Distance",
         "unit": "mi",
         "device_class": "distance",
+        "state_class": "measurement",
     },
     # WH45 combo sensor (CO2 + PM2.5 + PM10 + temp/humidity)
     "tf_co2": {
@@ -514,6 +518,7 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
         "entity_name": "Solar Radiation",
         "unit": "W/m²",
         "device_class": "irradiance",
+        "state_class": "measurement",
     },
     # 0x16 UV irradiance (µW/m²) — raw UV sensor value, distinct from 0x17 UV Index.
     # No HA device_class for µW/m² so we use a custom icon.
@@ -527,8 +532,9 @@ SENSOR_TYPES: Final[Dict[str, Dict[str, Any]]] = {
     "0x17": {
         "name": "UV Index",
         "entity_name": "UV Index",
-        "unit": "UV Index",
+        "unit": "UV index",
         "icon": "mdi:weather-sunny-alert",
+        "state_class": "measurement",
     },
     # Resets to 0 when the rain event ends: a restarting counter, so each drop is a
     # new meter cycle rather than a negative change (plain "total" subtracts it).
